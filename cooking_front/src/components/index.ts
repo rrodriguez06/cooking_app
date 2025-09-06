@@ -18,3 +18,4 @@ export * from './PasswordChangeForm';
 export * from './AddIngredientModal';
 export * from './AddEquipmentModal';
 export * from './ImageUpload';
+export * from './Timer';

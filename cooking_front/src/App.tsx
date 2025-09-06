@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { ProtectedRoute } from './components';
-import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage, CookingModePage } from './pages';
+import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage } from './pages';
 
 function App() {
   return (
@@ -57,12 +57,6 @@ function App() {
           <Route path="/recipe/new" element={
             <ProtectedRoute>
               <RecipeEditPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/recipe/:id/cook" element={
-            <ProtectedRoute>
-              <CookingModePage />
             </ProtectedRoute>
           } />
           

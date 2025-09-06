@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Loading, PlanRecipeModal, CommentSection, RecipeActions, UserLink } from '../components';
+import { Layout, Card, CardContent, CardHeader, Button, Loading, PlanRecipeModal, CommentSection, RecipeActions, UserLink, Timer } from '../components';
+import type { TimerRef } from '../components/Timer';
 import { recipeService, authService } from '../services';
 import { formatTime, formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
@@ -15,6 +16,19 @@ export const RecipeDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const timerRef = useRef<TimerRef>(null);
+
+  // Fonction pour démarrer le timer avec la durée d'une étape
+  const handleStepTimerClick = (duration: number) => {
+    if (timerRef.current) {
+      timerRef.current.startTimer(duration);
+      // Scroll vers le timer pour que l'utilisateur le voie
+      const timerElement = document.querySelector('[data-timer]');
+      if (timerElement) {
+        timerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
 
   useEffect(() => {
     // Get current user
@@ -257,9 +271,13 @@ export const RecipeDetailPage: React.FC = () => {
                           )}
                           <p className="text-gray-700">{step.description}</p>
                           {step.duration && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              Durée: {formatTime(step.duration)}
-                            </p>
+                            <button
+                              onClick={() => handleStepTimerClick(step.duration!)}
+                              className="text-sm text-primary-600 hover:text-primary-800 mt-1 cursor-pointer hover:underline font-medium transition-colors"
+                              title="Cliquer pour lancer le timer avec cette durée"
+                            >
+                              ⏱️ Durée: {formatTime(step.duration)} (cliquer pour lancer le timer)
+                            </button>
                           )}
                           {step.temperature && (
                             <p className="text-sm text-gray-500 mt-1">
@@ -355,12 +373,10 @@ export const RecipeDetailPage: React.FC = () => {
                   <h3 className="text-lg font-semibold">Actions</h3>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Link to={`/recipe/${recipe.id}/cook`} className="block">
-                    <Button className="w-full justify-start" size="sm">
-                      <ChefHat className="h-4 w-4 mr-2" />
-                      Commencer à cuisiner
-                    </Button>
-                  </Link>
+                  {/* Timer intégré */}
+                  <div data-timer>
+                    <Timer ref={timerRef} className="mb-4" />
+                  </div>
                   
                   <Button 
                     variant="secondary" 
