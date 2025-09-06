@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const MaxNestedRecipeDepth = 3 // Profondeur maximale pour les recettes imbriquées
+
 type mealPlanRepository struct {
 	db *gorm.DB
 }
@@ -197,6 +199,81 @@ func (r *mealPlanRepository) GetUpcomingMeals(ctx context.Context, userID uint, 
 	return mealPlans, nil
 }
 
+// RecipeIngredientCollector aide à collecter les ingrédients avec les recettes imbriquées
+type RecipeIngredientCollector struct {
+	Ingredients []RecipeIngredientWithSource
+	RecipeData  map[uint]*dto.Recipe // Cache des recettes pour éviter les requêtes répétées
+}
+
+// RecipeIngredientWithSource inclut l'ingrédient et sa source
+type RecipeIngredientWithSource struct {
+	dto.RecipeIngredient
+	SourceRecipeID   uint    // ID de la recette qui contient cet ingrédient
+	SourceRecipeName string  // Nom de la recette qui contient cet ingrédient
+	QuantityRatio    float64 // Ratio de quantité basé sur les portions
+	Depth            int     // Profondeur dans l'arbre des recettes imbriquées
+}
+
+// collectNestedIngredients collecte récursivement tous les ingrédients d'une recette et de ses recettes référencées
+func (r *mealPlanRepository) collectNestedIngredients(ctx context.Context, recipe *dto.Recipe, servingsRatio float64, depth int, visited map[uint]bool, collector *RecipeIngredientCollector) error {
+	if depth > MaxNestedRecipeDepth || visited[recipe.ID] {
+		return nil // Éviter les cycles et limiter la profondeur
+	}
+
+	visited[recipe.ID] = true
+	defer func() { visited[recipe.ID] = false }()
+
+	// Ajouter les ingrédients directs de cette recette
+	for _, ingredient := range recipe.Ingredients {
+		collector.Ingredients = append(collector.Ingredients, RecipeIngredientWithSource{
+			RecipeIngredient: ingredient,
+			SourceRecipeID:   recipe.ID,
+			SourceRecipeName: recipe.Title,
+			QuantityRatio:    servingsRatio,
+			Depth:            depth,
+		})
+	}
+
+	// Traiter les recettes référencées dans les étapes
+	for _, step := range recipe.Instructions {
+		if step.ReferencedRecipeID != nil && *step.ReferencedRecipeID > 0 {
+			// Vérifier si la recette est déjà en cache
+			var referencedRecipe *dto.Recipe
+			if cachedRecipe, exists := collector.RecipeData[*step.ReferencedRecipeID]; exists {
+				referencedRecipe = cachedRecipe
+			} else {
+				// Charger la recette référencée avec ses ingrédients et instructions
+				var loadedRecipe dto.Recipe
+				if err := r.db.WithContext(ctx).
+					Preload("Ingredients").
+					Preload("Ingredients.Ingredient").
+					First(&loadedRecipe, *step.ReferencedRecipeID).Error; err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						log.Printf("Warning: Referenced recipe %d not found, skipping", *step.ReferencedRecipeID)
+						continue
+					}
+					return ormerrors.NewDatabaseError("load referenced recipe", err)
+				}
+				collector.RecipeData[*step.ReferencedRecipeID] = &loadedRecipe
+				referencedRecipe = &loadedRecipe
+			}
+
+			// Calculer le ratio de portions pour la recette référencée
+			// Ici on suppose que l'étape utilise la totalité de la recette référencée
+			// Ce ratio pourrait être ajusté si on veut permettre des portions partielles
+			referencedServingsRatio := servingsRatio
+
+			// Collecter récursivement les ingrédients de la recette référencée
+			if err := r.collectNestedIngredients(ctx, referencedRecipe, referencedServingsRatio, depth+1, visited, collector); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetWeeklyShoppingList récupère la liste de courses pour une semaine donnée
 // GetWeeklyShoppingList récupère la liste de courses pour une semaine donnée
 func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID uint, startDate, endDate time.Time) (*dto.WeeklyShoppingList, error) {
 	// Récupérer tous les meal plans de la semaine avec leurs recettes et ingrédients
@@ -213,21 +290,33 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 
 	// Créer une map pour agréger les ingrédients par ID
 	ingredientMap := make(map[uint]*dto.ShoppingListItem)
+	
+	// Initialiser le collecteur pour les recettes imbriquées
+	collector := &RecipeIngredientCollector{
+		Ingredients: make([]RecipeIngredientWithSource, 0),
+		RecipeData:  make(map[uint]*dto.Recipe),
+	}
 
 	for _, mealPlan := range mealPlans {
-		for _, recipeIngredient := range mealPlan.Recipe.Ingredients {
-			ingredient := recipeIngredient.Ingredient
+		// Calculer le ratio de portions (portions planifiées / portions de base de la recette)
+		servingsRatio := float64(mealPlan.Servings) / float64(mealPlan.Recipe.Servings)
+		
+		// Collecter tous les ingrédients (directs et des recettes imbriquées)
+		visited := make(map[uint]bool)
+		if err := r.collectNestedIngredients(ctx, &mealPlan.Recipe, servingsRatio, 0, visited, collector); err != nil {
+			return nil, err
+		}
 
-			// Calculer la quantité en fonction du ratio entre portions planifiées et portions de base
-			// Par exemple: recette pour 4 personnes, planifiée pour 8 → ratio = 8/4 = 2
-			servingsRatio := float64(mealPlan.Servings) / float64(mealPlan.Recipe.Servings)
-			adjustedQuantity := recipeIngredient.Quantity * servingsRatio
+		// Traiter tous les ingrédients collectés
+		for _, ingredientWithSource := range collector.Ingredients {
+			ingredient := ingredientWithSource.RecipeIngredient.Ingredient
+			adjustedQuantity := ingredientWithSource.RecipeIngredient.Quantity * ingredientWithSource.QuantityRatio
 
 			if existingItem, exists := ingredientMap[ingredient.ID]; exists {
 				// Additionner les quantités si l'ingrédient existe déjà
 				existingItem.TotalQuantity += adjustedQuantity
 
-				// Ajouter les détails de cette recette
+				// Ajouter les détails de cette recette source
 				existingItem.Recipes = append(existingItem.Recipes, struct {
 					RecipeID   uint    `json:"recipe_id"`
 					RecipeName string  `json:"recipe_name"`
@@ -235,8 +324,8 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 					Date       string  `json:"date"`
 					MealType   string  `json:"meal_type"`
 				}{
-					RecipeID:   mealPlan.Recipe.ID,
-					RecipeName: mealPlan.Recipe.Title,
+					RecipeID:   ingredientWithSource.SourceRecipeID,
+					RecipeName: ingredientWithSource.SourceRecipeName,
 					Quantity:   adjustedQuantity,
 					Date:       mealPlan.PlannedDate.Format("2006-01-02"),
 					MealType:   mealPlan.MealType,
@@ -247,7 +336,7 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 					IngredientID:   ingredient.ID,
 					IngredientName: ingredient.Name,
 					TotalQuantity:  adjustedQuantity,
-					Unit:           recipeIngredient.Unit,
+					Unit:           ingredientWithSource.RecipeIngredient.Unit,
 					Recipes: []struct {
 						RecipeID   uint    `json:"recipe_id"`
 						RecipeName string  `json:"recipe_name"`
@@ -255,8 +344,8 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 						Date       string  `json:"date"`
 						MealType   string  `json:"meal_type"`
 					}{{
-						RecipeID:   mealPlan.Recipe.ID,
-						RecipeName: mealPlan.Recipe.Title,
+						RecipeID:   ingredientWithSource.SourceRecipeID,
+						RecipeName: ingredientWithSource.SourceRecipeName,
 						Quantity:   adjustedQuantity,
 						Date:       mealPlan.PlannedDate.Format("2006-01-02"),
 						MealType:   mealPlan.MealType,
@@ -264,6 +353,9 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 				}
 			}
 		}
+
+		// Réinitialiser le collecteur pour le prochain meal plan
+		collector.Ingredients = collector.Ingredients[:0]
 	}
 
 	// Convertir la map en slice
@@ -272,10 +364,14 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 		items = append(items, *item)
 	}
 
-	// Compter le nombre unique de recettes
+	// Compter le nombre unique de recettes (y compris les recettes imbriquées)
 	uniqueRecipes := make(map[uint]bool)
 	for _, mealPlan := range mealPlans {
 		uniqueRecipes[mealPlan.Recipe.ID] = true
+	}
+	// Ajouter aussi les recettes imbriquées
+	for recipeID := range collector.RecipeData {
+		uniqueRecipes[recipeID] = true
 	}
 
 	return &dto.WeeklyShoppingList{
