@@ -271,6 +271,36 @@ export const RecipeDetailPage: React.FC = () => {
                               💡 {step.tips}
                             </p>
                           )}
+                          {step.referenced_recipe && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-sm text-gray-600 mb-2">
+                                📖 Recette référencée:
+                              </p>
+                              <Link 
+                                to={`/recipes/${step.referenced_recipe.id}`}
+                                className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                <ChefHat className="h-4 w-4" />
+                                <span>{step.referenced_recipe.title}</span>
+                              </Link>
+                              {step.referenced_recipe.description && (
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {step.referenced_recipe.description.substring(0, 100)}
+                                  {step.referenced_recipe.description.length > 100 ? '...' : ''}
+                                </p>
+                              )}
+                              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                <span className="flex items-center space-x-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{step.referenced_recipe.prep_time + step.referenced_recipe.cook_time} min</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <Users className="h-3 w-3" />
+                                  <span>{step.referenced_recipe.servings} portions</span>
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

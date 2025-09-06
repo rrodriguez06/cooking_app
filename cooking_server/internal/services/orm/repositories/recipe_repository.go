@@ -49,7 +49,76 @@ func (r *recipeRepository) GetByID(ctx context.Context, id uint) (*dto.Recipe, e
 		}
 		return nil, ormerrors.NewDatabaseError("get recipe by id", err)
 	}
+
+	// Charger les informations des recettes référencées dans les étapes
+	if err := r.loadReferencedRecipesInSteps(ctx, &recipe); err != nil {
+		return nil, err
+	}
+
 	return &recipe, nil
+}
+
+// loadReferencedRecipesInSteps charge les informations des recettes référencées dans les étapes
+func (r *recipeRepository) loadReferencedRecipesInSteps(ctx context.Context, recipe *dto.Recipe) error {
+	return r.loadReferencedRecipesInMultipleRecipes(ctx, []*dto.Recipe{recipe})
+}
+
+// loadReferencedRecipesInMultipleRecipes charge les informations des recettes référencées pour plusieurs recettes
+func (r *recipeRepository) loadReferencedRecipesInMultipleRecipes(ctx context.Context, recipes []*dto.Recipe) error {
+	// Collecter tous les IDs de recettes référencées
+	referencedIDs := make(map[uint]bool)
+	for _, recipe := range recipes {
+		for _, step := range recipe.Instructions {
+			if step.ReferencedRecipeID != nil {
+				referencedIDs[*step.ReferencedRecipeID] = true
+			}
+		}
+	}
+
+	if len(referencedIDs) == 0 {
+		return nil
+	}
+
+	// Convertir en slice d'IDs
+	ids := make([]uint, 0, len(referencedIDs))
+	for id := range referencedIDs {
+		ids = append(ids, id)
+	}
+
+	// Charger toutes les recettes référencées en une fois
+	var referencedRecipes []dto.Recipe
+	if err := r.db.WithContext(ctx).
+		Select("id, title, description, prep_time, cook_time, servings, difficulty, image_url, author_id").
+		Preload("Author", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, username, email")
+		}).
+		Where("id IN ?", ids).
+		Find(&referencedRecipes).Error; err != nil {
+		return ormerrors.NewDatabaseError("load referenced recipes", err)
+	}
+
+	// Créer une map pour un accès rapide
+	recipeMap := make(map[uint]*dto.Recipe)
+	for i := range referencedRecipes {
+		recipeMap[referencedRecipes[i].ID] = &referencedRecipes[i]
+	}
+
+	// Assigner les données aux étapes
+	for _, recipe := range recipes {
+		for i := range recipe.Instructions {
+			step := &recipe.Instructions[i]
+			if step.ReferencedRecipeID != nil {
+				if referencedRecipe, exists := recipeMap[*step.ReferencedRecipeID]; exists {
+					step.ReferencedRecipeData = referencedRecipe
+				} else {
+					// Si la recette référencée n'existe plus, on supprime la référence
+					step.ReferencedRecipeID = nil
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // GetByAuthor récupère les recettes d'un auteur spécifique
@@ -475,6 +544,11 @@ func (r *recipeRepository) Search(ctx context.Context, searchReq *dto.SearchQuer
 		Find(&recipes).Error; err != nil {
 		log.Printf("Error fetching full recipes: %v", err)
 		return nil, 0, ormerrors.NewDatabaseError("search recipes", err)
+	}
+
+	// Charger les recettes référencées dans les étapes
+	if err := r.loadReferencedRecipesInMultipleRecipes(ctx, recipes); err != nil {
+		return nil, 0, err
 	}
 
 	log.Printf("Successfully found %d recipes", len(recipes))

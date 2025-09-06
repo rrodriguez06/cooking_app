@@ -45,6 +45,7 @@ export const recipeStepSchema = z.object({
   duration: z.number().min(0).optional(),
   temperature: z.number().min(0).optional(),
   tips: z.string().max(500).optional(),
+  referenced_recipe_id: z.number().min(1).optional(),
 });
 
 export const recipeIngredientSchema = z.object({

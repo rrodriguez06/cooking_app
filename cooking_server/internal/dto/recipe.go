@@ -8,12 +8,14 @@ import (
 )
 
 type RecipeStep struct {
-	StepNumber  int    `json:"step_number"`
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description"`
-	Duration    int    `json:"duration,omitempty"`    // Durée en minutes
-	Temperature int    `json:"temperature,omitempty"` // Température en degrés Celsius
-	Tips        string `json:"tips,omitempty"`        // Astuces facultatives
+	StepNumber           int     `json:"step_number"`
+	Title                string  `json:"title,omitempty"`
+	Description          string  `json:"description"`
+	Duration             int     `json:"duration,omitempty"`             // Durée en minutes
+	Temperature          int     `json:"temperature,omitempty"`          // Température en degrés Celsius
+	Tips                 string  `json:"tips,omitempty"`                 // Astuces facultatives
+	ReferencedRecipeID   *uint   `json:"referenced_recipe_id,omitempty"` // ID de la recette référencée (optionnel)
+	ReferencedRecipeData *Recipe `json:"referenced_recipe,omitempty"`    // Données de la recette référencée (non persisté, utilisé pour l'affichage)
 }
 
 type RecipeSteps []RecipeStep
@@ -71,12 +73,13 @@ type Recipe struct {
 }
 
 type RecipeStepRequest struct {
-	StepNumber  int    `json:"step_number" binding:"required,min=1"`
-	Title       string `json:"title,omitempty" binding:"omitempty,max=100"`
-	Description string `json:"description" binding:"required,max=1000"`
-	Duration    int    `json:"duration" binding:"min=0"`
-	Temperature int    `json:"temperature,omitempty" binding:"omitempty,min=0"`
-	Tips        string `json:"tips,omitempty" binding:"omitempty,max=500"`
+	StepNumber         int    `json:"step_number" binding:"required,min=1"`
+	Title              string `json:"title,omitempty" binding:"omitempty,max=100"`
+	Description        string `json:"description" binding:"required,max=1000"`
+	Duration           int    `json:"duration" binding:"min=0"`
+	Temperature        int    `json:"temperature,omitempty" binding:"omitempty,min=0"`
+	Tips               string `json:"tips,omitempty" binding:"omitempty,max=500"`
+	ReferencedRecipeID *uint  `json:"referenced_recipe_id,omitempty"` // ID de la recette référencée (optionnel)
 }
 
 type RecipeCreateRequest struct {

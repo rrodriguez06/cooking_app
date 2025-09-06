@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button, Input, Card, Loading, AddIngredientModal, AddEquipmentModal, ImageUpload } from '../components';
 import { recipeService } from '../services/recipe';
 import { categoryService, tagService, ingredientService, equipmentService } from '../services/data';
-import type { RecipeCreateRequest, Category, Tag, Ingredient, Equipment } from '../types';
+import type { RecipeCreateRequest, Category, Tag, Ingredient, Equipment, Recipe } from '../types';
 
 const recipeSchema = z.object({
   title: z.string().min(1, 'Le titre est requis'),
@@ -33,6 +33,7 @@ const recipeSchema = z.object({
     duration: z.number().optional(),
     temperature: z.number().optional(),
     tips: z.string().optional(),
+    referenced_recipe_id: z.number().min(1).optional(),
   })).min(1, 'Au moins une étape est requise'),
 });
 
@@ -47,6 +48,7 @@ export const RecipeEditPage: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [showAddIngredientModal, setShowAddIngredientModal] = useState(false);
   const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false);
 
@@ -72,7 +74,7 @@ export const RecipeEditPage: React.FC = () => {
       tag_ids: [],
       equipment_ids: [],
       ingredients: [{ ingredient_id: 1, quantity: 0, unit: '', notes: '' }],
-      instructions: [{ step_number: 1, description: '', title: '', duration: 0, temperature: 0, tips: '' }],
+      instructions: [{ step_number: 1, description: '', title: '', duration: 0, temperature: 0, tips: '', referenced_recipe_id: undefined }],
     }
   });
 
@@ -102,12 +104,13 @@ export const RecipeEditPage: React.FC = () => {
     const loadData = async () => {
       console.log('RecipeEditPage: Loading data...');
       try {
-        console.log('RecipeEditPage: Fetching categories, tags, ingredients, equipments...');
-        const [categoriesResponse, tagsResponse, ingredientsResponse, equipmentsResponse] = await Promise.all([
+        console.log('RecipeEditPage: Fetching categories, tags, ingredients, equipments, recipes...');
+        const [categoriesResponse, tagsResponse, ingredientsResponse, equipmentsResponse, recipesResponse] = await Promise.all([
           categoryService.getCategories().catch(e => { console.error('Categories error:', e); return { success: false, data: [] }; }),
           tagService.getTags().catch(e => { console.error('Tags error:', e); return { success: false, data: [] }; }),
           ingredientService.getIngredients().catch(e => { console.error('Ingredients error:', e); return { success: false, data: [] }; }),
-          equipmentService.getEquipments().catch(e => { console.error('Equipments error:', e); return { success: false, data: [] }; })
+          equipmentService.getEquipments().catch(e => { console.error('Equipments error:', e); return { success: false, data: [] }; }),
+          recipeService.searchRecipes({}).catch(e => { console.error('Recipes error:', e); return { success: false, data: { recipes: [] } }; })
         ]);
         
         console.log('RecipeEditPage: Raw responses:', {
@@ -135,18 +138,21 @@ export const RecipeEditPage: React.FC = () => {
         const tagsData = Array.isArray(tagsResponse.data) ? tagsResponse.data : [];
         const ingredientsData = Array.isArray(ingredientsResponse.data) ? ingredientsResponse.data : [];
         const equipmentsData = Array.isArray(equipmentsResponse.data) ? equipmentsResponse.data : [];
+        const recipesData = Array.isArray(recipesResponse.data?.recipes) ? recipesResponse.data.recipes : [];
         
         console.log('RecipeEditPage: Processed data:', {
           categoriesLength: categoriesData.length,
           tagsLength: tagsData.length,
           ingredientsLength: ingredientsData.length,
-          equipmentsLength: equipmentsData.length
+          equipmentsLength: equipmentsData.length,
+          recipesLength: recipesData.length
         });
         
         setCategories(categoriesData);
         setTags(tagsData);
         setIngredients(ingredientsData);
         setEquipments(equipmentsData);
+        setRecipes(recipesData);
 
         // Mettre à jour les valeurs par défaut avec le premier ingrédient disponible
         if (ingredientsData.length > 0) {
@@ -187,7 +193,8 @@ export const RecipeEditPage: React.FC = () => {
               title: inst.title || '',
               duration: inst.duration || 0,
               temperature: inst.temperature || 0,
-              tips: inst.tips || ''
+              tips: inst.tips || '',
+              referenced_recipe_id: inst.referenced_recipe_id || undefined
             })));
           }
         }
@@ -660,6 +667,29 @@ export const RecipeEditPage: React.FC = () => {
                     className="input-field"
                     placeholder="Conseils pour cette étape (optionnel)"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recette référencée (optionnel)
+                  </label>
+                  <select
+                    {...register(`instructions.${index}.referenced_recipe_id`, { valueAsNumber: true })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Aucune recette référencée</option>
+                    {recipes
+                      .filter(recipe => recipe.id !== parseInt(id || '0')) // Éviter de référencer la recette en cours d'édition
+                      .map(recipe => (
+                        <option key={recipe.id} value={recipe.id}>
+                          {recipe.title}
+                        </option>
+                      ))
+                    }
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Sélectionnez une recette pour créer un lien dans cette étape (ex: recette de pâte pour une tarte)
+                  </p>
                 </div>
               </div>
             ))}

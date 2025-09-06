@@ -54,7 +54,16 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 	// Convertir les étapes de la requête en RecipeSteps
 	var instructions dto.RecipeSteps
 	for _, stepReq := range req.Instructions {
-		instructions = append(instructions, dto.RecipeStep(stepReq))
+		step := dto.RecipeStep{
+			StepNumber:         stepReq.StepNumber,
+			Title:              stepReq.Title,
+			Description:        stepReq.Description,
+			Duration:           stepReq.Duration,
+			Temperature:        stepReq.Temperature,
+			Tips:               stepReq.Tips,
+			ReferencedRecipeID: stepReq.ReferencedRecipeID,
+		}
+		instructions = append(instructions, step)
 	}
 
 	recipe := &dto.Recipe{
@@ -227,7 +236,16 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 	if len(req.Instructions) > 0 {
 		var instructions dto.RecipeSteps
 		for _, stepReq := range req.Instructions {
-			instructions = append(instructions, dto.RecipeStep(stepReq))
+			step := dto.RecipeStep{
+				StepNumber:         stepReq.StepNumber,
+				Title:              stepReq.Title,
+				Description:        stepReq.Description,
+				Duration:           stepReq.Duration,
+				Temperature:        stepReq.Temperature,
+				Tips:               stepReq.Tips,
+				ReferencedRecipeID: stepReq.ReferencedRecipeID,
+			}
+			instructions = append(instructions, step)
 		}
 		recipe.Instructions = instructions
 	}

@@ -7,6 +7,8 @@ export interface RecipeStep {
   duration?: number;
   temperature?: number;
   tips?: string;
+  referenced_recipe_id?: number;
+  referenced_recipe?: Recipe;
 }
 
 export interface RecipeIngredient {
@@ -110,6 +112,7 @@ export interface RecipeStepRequest {
   duration?: number;
   temperature?: number;
   tips?: string;
+  referenced_recipe_id?: number;
 }
 
 export interface RecipeIngredientRequest {
