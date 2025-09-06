@@ -290,7 +290,7 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 
 	// Créer une map pour agréger les ingrédients par ID
 	ingredientMap := make(map[uint]*dto.ShoppingListItem)
-	
+
 	// Initialiser le collecteur pour les recettes imbriquées
 	collector := &RecipeIngredientCollector{
 		Ingredients: make([]RecipeIngredientWithSource, 0),
@@ -300,7 +300,7 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 	for _, mealPlan := range mealPlans {
 		// Calculer le ratio de portions (portions planifiées / portions de base de la recette)
 		servingsRatio := float64(mealPlan.Servings) / float64(mealPlan.Recipe.Servings)
-		
+
 		// Collecter tous les ingrédients (directs et des recettes imbriquées)
 		visited := make(map[uint]bool)
 		if err := r.collectNestedIngredients(ctx, &mealPlan.Recipe, servingsRatio, 0, visited, collector); err != nil {
