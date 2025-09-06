@@ -194,7 +194,7 @@ export const RecipeEditPage: React.FC = () => {
               duration: inst.duration || 0,
               temperature: inst.temperature || 0,
               tips: inst.tips || '',
-              referenced_recipe_id: inst.referenced_recipe_id || ''
+              referenced_recipe_id: inst.referenced_recipe_id ? String(inst.referenced_recipe_id) : ''
             })));
           }
         }
