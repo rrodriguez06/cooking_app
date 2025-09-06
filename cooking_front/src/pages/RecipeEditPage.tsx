@@ -33,7 +33,7 @@ const recipeSchema = z.object({
     duration: z.number().optional(),
     temperature: z.number().optional(),
     tips: z.string().optional(),
-    referenced_recipe_id: z.number().min(1).optional(),
+    referenced_recipe_id: z.union([z.number().min(1), z.literal('')]).optional().transform((val: number | string | undefined) => val === '' ? undefined : val),
   })).min(1, 'Au moins une étape est requise'),
 });
 
@@ -74,7 +74,7 @@ export const RecipeEditPage: React.FC = () => {
       tag_ids: [],
       equipment_ids: [],
       ingredients: [{ ingredient_id: 1, quantity: 0, unit: '', notes: '' }],
-      instructions: [{ step_number: 1, description: '', title: '', duration: 0, temperature: 0, tips: '', referenced_recipe_id: undefined }],
+      instructions: [{ step_number: 1, description: '', title: '', duration: 0, temperature: 0, tips: '', referenced_recipe_id: '' }],
     }
   });
 
@@ -194,7 +194,7 @@ export const RecipeEditPage: React.FC = () => {
               duration: inst.duration || 0,
               temperature: inst.temperature || 0,
               tips: inst.tips || '',
-              referenced_recipe_id: inst.referenced_recipe_id || undefined
+              referenced_recipe_id: inst.referenced_recipe_id || ''
             })));
           }
         }
@@ -226,7 +226,8 @@ export const RecipeEditPage: React.FC = () => {
         })),
         instructions: data.instructions.map((instruction, index) => ({
           ...instruction,
-          step_number: index + 1
+          step_number: index + 1,
+          referenced_recipe_id: instruction.referenced_recipe_id ? parseInt(instruction.referenced_recipe_id as string) : undefined
         }))
       };
 
@@ -585,7 +586,8 @@ export const RecipeEditPage: React.FC = () => {
                 title: '',
                 duration: 0,
                 temperature: 0,
-                tips: ''
+                tips: '',
+                referenced_recipe_id: ''
               })}
             >
               Ajouter une étape
@@ -674,7 +676,7 @@ export const RecipeEditPage: React.FC = () => {
                     Recette référencée (optionnel)
                   </label>
                   <select
-                    {...register(`instructions.${index}.referenced_recipe_id`, { valueAsNumber: true })}
+                    {...register(`instructions.${index}.referenced_recipe_id`)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Aucune recette référencée</option>
