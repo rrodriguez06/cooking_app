@@ -218,8 +218,10 @@ func (r *mealPlanRepository) GetWeeklyShoppingList(ctx context.Context, userID u
 		for _, recipeIngredient := range mealPlan.Recipe.Ingredients {
 			ingredient := recipeIngredient.Ingredient
 
-			// Calculer la quantité en fonction du nombre de portions
-			adjustedQuantity := recipeIngredient.Quantity * float64(mealPlan.Servings)
+			// Calculer la quantité en fonction du ratio entre portions planifiées et portions de base
+			// Par exemple: recette pour 4 personnes, planifiée pour 8 → ratio = 8/4 = 2
+			servingsRatio := float64(mealPlan.Servings) / float64(mealPlan.Recipe.Servings)
+			adjustedQuantity := recipeIngredient.Quantity * servingsRatio
 
 			if existingItem, exists := ingredientMap[ingredient.ID]; exists {
 				// Additionner les quantités si l'ingrédient existe déjà
