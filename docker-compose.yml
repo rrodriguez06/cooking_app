@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # Traefik - Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: cooking_traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=your-email@rrodriguez.dev
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Dashboard Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - cooking_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.rrodriguez.dev`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: cooking_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cooking_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./cooking_server/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - cooking_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cooking_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Backend Go
+  cooking-server:
+    build:
+      context: ./cooking_server
+      dockerfile: Dockerfile
+    container_name: cooking_server
+    restart: unless-stopped
+    environment:
+      - ENV=production
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_ISSUER=cooking-server
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=cooking_db
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-postgres_password}
+      - DB_SSLMODE=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cooking_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cooking-api.rule=Host(`cooking.rrodriguez.dev`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.cooking-api.tls=true"
+      - "traefik.http.routers.cooking-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cooking-api.loadbalancer.server.port=8080"
+
+  # Frontend React
+  cooking-frontend:
+    build:
+      context: ./cooking_front
+      dockerfile: Dockerfile
+    container_name: cooking_frontend
+    restart: unless-stopped
+    depends_on:
+      - cooking-server
+    networks:
+      - cooking_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cooking-frontend.rule=Host(`cooking.rrodriguez.dev`)"
+      - "traefik.http.routers.cooking-frontend.tls=true"
+      - "traefik.http.routers.cooking-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cooking-frontend.loadbalancer.server.port=80"
+
+  # pgAdmin (optionnel)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cooking_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rrodriguez.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin_password}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - cooking_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.rrodriguez.dev`)"
+      - "traefik.http.routers.pgadmin.tls=true"
+      - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+volumes:
+  postgres_data:
+    name: cooking_postgres_data
+  pgadmin_data:
+    name: cooking_pgadmin_data
+  traefik_letsencrypt:
+    name: cooking_traefik_letsencrypt
+
+networks:
+  cooking_network:
+    name: cooking_network
+    driver: bridge
