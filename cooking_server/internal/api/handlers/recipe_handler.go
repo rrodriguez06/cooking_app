@@ -79,6 +79,7 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 		AuthorID:     authorID,
 	}
 
+	// Créer la recette d'abord
 	if err := h.ormService.RecipeRepository.Create(c.Request.Context(), recipe); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Internal server error",
@@ -87,11 +88,66 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 		return
 	}
 
-	// TODO: Ajouter les ingrédients et équipements si fournis
+	// Ajouter les ingrédients
+	for _, ingredientReq := range req.Ingredients {
+		recipeIngredient := &dto.RecipeIngredient{
+			RecipeID:     recipe.ID,
+			IngredientID: ingredientReq.IngredientID,
+			Quantity:     ingredientReq.Quantity,
+			Unit:         ingredientReq.Unit,
+			Notes:        ingredientReq.Notes,
+			IsOptional:   ingredientReq.IsOptional,
+		}
+		if err := h.ormService.RecipeIngredientRepository.Create(c.Request.Context(), recipeIngredient); err != nil {
+			log.Printf("Failed to create recipe ingredient: %v", err)
+			// Ne pas faire échouer toute la création pour un ingrédient, mais log l'erreur
+		}
+	}
+
+	// Ajouter les équipements
+	for _, equipmentReq := range req.Equipments {
+		recipeEquipment := &dto.RecipeEquipment{
+			RecipeID:    recipe.ID,
+			EquipmentID: equipmentReq.EquipmentID,
+			IsOptional:  equipmentReq.IsOptional,
+			Notes:       equipmentReq.Notes,
+		}
+		if err := h.ormService.RecipeEquipmentRepository.Create(c.Request.Context(), recipeEquipment); err != nil {
+			log.Printf("Failed to create recipe equipment: %v", err)
+			// Ne pas faire échouer toute la création pour un équipement, mais log l'erreur
+		}
+	}
+
+	// Ajouter les catégories (relation many-to-many)
+	if len(req.CategoryIDs) > 0 {
+		var categories []dto.Category
+		if err := h.ormService.GetDB().Where("id IN ?", req.CategoryIDs).Find(&categories).Error; err == nil {
+			if err := h.ormService.GetDB().Model(recipe).Association("Categories").Append(categories); err != nil {
+				log.Printf("Failed to associate categories: %v", err)
+			}
+		}
+	}
+
+	// Ajouter les tags (relation many-to-many)
+	if len(req.TagIDs) > 0 {
+		var tags []dto.Tag
+		if err := h.ormService.GetDB().Where("id IN ?", req.TagIDs).Find(&tags).Error; err == nil {
+			if err := h.ormService.GetDB().Model(recipe).Association("Tags").Append(tags); err != nil {
+				log.Printf("Failed to associate tags: %v", err)
+			}
+		}
+	}
+
+	// Recharger la recette avec toutes ses relations pour la réponse
+	updatedRecipe, err := h.ormService.RecipeRepository.GetByID(c.Request.Context(), recipe.ID)
+	if err != nil {
+		// Si on ne peut pas recharger, retourner la recette de base
+		updatedRecipe = recipe
+	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
-		"data":    recipe,
+		"data":    updatedRecipe,
 		"message": "Recipe created successfully",
 	})
 }
@@ -266,6 +322,7 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 	}
 	recipe.IsPublic = req.IsPublic
 
+	// Mettre à jour la recette d'abord
 	if err := h.ormService.RecipeRepository.Update(c.Request.Context(), recipe); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Internal server error",
@@ -274,9 +331,92 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 		return
 	}
 
+	// Mettre à jour les ingrédients si fournis
+	if len(req.Ingredients) > 0 {
+		// Supprimer tous les ingrédients existants
+		if err := h.ormService.RecipeIngredientRepository.DeleteByRecipe(c.Request.Context(), recipe.ID); err != nil {
+			log.Printf("Failed to delete existing recipe ingredients: %v", err)
+		}
+
+		// Ajouter les nouveaux ingrédients
+		for _, ingredientReq := range req.Ingredients {
+			recipeIngredient := &dto.RecipeIngredient{
+				RecipeID:     recipe.ID,
+				IngredientID: ingredientReq.IngredientID,
+				Quantity:     ingredientReq.Quantity,
+				Unit:         ingredientReq.Unit,
+				Notes:        ingredientReq.Notes,
+				IsOptional:   ingredientReq.IsOptional,
+			}
+			if err := h.ormService.RecipeIngredientRepository.Create(c.Request.Context(), recipeIngredient); err != nil {
+				log.Printf("Failed to create recipe ingredient during update: %v", err)
+			}
+		}
+	}
+
+	// Mettre à jour les équipements si fournis
+	if len(req.Equipments) > 0 {
+		// Supprimer tous les équipements existants
+		if err := h.ormService.RecipeEquipmentRepository.DeleteByRecipe(c.Request.Context(), recipe.ID); err != nil {
+			log.Printf("Failed to delete existing recipe equipment: %v", err)
+		}
+
+		// Ajouter les nouveaux équipements
+		for _, equipmentReq := range req.Equipments {
+			recipeEquipment := &dto.RecipeEquipment{
+				RecipeID:    recipe.ID,
+				EquipmentID: equipmentReq.EquipmentID,
+				IsOptional:  equipmentReq.IsOptional,
+				Notes:       equipmentReq.Notes,
+			}
+			if err := h.ormService.RecipeEquipmentRepository.Create(c.Request.Context(), recipeEquipment); err != nil {
+				log.Printf("Failed to create recipe equipment during update: %v", err)
+			}
+		}
+	}
+
+	// Mettre à jour les catégories si fournies
+	if len(req.CategoryIDs) > 0 {
+		// Supprimer toutes les associations existantes
+		if err := h.ormService.GetDB().Model(recipe).Association("Categories").Clear(); err != nil {
+			log.Printf("Failed to clear existing categories: %v", err)
+		}
+
+		// Ajouter les nouvelles catégories
+		var categories []dto.Category
+		if err := h.ormService.GetDB().Where("id IN ?", req.CategoryIDs).Find(&categories).Error; err == nil {
+			if err := h.ormService.GetDB().Model(recipe).Association("Categories").Append(categories); err != nil {
+				log.Printf("Failed to associate categories during update: %v", err)
+			}
+		}
+	}
+
+	// Mettre à jour les tags si fournis
+	if len(req.TagIDs) > 0 {
+		// Supprimer toutes les associations existantes
+		if err := h.ormService.GetDB().Model(recipe).Association("Tags").Clear(); err != nil {
+			log.Printf("Failed to clear existing tags: %v", err)
+		}
+
+		// Ajouter les nouveaux tags
+		var tags []dto.Tag
+		if err := h.ormService.GetDB().Where("id IN ?", req.TagIDs).Find(&tags).Error; err == nil {
+			if err := h.ormService.GetDB().Model(recipe).Association("Tags").Append(tags); err != nil {
+				log.Printf("Failed to associate tags during update: %v", err)
+			}
+		}
+	}
+
+	// Recharger la recette avec toutes ses relations pour la réponse
+	updatedRecipe, err := h.ormService.RecipeRepository.GetByID(c.Request.Context(), recipe.ID)
+	if err != nil {
+		// Si on ne peut pas recharger, retourner la recette de base
+		updatedRecipe = recipe
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data":    recipe,
+		"data":    updatedRecipe,
 		"message": "Recipe updated successfully",
 	})
 }
