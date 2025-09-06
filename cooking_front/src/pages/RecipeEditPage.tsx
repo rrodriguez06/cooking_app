@@ -235,13 +235,17 @@ export const RecipeEditPage: React.FC = () => {
         }))
       };
 
+      let recipeId: number;
+      
       if (id) {
-        await recipeService.updateRecipe(parseInt(id), recipeData);
+        const response = await recipeService.updateRecipe(parseInt(id), recipeData);
+        recipeId = response.data.id;
       } else {
-        await recipeService.createRecipe(recipeData);
+        const response = await recipeService.createRecipe(recipeData);
+        recipeId = response.data.id;
       }
 
-      navigate('/');
+      navigate(`/recipe/${recipeId}`);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
     } finally {
