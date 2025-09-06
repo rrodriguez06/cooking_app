@@ -273,10 +273,10 @@ export const RecipeDetailPage: React.FC = () => {
                           {step.duration && (
                             <button
                               onClick={() => handleStepTimerClick(step.duration!)}
-                              className="text-sm text-primary-600 hover:text-primary-800 mt-1 cursor-pointer hover:underline font-medium transition-colors"
-                              title="Cliquer pour lancer le timer avec cette durée"
+                              className="text-xs text-gray-600 hover:text-primary-600 mt-1 cursor-pointer hover:underline transition-colors"
+                              title="Cliquer pour lancer le timer"
                             >
-                              ⏱️ Durée: {formatTime(step.duration)} (cliquer pour lancer le timer)
+                              Durée: {formatTime(step.duration)}
                             </button>
                           )}
                           {step.temperature && (
