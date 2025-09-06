@@ -215,6 +215,7 @@ export const RecipeEditPage: React.FC = () => {
   }, [id, setValue]);
 
   const onSubmit = async (data: RecipeFormData) => {
+    console.log('onSubmit called with data:', data);
     setLoading(true);
     try {
       const recipeData: RecipeCreateRequest = {
@@ -235,19 +236,33 @@ export const RecipeEditPage: React.FC = () => {
         }))
       };
 
+      console.log('Recipe data prepared:', recipeData);
+
       let recipeId: number;
       
       if (id) {
+        console.log('Updating existing recipe with ID:', id);
         const response = await recipeService.updateRecipe(parseInt(id), recipeData);
+        console.log('Update response:', response);
         recipeId = response.data.id;
+        console.log('Update successful, recipe ID:', recipeId);
       } else {
+        console.log('Creating new recipe');
         const response = await recipeService.createRecipe(recipeData);
+        console.log('Creation response:', response);
         recipeId = response.data.id;
+        console.log('Creation successful, recipe ID:', recipeId);
       }
 
-      navigate(`/recipe/${recipeId}`);
+      console.log('Navigating to recipe page:', `/recipe/${recipeId}`);
+      // Utiliser un délai pour s'assurer que tous les états sont mis à jour
+      setTimeout(() => {
+        navigate(`/recipe/${recipeId}`);
+        console.log('Navigate called with timeout');
+      }, 100);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      // En cas d'erreur, on reste sur la page d'édition
     } finally {
       setLoading(false);
     }
