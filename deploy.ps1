@@ -3,7 +3,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("start", "stop", "restart", "update", "logs", "status", "backup", "restore", "help")]
+    [ValidateSet("start", "stop", "restart", "update", "logs", "status", "backup", "restore", "seed", "help")]
     [string]$Action = "help",
     
     [Parameter(Position=1)]
@@ -197,10 +197,45 @@ function Restore-Database {
     }
 }
 
+# Lancer le seeder
+function Seed-Database {
+    Write-Log "Vérification que l'application est en cours d'exécution..." "INFO"
+    
+    $runningContainers = docker-compose -f $COMPOSE_FILE ps --filter "status=running" --format "table {{.Service}}"
+    
+    if ($runningContainers -notmatch "cooking-server") {
+        Write-Log "Le serveur cooking-server n'est pas en cours d'exécution" "ERROR"
+        Write-Log "Veuillez démarrer l'application avec: .\deploy.ps1 start" "INFO"
+        exit 1
+    }
+    
+    Write-Log "⚠️  ATTENTION: Cette opération va ajouter des données de démonstration à la base de données!" "WARNING"
+    Write-Log "Si la base contient déjà ces données, cela pourrait créer des doublons." "WARNING"
+    $confirmation = Read-Host "Voulez-vous continuer? (y/N)"
+    
+    if ($confirmation -notmatch "^[Yy]$") {
+        Write-Log "Seeding annulé" "INFO"
+        exit 0
+    }
+    
+    Write-Log "🌱 Lancement du seeder dans le conteneur cooking-server..." "INFO"
+    
+    # Exécuter le seeder dans le conteneur
+    docker-compose -f $COMPOSE_FILE exec cooking-server ./seeder
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Log "✅ Seeder exécuté avec succès!" "SUCCESS"
+        Write-Log "La base de données a été peuplée avec des données de démonstration." "INFO"
+    } else {
+        Write-Log "❌ Erreur lors de l'exécution du seeder" "ERROR"
+        exit 1
+    }
+}
+
 # Afficher l'aide
 function Show-Help {
     Write-Host @"
-Usage: .\deploy.ps1 {start|stop|restart|update|logs|status|backup|restore|help}
+Usage: .\deploy.ps1 {start|stop|restart|update|logs|status|backup|restore|seed|help}
 
 Commandes:
   start     - Démarrer l'application
@@ -211,12 +246,14 @@ Commandes:
   status    - Afficher le statut des services
   backup    - Créer un backup de la base de données
   restore   - Restaurer la base de données depuis un backup
+  seed      - Peupler la base de données avec des données de démonstration
   help      - Afficher cette aide
 
 Exemples:
   .\deploy.ps1 start
   .\deploy.ps1 logs cooking-server
   .\deploy.ps1 restore .\backups\cooking_db_backup_20250906_143022.sql
+  .\deploy.ps1 seed
 "@
 }
 
@@ -230,6 +267,7 @@ switch ($Action) {
     "status" { Show-Status }
     "backup" { Backup-Database }
     "restore" { Restore-Database }
+    "seed" { Seed-Database }
     "help" { Show-Help }
     default { 
         Write-Log "Commande inconnue: $Action" "ERROR"

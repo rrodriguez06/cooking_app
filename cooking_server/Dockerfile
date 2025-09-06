@@ -16,8 +16,11 @@ RUN go mod download
 # Copier tout le code source
 COPY . .
 
-# Compiler l'application
+# Compiler l'application principale
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Compiler le seeder
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o seeder ./seed_data
 
 # Production stage
 FROM alpine:latest
@@ -31,8 +34,9 @@ RUN addgroup -g 1001 -S appgroup && \
 
 WORKDIR /root/
 
-# Copier le binaire depuis le stage de build
+# Copier les binaires depuis le stage de build
 COPY --from=builder /app/main .
+COPY --from=builder /app/seeder .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seed_data ./seed_data
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script de déploiement pour cooking_app
-# Usage: ./deploy.sh [start|stop|restart|update|logs]
+# Usage: ./deploy.sh [start|stop|restart|update|logs|status|backup|restore|seed|help]
 
 set -e
 
@@ -181,9 +181,40 @@ restore() {
     fi
 }
 
+# Lancer le seeder
+seed() {
+    log "Vérification que l'application est en cours d'exécution..."
+    
+    if ! docker-compose -f $COMPOSE_FILE ps | grep -q "cooking-server.*Up"; then
+        error "Le serveur cooking-server n'est pas en cours d'exécution"
+        info "Veuillez démarrer l'application avec: $0 start"
+        exit 1
+    fi
+    
+    warning "⚠️  ATTENTION: Cette opération va ajouter des données de démonstration à la base de données!"
+    warning "Si la base contient déjà ces données, cela pourrait créer des doublons."
+    read -p "Voulez-vous continuer? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        info "Seeding annulé"
+        exit 0
+    fi
+    
+    log "🌱 Lancement du seeder dans le conteneur cooking-server..."
+    
+    # Exécuter le seeder dans le conteneur
+    if docker-compose -f $COMPOSE_FILE exec cooking-server ./seeder; then
+        log "✅ Seeder exécuté avec succès!"
+        info "La base de données a été peuplée avec des données de démonstration."
+    else
+        error "❌ Erreur lors de l'exécution du seeder"
+        exit 1
+    fi
+}
+
 # Afficher l'aide
 help() {
-    echo "Usage: $0 {start|stop|restart|update|logs|status|backup|restore|help}"
+    echo "Usage: $0 {start|stop|restart|update|logs|status|backup|restore|seed|help}"
     echo ""
     echo "Commandes:"
     echo "  start     - Démarrer l'application"
@@ -194,12 +225,14 @@ help() {
     echo "  status    - Afficher le statut des services"
     echo "  backup    - Créer un backup de la base de données"
     echo "  restore   - Restaurer la base de données depuis un backup"
+    echo "  seed      - Peupler la base de données avec des données de démonstration"
     echo "  help      - Afficher cette aide"
     echo ""
     echo "Exemples:"
     echo "  $0 start"
     echo "  $0 logs cooking-server"
     echo "  $0 restore ./backups/cooking_db_backup_20250906_143022.sql"
+    echo "  $0 seed"
 }
 
 # Point d'entrée principal
@@ -227,6 +260,9 @@ case "${1:-}" in
         ;;
     restore)
         restore $@
+        ;;
+    seed)
+        seed
         ;;
     help|--help|-h)
         help
