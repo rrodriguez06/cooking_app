@@ -1,0 +1,3 @@
+# Favicon placeholder
+# Dans un environnement de production, vous pourriez convertir le SVG en ICO
+# Pour l'instant, nous utilisons juste le SVG qui fonctionne dans la plupart des navigateurs modernes
