@@ -185,8 +185,8 @@ restore() {
 seed() {
     log "Vérification que l'application est en cours d'exécution..."
     
-    if ! docker-compose -f $COMPOSE_FILE ps | grep -q "cooking-server.*Up"; then
-        error "Le serveur cooking-server n'est pas en cours d'exécution"
+    if ! docker-compose -f $COMPOSE_FILE ps | grep -q "cooking_server.*Up"; then
+        error "Le serveur cooking_server n'est pas en cours d'exécution"
         info "Veuillez démarrer l'application avec: $0 start"
         exit 1
     fi
@@ -200,7 +200,7 @@ seed() {
         exit 0
     fi
     
-    log "🌱 Lancement du seeder dans le conteneur cooking-server..."
+    log "🌱 Lancement du seeder dans le conteneur cooking_server..."
     
     # Exécuter le seeder dans le conteneur
     if docker-compose -f $COMPOSE_FILE exec cooking-server ./seeder; then
