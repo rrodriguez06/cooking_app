@@ -33,7 +33,7 @@ const recipeSchema = z.object({
     duration: z.number().optional(),
     temperature: z.number().optional(),
     tips: z.string().optional(),
-    referenced_recipe_id: z.union([z.number().min(1), z.literal('')]).optional().transform((val: number | string | undefined) => val === '' ? undefined : val),
+    referenced_recipe_id: z.string().optional(),
   })).min(1, 'Au moins une étape est requise'),
 });
 
@@ -227,7 +227,11 @@ export const RecipeEditPage: React.FC = () => {
         instructions: data.instructions.map((instruction, index) => ({
           ...instruction,
           step_number: index + 1,
-          referenced_recipe_id: instruction.referenced_recipe_id ? parseInt(instruction.referenced_recipe_id as string) : undefined
+          referenced_recipe_id: instruction.referenced_recipe_id && instruction.referenced_recipe_id !== '' 
+            ? (typeof instruction.referenced_recipe_id === 'string' 
+                ? parseInt(instruction.referenced_recipe_id) 
+                : instruction.referenced_recipe_id)
+            : undefined
         }))
       };
 
