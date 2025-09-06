@@ -22,11 +22,7 @@ export const RecipeDetailPage: React.FC = () => {
   const handleStepTimerClick = (duration: number) => {
     if (timerRef.current) {
       timerRef.current.startTimer(duration);
-      // Scroll vers le timer pour que l'utilisateur le voie
-      const timerElement = document.querySelector('[data-timer]');
-      if (timerElement) {
-        timerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      // Pas de scroll automatique pour ne pas perturber la lecture des instructions
     }
   };
 
