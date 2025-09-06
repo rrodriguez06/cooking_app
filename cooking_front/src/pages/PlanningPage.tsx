@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout, Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal } from '../components';
 import { mealPlanService } from '../services';
 import { formatDate, getCurrentDate, addDays, getStartOfWeek } from '../utils';
@@ -6,6 +7,7 @@ import type { MealPlan } from '../types';
 import { Calendar, Plus, ChefHat, ShoppingCart, Trash2, Edit2, Check, Eye } from 'lucide-react';
 
 export const PlanningPage: React.FC = () => {
+  const navigate = useNavigate();
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(getStartOfWeek(getCurrentDate()));
@@ -238,7 +240,7 @@ export const PlanningPage: React.FC = () => {
                                     size="sm"
                                     variant="ghost"
                                     className="text-xs h-8 px-3 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                    onClick={() => window.location.href = `/recipe/${meal.recipe.id}`}
+                                    onClick={() => navigate(`/recipe/${meal.recipe.id}`)}
                                     title="Voir la recette complète"
                                   >
                                     <Eye className="h-4 w-4" />

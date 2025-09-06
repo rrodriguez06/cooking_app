@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm } from '../components';
 import { useAuth } from '../context';
 import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
@@ -8,6 +9,7 @@ import { User, Mail, Calendar, ChefHat, Edit2, Heart, List, Plus, Trash2, Edit, 
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
   const [recipeLists, setRecipeLists] = useState<RecipeList[]>([]);
@@ -348,7 +350,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="text-center py-8">
                   <ChefHat className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">Vous n'avez pas encore créé de recettes</p>
-                  <Button onClick={() => window.location.href = '/recipe/new'}>
+                  <Button onClick={() => navigate('/recipe/new')}>
                     Créer ma première recette
                   </Button>
                 </div>
@@ -370,7 +372,7 @@ export const ProfilePage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.location.href = `/recipe/${recipe.id}`}
+                          onClick={() => navigate(`/recipe/${recipe.id}`)}
                           className="flex-1"
                         >
                           <Eye className="h-4 w-4 mr-1" />
@@ -379,7 +381,7 @@ export const ProfilePage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.location.href = `/recipe/${recipe.id}/edit`}
+                          onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
                           className="flex-1"
                         >
                           <Edit className="h-4 w-4 mr-1" />
@@ -437,7 +439,7 @@ export const ProfilePage: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.location.href = `/recipe/${recipe.id}`}
+                          onClick={() => navigate(`/recipe/${recipe.id}`)}
                         >
                           Voir
                         </Button>

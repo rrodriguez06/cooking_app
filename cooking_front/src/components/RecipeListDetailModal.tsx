@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Heart, Clock, Users, Eye, Trash2, ChefHat } from 'lucide-react';
 import { Button, Card, CardContent } from './ui';
 import { recipeListService } from '../services';
@@ -20,6 +21,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
   canEdit = false,
   onRecipeRemoved,
 }) => {
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
   };
 
   const handleRecipeClick = (recipeId: number) => {
-    window.location.href = `/recipe/${recipeId}`;
+    navigate(`/recipe/${recipeId}`);
   };
 
   const handleRemoveRecipe = async (recipeId: number, recipeTitle: string) => {

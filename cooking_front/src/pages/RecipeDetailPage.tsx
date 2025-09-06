@@ -277,7 +277,7 @@ export const RecipeDetailPage: React.FC = () => {
                                 📖 Recette référencée:
                               </p>
                               <Link 
-                                to={`/recipes/${step.referenced_recipe.id}`}
+                                to={`/recipe/${step.referenced_recipe.id}`}
                                 className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium"
                               >
                                 <ChefHat className="h-4 w-4" />
