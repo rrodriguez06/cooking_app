@@ -94,16 +94,24 @@ restart() {
 update() {
     log "Mise à jour de $APP_NAME..."
     
+    # Arrêter et supprimer les containers existants
+    log "Arrêt des containers existants..."
+    docker-compose -f $COMPOSE_FILE down
+    
     # Pull des dernières images
+    log "Téléchargement des dernières images..."
     docker-compose -f $COMPOSE_FILE pull
     
     # Rebuild des images custom
+    log "Reconstruction des images personnalisées..."
     docker-compose -f $COMPOSE_FILE build --no-cache
     
     # Redémarrage avec les nouvelles images
+    log "Démarrage avec les nouvelles images..."
     docker-compose -f $COMPOSE_FILE up -d
     
     # Nettoyage des anciennes images
+    log "Nettoyage des anciennes images..."
     docker image prune -f
     
     log "Mise à jour terminée!"
