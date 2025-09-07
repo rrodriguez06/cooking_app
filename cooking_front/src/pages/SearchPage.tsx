@@ -282,6 +282,11 @@ export const SearchPage: React.FC = () => {
     return count;
   };
 
+  // Fonction pour vérifier si un filtre traditionnel est déjà présent dans les filtres intelligents
+  const isAlreadyInSmartFilters = (type: 'author' | 'ingredient', value: string) => {
+    return smartSearchFilters.some(filter => filter.type === type && filter.value === value);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -336,7 +341,7 @@ export const SearchPage: React.FC = () => {
                       </button>
                     </span>
                   )}
-                  {filters.author && (
+                  {filters.author && !isAlreadyInSmartFilters('author', filters.author) && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
                       Auteur: {filters.author}
                       <button
