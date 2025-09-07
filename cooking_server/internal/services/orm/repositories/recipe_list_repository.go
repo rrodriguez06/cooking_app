@@ -63,10 +63,11 @@ func (r *recipeListRepository) GetByUser(ctx context.Context, userID uint, limit
 	}
 	log.Printf("[RECIPE_LIST_REPO] Found %d total lists for user %d", total, userID)
 
-	// Récupérer les listes avec pagination (sans le preload problématique pour commencer)
+	// Récupérer les listes avec pagination et charger les items pour le comptage
 	log.Printf("[RECIPE_LIST_REPO] Fetching user recipe lists...")
 	if err := r.db.WithContext(ctx).
 		Preload("User").
+		Preload("Items").
 		Where("user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
