@@ -176,6 +176,7 @@ export interface SearchFilters {
   max_total_time?: number;      // Temps total maximum en minutes
   min_rating?: number;          // Note minimale (1-5)
   author_id?: number;           // ID de l'auteur
+  author?: string;              // Username de l'auteur
   page?: number;
   limit?: number;
   sort_by?: string;             // Champ de tri (ex: "created_at", "rating")

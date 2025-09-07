@@ -704,6 +704,15 @@ func (h *RecipeHandler) SearchRecipes(c *gin.Context) {
 		}
 	}
 
+	// Support for author parameter (username)
+	if authorUsername := c.Query("author"); authorUsername != "" {
+		// Find user by username and get their ID
+		user, err := h.ormService.UserRepository.GetByUsername(c.Request.Context(), authorUsername)
+		if err == nil && user != nil {
+			searchQuery.AuthorID = user.ID
+		}
+	}
+
 	// Filtres par listes (ingrédients, équipements, etc.)
 	if ingredients := c.QueryArray("ingredients"); len(ingredients) > 0 {
 		searchQuery.Ingredients = ingredients

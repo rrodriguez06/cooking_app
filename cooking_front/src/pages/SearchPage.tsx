@@ -122,6 +122,7 @@ export const SearchPage: React.FC = () => {
     max_cook_time: searchParams.get('max_cook_time') ? parseInt(searchParams.get('max_cook_time')!) : undefined,
     max_total_time: searchParams.get('max_total_time') ? parseInt(searchParams.get('max_total_time')!) : undefined,
     min_rating: searchParams.get('min_rating') ? parseFloat(searchParams.get('min_rating')!) : undefined,
+    author: searchParams.get('author') || undefined,
     categories: searchParams.get('categories') ? searchParams.get('categories')!.split(',') : [],
     tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') : [],
     ingredients: searchParams.get('ingredients') ? searchParams.get('ingredients')!.split(',') : [],
@@ -219,6 +220,7 @@ export const SearchPage: React.FC = () => {
     if (filters.max_cook_time) count++;
     if (filters.max_total_time) count++;
     if (filters.min_rating) count++;
+    if (filters.author) count++;
     if (filters.categories?.length) count++;
     if (filters.tags?.length) count++;
     if (filters.ingredients?.length) count++;
@@ -280,6 +282,17 @@ export const SearchPage: React.FC = () => {
                         <button
                           onClick={() => removeFilter('difficulty')}
                           className="ml-2 hover:text-blue-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    )}
+                    {filters.author && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                        Auteur: {filters.author}
+                        <button
+                          onClick={() => removeFilter('author')}
+                          className="ml-2 hover:text-purple-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
