@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, Card, Loading, AddIngredientModal, AddEquipmentModal, ImageUpload } from '../components';
+import { Button, Input, Card, Loading, AddIngredientModal, AddEquipmentModal, ImageUpload, IngredientSearch } from '../components';
 import { recipeService } from '../services/recipe';
 import { categoryService, tagService, ingredientService, equipmentService } from '../services/data';
 import type { RecipeCreateRequest, Category, Tag, Ingredient, Equipment, Recipe } from '../types';
@@ -543,16 +543,19 @@ export const RecipeEditPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Ingrédient
                   </label>
-                  <select
-                    {...register(`ingredients.${index}.ingredient_id`, { valueAsNumber: true })}
-                    className="input-field"
-                  >
-                    {(ingredients || []).map(ingredient => (
-                      <option key={ingredient.id} value={ingredient.id}>
-                        {ingredient.icon ? `${ingredient.icon} ${ingredient.name}` : ingredient.name}
-                      </option>
-                    ))}
-                  </select>
+                  <IngredientSearch
+                    ingredients={ingredients || []}
+                    selectedIngredientId={watch(`ingredients.${index}.ingredient_id`)}
+                    onSelect={(ingredient) => {
+                      if (ingredient) {
+                        setValue(`ingredients.${index}.ingredient_id`, ingredient.id);
+                      } else {
+                        setValue(`ingredients.${index}.ingredient_id`, 0);
+                      }
+                    }}
+                    placeholder="Rechercher un ingrédient..."
+                    error={errors.ingredients?.[index]?.ingredient_id?.message}
+                  />
                 </div>
 
                 <div>
