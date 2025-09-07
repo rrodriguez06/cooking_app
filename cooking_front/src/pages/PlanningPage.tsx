@@ -191,138 +191,131 @@ export const PlanningPage: React.FC = () => {
             <p className="text-gray-500">Chargement du planning...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Card>
-              <CardContent className="p-0">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="p-4 text-left font-semibold text-gray-900 w-36 border-r">Type de repas</th>
-                      {weekDays.map((date, dayIndex) => (
-                        <th key={dayIndex} className="p-4 text-center font-semibold text-gray-900 min-w-[220px] border-r last:border-r-0">
-                          <div>
-                            <div className="text-sm">{dayNames[dayIndex]}</div>
-                            <div className="text-xs text-gray-500 font-normal">
-                              {formatDate(date, 'dd/MM')}
-                            </div>
+          <Card>
+            <CardContent className="p-0">
+              <table className="w-full border-collapse table-fixed">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="p-3 text-left font-semibold text-gray-900 w-24 border-r text-xs">Repas</th>
+                    {weekDays.map((date, dayIndex) => (
+                      <th key={dayIndex} className="p-2 text-center font-semibold text-gray-900 border-r last:border-r-0">
+                        <div>
+                          <div className="text-xs font-medium">{dayNames[dayIndex].substring(0, 3)}</div>
+                          <div className="text-xs text-gray-500 font-normal">
+                            {formatDate(date, 'dd/MM')}
                           </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mealTypes.map((mealType) => (
-                      <tr key={mealType.key} className="border-b last:border-b-0">
-                        <td className="p-4 font-medium text-gray-700 bg-gray-50 border-r align-top">
-                          <div className="text-sm">{mealType.label}</div>
-                        </td>
-                        {weekDays.map((date, dayIndex) => {
-                          const dayMeals = getMealsForDate(date);
-                          const meal = dayMeals.find(m => m.meal_type === mealType.key);
-                          
-                          return (
-                            <td key={dayIndex} className="p-3 align-top border-r last:border-r-0">
-                              {meal ? (
-                                <div className={`p-4 rounded-lg border ${mealType.color} space-y-3`}>
-                                  <div>
-                                    <h5 className="font-medium text-sm text-gray-900 mb-1 leading-tight">
-                                      {meal.recipe.title}
-                                    </h5>
-                                    <p className="text-xs text-gray-600">
-                                      {meal.servings} portion{meal.servings > 1 ? 's' : ''}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mealTypes.map((mealType) => (
+                    <tr key={mealType.key} className="border-b last:border-b-0">
+                      <td className="p-3 font-medium text-gray-700 bg-gray-50 border-r align-top">
+                        <div className="text-xs">{mealType.label}</div>
+                      </td>
+                      {weekDays.map((date, dayIndex) => {
+                        const dayMeals = getMealsForDate(date);
+                        const meal = dayMeals.find(m => m.meal_type === mealType.key);
+                        
+                        return (
+                          <td key={dayIndex} className="p-2 align-top border-r last:border-r-0">
+                            {meal ? (
+                              <div className={`p-2 rounded-md border ${mealType.color} space-y-2`}>
+                                <div>
+                                  <h5 className="font-medium text-xs text-gray-900 leading-tight line-clamp-2">
+                                    {meal.recipe.title}
+                                  </h5>
+                                  <p className="text-xs text-gray-600">
+                                    {meal.servings}p
+                                  </p>
+                                  {meal.notes && (
+                                    <p className="text-xs text-gray-500 line-clamp-1">
+                                      {meal.notes}
                                     </p>
-                                    {meal.notes && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        {meal.notes}
-                                      </p>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Actions en grille 2x2 */}
-                                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="text-xs h-8 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                      onClick={() => navigate(`/recipe/${meal.recipe.id}`)}
-                                      title="Voir la recette complète"
-                                    >
-                                      <Eye className="h-3 w-3 mr-1" />
-                                      Voir
-                                    </Button>
-                                    
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="text-xs h-8 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                      onClick={() => {
-                                        setMealToEdit(meal);
-                                        setCurrentMealContext({ 
-                                          date, 
-                                          mealType: mealType.key as any 
-                                        });
-                                        setShowAddMealModal(true);
-                                      }}
-                                      title="Modifier ou remplacer ce repas"
-                                    >
-                                      <Edit2 className="h-3 w-3 mr-1" />
-                                      Modifier
-                                    </Button>
-                                    
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="text-xs h-8 px-2 text-red-600 hover:text-red-800 hover:bg-red-50"
-                                      onClick={() => deleteMealPlan(meal.id)}
-                                      title="Supprimer ce repas"
-                                    >
-                                      <Trash2 className="h-3 w-3 mr-1" />
-                                      Suppr.
-                                    </Button>
-                                    
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className={`text-xs h-8 px-2 ${
-                                        meal.is_completed 
-                                          ? 'text-green-600 bg-green-50' 
-                                          : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-                                      }`}
-                                      onClick={() => markMealAsCompleted(meal.id)}
-                                      disabled={meal.is_completed}
-                                      title={meal.is_completed ? 'Repas terminé ✓' : 'Marquer comme terminé'}
-                                    >
-                                      <Check className="h-3 w-3 mr-1" />
-                                      {meal.is_completed ? 'Fait' : 'OK'}
-                                    </Button>
-                                  </div>
+                                  )}
                                 </div>
-                              ) : (
-                                <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg text-center hover:border-gray-300 transition-colors min-h-[120px] flex items-center justify-center">
+                                
+                                {/* Actions compactes en 2x2 */}
+                                <div className="grid grid-cols-2 gap-1">
                                   <Button
-                                    variant="ghost"
                                     size="sm"
-                                    className="text-xs text-gray-500 hover:text-gray-700"
+                                    variant="ghost"
+                                    className="text-xs h-6 px-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                    onClick={() => navigate(`/recipe/${meal.recipe.id}`)}
+                                    title="Voir la recette complète"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-6 px-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                                     onClick={() => {
-                                      setCurrentMealContext({ date, mealType: mealType.key as any });
+                                      setMealToEdit(meal);
+                                      setCurrentMealContext({ 
+                                        date, 
+                                        mealType: mealType.key as any 
+                                      });
                                       setShowAddMealModal(true);
                                     }}
+                                    title="Modifier ou remplacer ce repas"
                                   >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Ajouter
+                                    <Edit2 className="h-3 w-3" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-6 px-1 text-red-600 hover:text-red-800 hover:bg-red-50"
+                                    onClick={() => deleteMealPlan(meal.id)}
+                                    title="Supprimer ce repas"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className={`text-xs h-6 px-1 ${
+                                      meal.is_completed 
+                                        ? 'text-green-600 bg-green-50' 
+                                        : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                    }`}
+                                    onClick={() => markMealAsCompleted(meal.id)}
+                                    disabled={meal.is_completed}
+                                    title={meal.is_completed ? 'Repas terminé ✓' : 'Marquer comme terminé'}
+                                  >
+                                    <Check className="h-3 w-3" />
                                   </Button>
                                 </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
+                              </div>
+                            ) : (
+                              <div className="p-2 border-2 border-dashed border-gray-200 rounded-md text-center hover:border-gray-300 transition-colors min-h-[80px] flex items-center justify-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs text-gray-500 hover:text-gray-700 h-6 px-1"
+                                  onClick={() => {
+                                    setCurrentMealContext({ date, mealType: mealType.key as any });
+                                    setShowAddMealModal(true);
+                                  }}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
         )}
 
         {/* Quick Actions */}
