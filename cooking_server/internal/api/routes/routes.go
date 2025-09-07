@@ -24,7 +24,7 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	favoriteHandler := handlers.NewFavoriteHandler(ormService)
 	recipeListHandler := handlers.NewRecipeListHandler(ormService)
 	feedHandler := handlers.NewFeedHandler(ormService)
-	uploadHandler := handlers.NewUploadHandler()
+	uploadHandler := handlers.NewUploadHandler(ormService)
 
 	// Configuration des routes pour chaque entité
 	SetupUserRoutes(api, userHandler, jwtService)

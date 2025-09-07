@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm } from '../components';
+import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload } from '../components';
 import { useAuth } from '../context';
 import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
 import { formatDate } from '../utils';
+import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, RecipeList, User as UserType } from '../types';
 import { User, Mail, Calendar, ChefHat, Edit2, Heart, List, Plus, Trash2, Edit, Eye, Users, UserCheck, Shield } from 'lucide-react';
 
@@ -163,7 +164,7 @@ export const ProfilePage: React.FC = () => {
               <div className="flex-shrink-0">
                 {user.avatar ? (
                   <img
-                    src={user.avatar}
+                    src={getFullImageUrl(user.avatar)}
                     alt={user.username}
                     className="w-20 h-20 rounded-full object-cover"
                   />
@@ -189,11 +190,19 @@ export const ProfilePage: React.FC = () => {
                       value={editForm.email}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     />
-                    <Input
-                      label="Avatar (URL)"
-                      value={editForm.avatar}
-                      onChange={(e) => setEditForm({ ...editForm, avatar: e.target.value })}
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Photo de profil
+                      </label>
+                      <ProfileImageUpload
+                        value={editForm.avatar}
+                        onChange={(imageUrl) => setEditForm({ ...editForm, avatar: imageUrl })}
+                        onError={(error) => {
+                          console.error('Erreur upload photo de profil:', error);
+                          // Optionnel : afficher l'erreur à l'utilisateur
+                        }}
+                      />
+                    </div>
                     <div className="flex space-x-2">
                       <Button onClick={handleSaveProfile}>
                         Sauvegarder
@@ -627,7 +636,7 @@ export const ProfilePage: React.FC = () => {
                                 {/* Avatar */}
                                 {follower.avatar ? (
                                   <img
-                                    src={follower.avatar}
+                                    src={getFullImageUrl(follower.avatar)}
                                     alt={follower.username}
                                     className="w-16 h-16 rounded-full object-cover mb-3"
                                   />
@@ -675,7 +684,7 @@ export const ProfilePage: React.FC = () => {
                                 {/* Avatar */}
                                 {followedUser.avatar ? (
                                   <img
-                                    src={followedUser.avatar}
+                                    src={getFullImageUrl(followedUser.avatar)}
                                     alt={followedUser.username}
                                     className="w-16 h-16 rounded-full object-cover mb-3"
                                   />

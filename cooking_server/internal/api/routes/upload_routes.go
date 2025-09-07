@@ -13,6 +13,7 @@ func SetupUploadRoutes(router *gin.RouterGroup, uploadHandler *handlers.UploadHa
 		// Routes protégées par authentification
 		upload.Use(middleware.AuthMiddleware(jwtService))
 		upload.POST("/image", uploadHandler.UploadImage)
+		upload.POST("/profile-image", uploadHandler.UploadProfileImage)
 		upload.DELETE("/image", uploadHandler.DeleteImage)
 	}
 }
