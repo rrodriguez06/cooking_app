@@ -20,6 +20,7 @@ const formatSearchParams = (filters: SearchFilters): URLSearchParams => {
   if (filters.max_total_time) params.append('max_total_time', filters.max_total_time.toString());
   if (filters.min_rating) params.append('min_rating', filters.min_rating.toString());
   if (filters.author_id) params.append('author_id', filters.author_id.toString());
+  if (filters.author) params.append('author', filters.author);
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
   if (filters.sort_by) params.append('sort_by', filters.sort_by);
@@ -57,8 +58,11 @@ export const recipeService = {
 
   // Search recipes
   async searchRecipes(filters: SearchFilters): Promise<RecipeListResponse> {
+    console.log('DEBUG: searchRecipes called with filters:', filters);
     const params = formatSearchParams(filters);
+    console.log('DEBUG: searchRecipes formatted params:', params.toString());
     const response = await api.get<RecipeListResponse>(`/recipes/search?${params.toString()}`);
+    console.log('DEBUG: searchRecipes response:', response.data);
     return response.data;
   },
 
