@@ -32,7 +32,7 @@ RUN apk --no-cache add ca-certificates tzdata
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-WORKDIR /root/
+WORKDIR /app
 
 # Copier les binaires depuis le stage de build
 COPY --from=builder /app/main .
@@ -40,8 +40,11 @@ COPY --from=builder /app/seeder .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seed_data ./seed_data
 
+# Créer le dossier uploads
+RUN mkdir -p /app/uploads/images
+
 # Changer les permissions
-RUN chown -R appuser:appgroup /root
+RUN chown -R appuser:appgroup /app
 USER appuser
 
 # Exposer le port

@@ -75,6 +75,8 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=${DB_PASSWORD:-postgres_password}
       - DB_SSLMODE=disable
+    volumes:
+      - cooking_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,7 +84,7 @@ services:
       - cooking_network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.cooking-api.rule=Host(`cooking.rrodriguez.dev`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.cooking-api.rule=Host(`cooking.rrodriguez.dev`) && (PathPrefix(`/api`) || PathPrefix(`/uploads`))"
       - "traefik.http.routers.cooking-api.tls=true"
       - "traefik.http.routers.cooking-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.cooking-api.loadbalancer.server.port=8080"
@@ -135,6 +137,8 @@ volumes:
     name: cooking_pgadmin_data
   traefik_letsencrypt:
     name: cooking_traefik_letsencrypt
+  cooking_uploads:
+    name: cooking_uploads_data
 
 networks:
   cooking_network:
