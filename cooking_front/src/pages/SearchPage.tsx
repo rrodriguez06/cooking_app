@@ -246,11 +246,6 @@ export const SearchPage: React.FC = () => {
     setFilters(newFilters);
   };
 
-  const handleClearSearch = () => {
-    setSmartSearchFilters([]);
-    clearFilters();
-  };
-
   const clearFilters = () => {
     setFilters({
       sort_by: 'created_at',
@@ -462,7 +457,6 @@ export const SearchPage: React.FC = () => {
               <div className="flex-1">
                 <SmartSearchBar
                   onSearch={handleSmartSearch}
-                  onClear={handleClearSearch}
                   ingredients={ingredients}
                   placeholder="Rechercher une recette, un auteur, un ingrédient..."
                 />

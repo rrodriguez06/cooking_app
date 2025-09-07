@@ -12,7 +12,6 @@ export interface SearchSuggestion {
 
 interface SmartSearchBarProps {
   onSearch: (suggestion: SearchSuggestion) => void;
-  onClear: () => void;
   ingredients: Ingredient[];
   placeholder?: string;
   disabled?: boolean;
@@ -21,7 +20,6 @@ interface SmartSearchBarProps {
 
 export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
   onSearch,
-  onClear,
   ingredients,
   placeholder = "Rechercher une recette, un auteur, un ingrédient...",
   disabled = false,
