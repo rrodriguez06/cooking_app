@@ -56,16 +56,24 @@ export const ProfilePage: React.FC = () => {
         }
 
         // Charger les abonnés et abonnements
+        console.log('Chargement des abonnés pour l\'utilisateur:', user.id);
         const followersResponse = await userFollowService.getFollowers(user.id);
+        console.log('Réponse getFollowers:', followersResponse);
         if (followersResponse.success) {
           setFollowers(followersResponse.data.users);
           setFollowersCount(followersResponse.data.total_count);
+        } else {
+          console.error('Erreur lors du chargement des abonnés:', followersResponse);
         }
 
+        console.log('Chargement des abonnements pour l\'utilisateur:', user.id);
         const followingResponse = await userFollowService.getFollowing(user.id);
+        console.log('Réponse getFollowing:', followingResponse);
         if (followingResponse.success) {
           setFollowing(followingResponse.data.users);
           setFollowingCount(followingResponse.data.total_count);
+        } else {
+          console.error('Erreur lors du chargement des abonnements:', followingResponse);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
