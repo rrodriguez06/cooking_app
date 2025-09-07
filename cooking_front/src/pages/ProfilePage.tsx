@@ -44,51 +44,69 @@ export const ProfilePage: React.FC = () => {
       
       try {
         // Charger les recettes de l'utilisateur
-        console.log('Chargement des recettes pour l\'utilisateur:', user.id);
-        const recipesResponse = await recipeService.getUserRecipes(parseInt(user.id));
-        console.log('Réponse getUserRecipes:', recipesResponse);
-        if (recipesResponse.success) {
-          setUserRecipes(recipesResponse.data.recipes);
+        try {
+          console.log('Chargement des recettes pour l\'utilisateur:', user.id);
+          const recipesResponse = await recipeService.getUserRecipes(parseInt(user.id));
+          console.log('Réponse getUserRecipes:', recipesResponse);
+          if (recipesResponse.success) {
+            setUserRecipes(recipesResponse.data.recipes);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des recettes:', error);
         }
 
         // Charger les favoris
-        console.log('Chargement des favoris');
-        const favoritesResponse = await favoriteService.getUserFavorites();
-        console.log('Réponse getUserFavorites:', favoritesResponse);
-        if (favoritesResponse.success) {
-          setFavoriteRecipes(favoritesResponse.data.recipes);
+        try {
+          console.log('Chargement des favoris');
+          const favoritesResponse = await favoriteService.getUserFavorites();
+          console.log('Réponse getUserFavorites:', favoritesResponse);
+          if (favoritesResponse.success) {
+            setFavoriteRecipes(favoritesResponse.data.recipes);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des favoris:', error);
         }
 
         // Charger les listes
-        console.log('Chargement des listes');
-        const listsResponse = await recipeListService.getUserRecipeLists();
-        console.log('Réponse getUserRecipeLists:', listsResponse);
-        if (listsResponse.success) {
-          setRecipeLists(listsResponse.data.lists);
+        try {
+          console.log('Chargement des listes');
+          const listsResponse = await recipeListService.getUserRecipeLists();
+          console.log('Réponse getUserRecipeLists:', listsResponse);
+          if (listsResponse.success) {
+            setRecipeLists(listsResponse.data.lists);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des listes:', error);
         }
 
         // Charger les abonnés et abonnements
-        console.log('Chargement des abonnés pour l\'utilisateur:', user.id);
-        const followersResponse = await userFollowService.getFollowers(user.id);
-        console.log('Réponse getFollowers:', followersResponse);
-        if (followersResponse.success) {
-          setFollowers(followersResponse.data.users);
-          setFollowersCount(followersResponse.data.total_count);
-        } else {
-          console.error('Erreur lors du chargement des abonnés:', followersResponse);
+        try {
+          console.log('Chargement des abonnés pour l\'utilisateur:', user.id);
+          const followersResponse = await userFollowService.getFollowers(user.id);
+          console.log('Réponse getFollowers:', followersResponse);
+          if (followersResponse.success) {
+            setFollowers(followersResponse.data.users);
+            setFollowersCount(followersResponse.data.total_count);
+          } else {
+            console.error('Erreur lors du chargement des abonnés:', followersResponse);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des abonnés:', error);
         }
 
-        console.log('Chargement des abonnements pour l\'utilisateur:', user.id);
-        const followingResponse = await userFollowService.getFollowing(user.id);
-        console.log('Réponse getFollowing:', followingResponse);
-        if (followingResponse.success) {
-          setFollowing(followingResponse.data.users);
-          setFollowingCount(followingResponse.data.total_count);
-        } else {
-          console.error('Erreur lors du chargement des abonnements:', followingResponse);
+        try {
+          console.log('Chargement des abonnements pour l\'utilisateur:', user.id);
+          const followingResponse = await userFollowService.getFollowing(user.id);
+          console.log('Réponse getFollowing:', followingResponse);
+          if (followingResponse.success) {
+            setFollowing(followingResponse.data.users);
+            setFollowingCount(followingResponse.data.total_count);
+          } else {
+            console.error('Erreur lors du chargement des abonnements:', followingResponse);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des abonnements:', error);
         }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
       } finally {
         setIsLoading(false);
       }
