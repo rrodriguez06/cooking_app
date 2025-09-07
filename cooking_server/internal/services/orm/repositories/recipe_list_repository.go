@@ -70,7 +70,7 @@ func (r *recipeListRepository) GetByUser(ctx context.Context, userID uint, limit
 		Where("user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
-		Order("created_at DESC").
+		Order("id DESC").
 		Find(&lists).Error; err != nil {
 		log.Printf("[RECIPE_LIST_REPO] Error fetching user recipe lists: %v", err)
 		return nil, 0, ormerrors.NewDatabaseError("get user recipe lists", err)
