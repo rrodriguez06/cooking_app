@@ -29,7 +29,7 @@ type RecipeIngredient struct {
 type RecipeIngredientRequest struct {
 	IngredientID uint    `json:"ingredient_id" binding:"required"`
 	Quantity     float64 `json:"quantity" binding:"min=0"`
-	Unit         string  `json:"unit" binding:"required"`
+	Unit         string  `json:"unit,omitempty"`
 	Notes        string  `json:"notes,omitempty"`
 	IsOptional   bool    `json:"is_optional"`
 }

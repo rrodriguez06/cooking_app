@@ -51,7 +51,7 @@ export const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({
         success: boolean;
         data: Equipment;
         message?: string;
-      }>('/equipments', {
+      }>('/equipment', {
         name: formData.name.trim(),
         description: formData.description.trim(),
         category: formData.category,

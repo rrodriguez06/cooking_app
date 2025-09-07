@@ -49,7 +49,8 @@ export function ShoppingListModal({ isOpen, onClose, startDate, endDate }: Shopp
   const formatQuantity = (quantity: number, unit: string) => {
     // Arrondir à 2 décimales si nécessaire
     const rounded = Math.round(quantity * 100) / 100;
-    return `${rounded} ${unit}`;
+    const displayUnit = unit || 'pièce';
+    return `${rounded} ${displayUnit}`;
   };
 
   const getMealTypeLabel = (mealType: string) => {

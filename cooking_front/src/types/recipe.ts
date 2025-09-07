@@ -118,7 +118,7 @@ export interface RecipeStepRequest {
 export interface RecipeIngredientRequest {
   ingredient_id: number;
   quantity: number;
-  unit: string;
+  unit?: string;
   notes?: string;
 }
 

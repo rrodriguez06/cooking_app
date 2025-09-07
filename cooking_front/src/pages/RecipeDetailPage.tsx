@@ -241,7 +241,7 @@ export const RecipeDetailPage: React.FC = () => {
                           <span>{ingredient.ingredient.name}</span>
                         </div>
                         <span className="text-sm text-gray-600">
-                          {ingredient.quantity} {ingredient.unit}
+                          {ingredient.quantity} {ingredient.unit || 'pièce'}
                         </span>
                       </li>
                     ))}

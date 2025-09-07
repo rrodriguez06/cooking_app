@@ -47,9 +47,24 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 		return
 	}
 
-	// TODO: Récupérer l'ID de l'utilisateur depuis le token JWT
-	// Pour l'instant, on utilise un ID fictif
-	authorID := uint(1) // TODO: Extraire de l'authentification
+	// Récupérer l'ID de l'utilisateur depuis le contexte d'authentification
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "User not authenticated",
+		})
+		return
+	}
+
+	authorID, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal server error",
+			"message": "Invalid user ID format",
+		})
+		return
+	}
 
 	// Convertir les étapes de la requête en RecipeSteps
 	var instructions dto.RecipeSteps
@@ -90,11 +105,17 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 
 	// Ajouter les ingrédients
 	for _, ingredientReq := range req.Ingredients {
+		// Utiliser "pièce" par défaut si l'unité est vide
+		unit := ingredientReq.Unit
+		if unit == "" {
+			unit = "pièce"
+		}
+
 		recipeIngredient := &dto.RecipeIngredient{
 			RecipeID:     recipe.ID,
 			IngredientID: ingredientReq.IngredientID,
 			Quantity:     ingredientReq.Quantity,
-			Unit:         ingredientReq.Unit,
+			Unit:         unit,
 			Notes:        ingredientReq.Notes,
 			IsOptional:   ingredientReq.IsOptional,
 		}
@@ -340,11 +361,17 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 
 		// Ajouter les nouveaux ingrédients
 		for _, ingredientReq := range req.Ingredients {
+			// Utiliser "pièce" par défaut si l'unité est vide
+			unit := ingredientReq.Unit
+			if unit == "" {
+				unit = "pièce"
+			}
+
 			recipeIngredient := &dto.RecipeIngredient{
 				RecipeID:     recipe.ID,
 				IngredientID: ingredientReq.IngredientID,
 				Quantity:     ingredientReq.Quantity,
-				Unit:         ingredientReq.Unit,
+				Unit:         unit,
 				Notes:        ingredientReq.Notes,
 				IsOptional:   ingredientReq.IsOptional,
 			}

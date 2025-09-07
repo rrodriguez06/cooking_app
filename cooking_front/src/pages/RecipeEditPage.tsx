@@ -23,7 +23,7 @@ const recipeSchema = z.object({
   ingredients: z.array(z.object({
     ingredient_id: z.number().min(1, 'Un ingrédient est requis'),
     quantity: z.number().min(0, 'La quantité doit être positive'),
-    unit: z.string().min(1, 'L\'unité est requise'),
+    unit: z.string().optional(),
     notes: z.string().optional(),
   })).min(1, 'Au moins un ingrédient est requis'),
   instructions: z.array(z.object({
@@ -562,11 +562,11 @@ export const RecipeEditPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unité
+                    Unité (optionnel)
                   </label>
                   <Input
                     {...register(`ingredients.${index}.unit`)}
-                    placeholder="g, ml, cuillères..."
+                    placeholder="g, ml, cuillères... (défaut: pièce)"
                   />
                 </div>
 
