@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeActions, UserLink } from '../components';
+import { Layout, Card, CardContent, Button, RecipeActions, UserLink, SmartSearchBar } from '../components';
+import type { SearchSuggestion } from '../components/SmartSearchBar';
 import { recipeService, categoryService, tagService, ingredientService, equipmentService } from '../services';
 import { useDebounce } from '../hooks';
 import { formatTime } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, SearchFilters, Category, Tag, Ingredient, Equipment } from '../types';
-import { Search, Filter, Clock, Users, ChefHat, Star, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, Clock, Users, ChefHat, Star, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const RecipeCard: React.FC<{ recipe: Recipe }> = ({ recipe }) => (
   <Card className="hover:shadow-lg transition-shadow duration-200 group">
@@ -196,6 +197,38 @@ export const SearchPage: React.FC = () => {
     });
   };
 
+  const handleSmartSearch = (suggestion: SearchSuggestion) => {
+    // Réinitialiser les filtres pour éviter les conflits
+    const newFilters: SearchFilters = {
+      sort_by: 'created_at',
+      sort_order: 'desc'
+    };
+
+    // Appliquer le filtre selon le type de suggestion
+    switch (suggestion.type) {
+      case 'recipe':
+        newFilters.q = suggestion.value;
+        break;
+      case 'author':
+        newFilters.author = suggestion.value;
+        break;
+      case 'ingredient':
+        // Trouver l'ID de l'ingrédient
+        const ingredient = ingredients.find(ing => ing.name === suggestion.value);
+        if (ingredient) {
+          newFilters.ingredients = [ingredient.id.toString()];
+        }
+        break;
+    }
+
+    setFilters(newFilters);
+    setSearchQuery(''); // Vider la barre de recherche simple
+  };
+
+  const handleClearSearch = () => {
+    clearFilters();
+  };
+
   const clearFilters = () => {
     setFilters({
       sort_by: 'created_at',
@@ -239,21 +272,17 @@ export const SearchPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Search Bar */}
+        {/* Smart Search Bar */}
         <Card>
           <CardContent className="p-6">
             <div className="flex space-x-4">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher par nom, ingrédient..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
+                <SmartSearchBar
+                  onSearch={handleSmartSearch}
+                  onClear={handleClearSearch}
+                  ingredients={ingredients}
+                  placeholder="Rechercher une recette, un auteur, un ingrédient..."
+                />
               </div>
               <Button
                 variant="secondary"

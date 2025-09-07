@@ -21,3 +21,4 @@ export * from './ImageUpload';
 export * from './ProfileImageUpload';
 export * from './Timer';
 export * from './IngredientSearch';
+export * from './SmartSearchBar';
