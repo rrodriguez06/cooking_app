@@ -38,6 +38,7 @@ func (r *recipeRepository) GetByID(ctx context.Context, id uint) (*dto.Recipe, e
 	if err := r.db.WithContext(ctx).
 		Preload("Author").
 		Preload("OriginalRecipe").
+		Preload("OriginalRecipe.Author").
 		Preload("Ingredients.Ingredient").
 		Preload("Equipments.Equipment").
 		Preload("Tags").
@@ -575,13 +576,17 @@ func (r *recipeRepository) Copy(ctx context.Context, originalRecipeID, newAuthor
 		Difficulty:       originalRecipe.Difficulty,
 		ImageURL:         originalRecipe.ImageURL,
 		IsPublic:         false, // Les copies sont privées par défaut
-		IsOriginal:       false,
 		OriginalRecipeID: &originalRecipeID,
 		AuthorID:         newAuthorID,
 	}
 
 	if err := r.db.WithContext(ctx).Create(newRecipe).Error; err != nil {
 		return nil, ormerrors.NewDatabaseError("copy recipe", err)
+	}
+
+	// Forcer explicitement IsOriginal à false après la création
+	if err := r.db.WithContext(ctx).Model(newRecipe).Update("is_original", false).Error; err != nil {
+		return nil, ormerrors.NewDatabaseError("update is_original", err)
 	}
 
 	// Copier les ingrédients

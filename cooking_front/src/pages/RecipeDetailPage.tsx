@@ -6,7 +6,7 @@ import { recipeService, authService } from '../services';
 import { formatTime, formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, User } from '../types';
-import { Clock, Users, ChefHat, Edit, Copy, ArrowLeft, Calendar, Star, Trash2 } from 'lucide-react';
+import { Clock, Users, ChefHat, Edit, Copy, ArrowLeft, Calendar, Star, Trash2, ChevronRight } from 'lucide-react';
 
 export const RecipeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -219,6 +219,30 @@ export const RecipeDetailPage: React.FC = () => {
                     <div className="mt-4 text-sm text-gray-500">
                       Par <UserLink user={recipe.author} /> • {formatDate(recipe.created_at)}
                     </div>
+                    
+                    {/* Affichage du lien vers la recette originale si c'est une copie */}
+                    {!recipe.is_original && recipe.original_recipe && (
+                      <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r">
+                        <div className="flex items-center space-x-2">
+                          <Copy className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm text-blue-800 font-medium">
+                            Adaptation de la recette originale :
+                          </span>
+                        </div>
+                        <Link 
+                          to={`/recipe/${recipe.original_recipe.id}`}
+                          className="mt-1 inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          <span>{recipe.original_recipe.title}</span>
+                          <ChevronRight className="h-3 w-3 ml-1" />
+                        </Link>
+                        {recipe.original_recipe.author && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            par <UserLink user={recipe.original_recipe.author} />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
