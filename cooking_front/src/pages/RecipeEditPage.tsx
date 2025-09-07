@@ -106,10 +106,10 @@ export const RecipeEditPage: React.FC = () => {
       try {
         console.log('RecipeEditPage: Fetching categories, tags, ingredients, equipments, recipes...');
         const [categoriesResponse, tagsResponse, ingredientsResponse, equipmentsResponse, recipesResponse] = await Promise.all([
-          categoryService.getCategories().catch(e => { console.error('Categories error:', e); return { success: false, data: [] }; }),
-          tagService.getTags().catch(e => { console.error('Tags error:', e); return { success: false, data: [] }; }),
-          ingredientService.getIngredients().catch(e => { console.error('Ingredients error:', e); return { success: false, data: [] }; }),
-          equipmentService.getEquipments().catch(e => { console.error('Equipments error:', e); return { success: false, data: [] }; }),
+          categoryService.getCategories({ limit: 100 }).catch(e => { console.error('Categories error:', e); return { success: false, data: [] }; }),
+          tagService.getTags({ limit: 100 }).catch(e => { console.error('Tags error:', e); return { success: false, data: [] }; }),
+          ingredientService.getIngredients({ limit: 100 }).catch(e => { console.error('Ingredients error:', e); return { success: false, data: [] }; }),
+          equipmentService.getEquipments({ limit: 100 }).catch(e => { console.error('Equipments error:', e); return { success: false, data: [] }; }),
           recipeService.searchRecipes({}).catch(e => { console.error('Recipes error:', e); return { success: false, data: { recipes: [] } }; })
         ]);
         
@@ -119,6 +119,12 @@ export const RecipeEditPage: React.FC = () => {
           ingredientsResponse,
           equipmentsResponse
         });
+        
+        // Log des comptes pour vérifier qu'on récupère tous les éléments
+        console.log('Categories count:', categoriesResponse.data?.length || 0);
+        console.log('Tags count:', tagsResponse.data?.length || 0);
+        console.log('Ingredients count:', ingredientsResponse.data?.length || 0);
+        console.log('Equipments count:', equipmentsResponse.data?.length || 0);
         
         // Log each response structure individually
         console.log('Categories response details:', JSON.stringify(categoriesResponse, null, 2));

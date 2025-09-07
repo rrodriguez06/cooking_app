@@ -102,8 +102,8 @@ export const ingredientService = {
 
 // Equipment service
 export const equipmentService = {
-  async getEquipments(): Promise<{ success: boolean; data: Equipment[] }> {
-    const response = await api.get('/equipment');
+  async getEquipments(params?: QueryParams): Promise<{ success: boolean; data: Equipment[] }> {
+    const response = await api.get('/equipment', { params });
     return {
       success: response.data.success,
       data: response.data.data?.equipment || []

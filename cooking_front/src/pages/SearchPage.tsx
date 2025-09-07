@@ -137,10 +137,10 @@ export const SearchPage: React.FC = () => {
     const loadReferenceData = async () => {
       try {
         const [categoriesRes, tagsRes, ingredientsRes, equipmentsRes] = await Promise.all([
-          categoryService.getCategories(),
-          tagService.getTags(),
-          ingredientService.getIngredients(),
-          equipmentService.getEquipments(),
+          categoryService.getCategories({ limit: 100 }),
+          tagService.getTags({ limit: 100 }),
+          ingredientService.getIngredients({ limit: 100 }),
+          equipmentService.getEquipments({ limit: 100 }),
         ]);
 
         if (categoriesRes.success) setCategories(categoriesRes.data);
