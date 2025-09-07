@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, User, ChefHat } from 'lucide-react';
-import type { Ingredient } from '../types';
+import type { Ingredient, User as UserType } from '../types';
 
 export interface SearchSuggestion {
   type: 'recipe' | 'author' | 'ingredient';
@@ -13,6 +13,7 @@ export interface SearchSuggestion {
 interface SmartSearchBarProps {
   onSearch: (suggestion: SearchSuggestion) => void;
   ingredients: Ingredient[];
+  users?: UserType[]; // Nouvelle prop pour les utilisateurs
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -21,6 +22,7 @@ interface SmartSearchBarProps {
 export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
   onSearch,
   ingredients,
+  users = [], // Valeur par défaut
   placeholder = "Rechercher une recette, un auteur, un ingrédient...",
   disabled = false,
   className = ""
@@ -52,9 +54,25 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
       meta: 'Recherche par nom de recette'
     });
 
-    // Proposer la recherche par auteur si ça pourrait être un nom d'utilisateur
-    // (pas de caractères spéciaux, longueur raisonnable)
-    if (/^[a-zA-Z0-9_-]+$/.test(searchTerm) && searchTerm.length >= 2) {
+    // Rechercher des utilisateurs correspondants (insensible à la casse)
+    const matchingUsers = users
+      .filter(user => 
+        user.username.toLowerCase().startsWith(searchTerm)
+      )
+      .slice(0, 5); // Limiter à 5 suggestions d'utilisateurs
+
+    matchingUsers.forEach(user => {
+      newSuggestions.push({
+        type: 'author',
+        value: user.username,
+        label: `Auteur: ${user.username}`,
+        meta: 'Utilisateur trouvé'
+      });
+    });
+
+    // Si aucun utilisateur trouvé et que le terme pourrait être un nom d'utilisateur
+    // Proposer une recherche générique (comportement de fallback)
+    if (matchingUsers.length === 0 && /^[a-zA-Z0-9_-]+$/.test(searchTerm) && searchTerm.length >= 2) {
       newSuggestions.push({
         type: 'author',
         value: query,
@@ -83,7 +101,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
 
     setSuggestions(newSuggestions);
     setHighlightedIndex(-1);
-  }, [query, ingredients]);
+  }, [query, ingredients, users]);
 
   // Fermer le dropdown quand on clique ailleurs
   useEffect(() => {

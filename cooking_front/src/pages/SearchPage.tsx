@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Layout, Card, CardContent, Button, RecipeActions, UserLink, SmartSearchBar } from '../components';
 import type { SearchSuggestion } from '../components/SmartSearchBar';
-import { recipeService, categoryService, tagService, ingredientService } from '../services';
+import { recipeService, categoryService, tagService, ingredientService, userService } from '../services';
 import { useDebounce } from '../hooks';
 import { formatTime } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
-import type { Recipe, SearchFilters, Category, Tag, Ingredient } from '../types';
+import type { Recipe, SearchFilters, Category, Tag, Ingredient, User } from '../types';
 import { Filter, Clock, Users, ChefHat, Star, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const RecipeCard: React.FC<{ recipe: Recipe }> = ({ recipe }) => (
@@ -116,6 +116,7 @@ export const SearchPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [filters, setFilters] = useState<SearchFilters>({
     difficulty: searchParams.get('difficulty') as any || undefined,
@@ -137,15 +138,17 @@ export const SearchPage: React.FC = () => {
   useEffect(() => {
     const loadReferenceData = async () => {
       try {
-        const [categoriesRes, tagsRes, ingredientsRes] = await Promise.all([
+        const [categoriesRes, tagsRes, ingredientsRes, usersRes] = await Promise.all([
           categoryService.getCategories({ limit: 100 }),
           tagService.getTags({ limit: 100 }),
           ingredientService.getIngredients({ limit: 100 }),
+          userService.listUsers({ limit: 100 }), // Charger les utilisateurs
         ]);
 
         if (categoriesRes.success) setCategories(categoriesRes.data);
         if (tagsRes.success) setTags(tagsRes.data);
         if (ingredientsRes.success) setIngredients(ingredientsRes.data);
+        if (usersRes.success) setUsers(usersRes.data.users);
       } catch (error) {
         console.error('Error loading reference data:', error);
       }
@@ -458,6 +461,7 @@ export const SearchPage: React.FC = () => {
                 <SmartSearchBar
                   onSearch={handleSmartSearch}
                   ingredients={ingredients}
+                  users={users}
                   placeholder="Rechercher une recette, un auteur, un ingrédient..."
                 />
               </div>
