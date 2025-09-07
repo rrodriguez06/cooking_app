@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -706,10 +707,14 @@ func (h *RecipeHandler) SearchRecipes(c *gin.Context) {
 
 	// Support for author parameter (username)
 	if authorUsername := c.Query("author"); authorUsername != "" {
+		fmt.Printf("DEBUG: SearchRecipes - author parameter received: %s\n", authorUsername)
 		// Find user by username and get their ID
 		user, err := h.ormService.UserRepository.GetByUsername(c.Request.Context(), authorUsername)
 		if err == nil && user != nil {
+			fmt.Printf("DEBUG: SearchRecipes - found user %s with ID: %d\n", authorUsername, user.ID)
 			searchQuery.AuthorID = user.ID
+		} else {
+			fmt.Printf("DEBUG: SearchRecipes - error finding user %s: %v\n", authorUsername, err)
 		}
 	}
 
@@ -731,6 +736,10 @@ func (h *RecipeHandler) SearchRecipes(c *gin.Context) {
 	}
 
 	// Effectuer la recherche
+	// Debug: afficher la requête finale
+	fmt.Printf("DEBUG: SearchRecipes - Final searchQuery.AuthorID: %d\n", searchQuery.AuthorID)
+	fmt.Printf("DEBUG: SearchRecipes - Final searchQuery: %+v\n", searchQuery)
+
 	recipes, total, err := h.ormService.RecipeRepository.Search(c.Request.Context(), searchQuery)
 	if err != nil {
 		// Log détaillé de l'erreur

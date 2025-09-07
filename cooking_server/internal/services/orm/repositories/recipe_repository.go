@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -366,7 +367,10 @@ func (r *recipeRepository) Search(ctx context.Context, searchReq *dto.SearchQuer
 
 	// Filtrage par auteur
 	if searchReq.AuthorID > 0 {
+		fmt.Printf("DEBUG: Repository - Applying author filter with ID: %d\n", searchReq.AuthorID)
 		query = query.Where("author_id = ?", searchReq.AuthorID)
+	} else {
+		fmt.Printf("DEBUG: Repository - No author filter applied (AuthorID: %d)\n", searchReq.AuthorID)
 	}
 
 	// Filtrage par ingrédients
