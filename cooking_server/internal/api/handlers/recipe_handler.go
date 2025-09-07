@@ -308,9 +308,8 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 	if req.Title != "" {
 		recipe.Title = req.Title
 	}
-	if req.Description != "" {
-		recipe.Description = req.Description
-	}
+	// Toujours mettre à jour la description (y compris pour la vider)
+	recipe.Description = req.Description
 	if len(req.Instructions) > 0 {
 		var instructions dto.RecipeSteps
 		for _, stepReq := range req.Instructions {
