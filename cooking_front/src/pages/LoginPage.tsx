@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-do
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../context';
-import { Button, Input, Card, CardContent, ForgotPasswordModal } from '../components';
+import { Button, Input, Card, CardContent, ForgotPasswordModal, ProfileImageUpload } from '../components';
 import { userLoginSchema, userRegisterSchema } from '../utils/validation';
 import type { UserLoginData, UserRegisterData } from '../utils/validation';
 import { ChefHat } from 'lucide-react';
@@ -17,6 +17,7 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [profileImage, setProfileImage] = useState<string>(''); // État pour l'image de profil
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -36,13 +37,12 @@ export const LoginPage: React.FC = () => {
     },
   });
 
-  const registerForm = useForm<UserRegisterData>({
-    resolver: zodResolver(userRegisterSchema),
+  const registerForm = useForm<Pick<UserRegisterData, 'username' | 'email' | 'password'>>({
+    resolver: zodResolver(userRegisterSchema.omit({ avatar: true })),
     defaultValues: {
       username: '',
       email: '',
       password: '',
-      avatar: '',
     },
   });
 
@@ -63,13 +63,14 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleRegister = async (data: UserRegisterData) => {
+  const handleRegister = async (data: Pick<UserRegisterData, 'username' | 'email' | 'password'>) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await register(data.username, data.email, data.password, data.avatar || undefined);
-      // Let the useEffect handle navigation
+      // Créer l'utilisateur d'abord sans avatar
+      await register(data.username, data.email, data.password, profileImage || undefined);
+      // La navigation sera gérée par useEffect
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
@@ -80,6 +81,7 @@ export const LoginPage: React.FC = () => {
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError(null);
+    setProfileImage(''); // Reset l'image de profil
     loginForm.reset();
     registerForm.reset();
   };
@@ -182,12 +184,18 @@ export const LoginPage: React.FC = () => {
                   {...registerForm.register('password')}
                   error={registerForm.formState.errors.password?.message}
                 />
-                <Input
-                  label="Avatar (URL optionnel)"
-                  {...registerForm.register('avatar')}
-                  error={registerForm.formState.errors.avatar?.message}
-                  helperText="Lien vers une image de profil"
-                />
+                
+                {/* Upload de photo de profil */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Photo de profil (optionnel)
+                  </label>
+                  <ProfileImageUpload
+                    value={profileImage}
+                    onChange={(imageUrl: string) => setProfileImage(imageUrl)}
+                  />
+                </div>
+                
                 <Button
                   type="submit"
                   className="w-full"
