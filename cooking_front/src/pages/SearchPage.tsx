@@ -287,6 +287,154 @@ export const SearchPage: React.FC = () => {
     return smartSearchFilters.some(filter => filter.type === type && filter.value === value);
   };
 
+  // Fonction pour créer tous les tags unifiés (smart + traditional sans doublons)
+  const getAllActiveTags = () => {
+    const activeTags: Array<{type: string, smartIndex?: number, element: React.ReactElement}> = [];
+    
+    // Ajouter tous les smartSearchFilters en premier
+    smartSearchFilters.forEach((filter, index) => {
+      activeTags.push({
+        type: 'smart',
+        smartIndex: index,
+        element: (
+          <span key={`smart-${index}`} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+            filter.type === 'recipe' ? 'bg-blue-100 text-blue-800' :
+            filter.type === 'author' ? 'bg-purple-100 text-purple-800' :
+            'bg-green-100 text-green-800'
+          }`}>
+            {filter.type === 'recipe' && '📋 '}
+            {filter.type === 'author' && '👤 '}
+            {filter.type === 'ingredient' && '🥕 '}
+            {filter.label}
+            <button
+              onClick={() => removeSmartSearchFilter(index)}
+              className={`ml-2 ${
+                filter.type === 'recipe' ? 'hover:text-blue-600' :
+                filter.type === 'author' ? 'hover:text-purple-600' :
+                'hover:text-green-600'
+              }`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )
+      });
+    });
+
+    // Ajouter les filtres traditionnels seulement s'ils ne sont pas déjà dans les smart filters
+    if (filters.difficulty) {
+      activeTags.push({
+        type: 'traditional',
+        element: (
+          <span key="difficulty" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+            Difficulté: {filters.difficulty === 'easy' ? 'Facile' : filters.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
+            <button
+              onClick={() => removeFilter('difficulty')}
+              className="ml-2 hover:text-blue-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )
+      });
+    }
+
+    if (filters.author && !isAlreadyInSmartFilters('author', filters.author)) {
+      activeTags.push({
+        type: 'traditional',
+        element: (
+          <span key="author" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+            Auteur: {filters.author}
+            <button
+              onClick={() => removeFilter('author')}
+              className="ml-2 hover:text-purple-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )
+      });
+    }
+
+    if (filters.min_rating) {
+      activeTags.push({
+        type: 'traditional',
+        element: (
+          <span key="min_rating" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+            Note min: {filters.min_rating} ⭐
+            <button
+              onClick={() => removeFilter('min_rating')}
+              className="ml-2 hover:text-yellow-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )
+      });
+    }
+
+    if (filters.max_total_time) {
+      activeTags.push({
+        type: 'traditional',
+        element: (
+          <span key="max_total_time" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+            Max {filters.max_total_time}min
+            <button
+              onClick={() => removeFilter('max_total_time')}
+              className="ml-2 hover:text-green-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )
+      });
+    }
+
+    // Ajouter les catégories
+    filters.categories?.forEach(catId => {
+      const category = categories.find(c => c.id.toString() === catId);
+      if (category) {
+        activeTags.push({
+          type: 'traditional',
+          element: (
+            <span key={`category-${catId}`} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+              {category.name}
+              <button
+                onClick={() => removeFilter('categories', catId)}
+                className="ml-2 hover:text-purple-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )
+        });
+      }
+    });
+
+    // Ajouter les tags
+    filters.tags?.forEach(tagId => {
+      const tag = tags.find(t => t.id.toString() === tagId);
+      if (tag) {
+        activeTags.push({
+          type: 'traditional',
+          element: (
+            <span key={`tag-${tagId}`} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
+              {tag.name}
+              <button
+                onClick={() => removeFilter('tags', tagId)}
+                className="ml-2 hover:text-indigo-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )
+        });
+      }
+    });
+
+    return activeTags;
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -305,103 +453,7 @@ export const SearchPage: React.FC = () => {
             {(getActiveFiltersCount() > 0 || smartSearchFilters.length > 0) && (
               <div className="mb-4">
                 <div className="flex flex-wrap gap-2">
-                  {/* Smart Search Filters */}
-                  {smartSearchFilters.map((filter, index) => (
-                    <span key={index} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                      filter.type === 'recipe' ? 'bg-blue-100 text-blue-800' :
-                      filter.type === 'author' ? 'bg-purple-100 text-purple-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {filter.type === 'recipe' && '📋 '}
-                      {filter.type === 'author' && '👤 '}
-                      {filter.type === 'ingredient' && '🥕 '}
-                      {filter.label}
-                      <button
-                        onClick={() => removeSmartSearchFilter(index)}
-                        className={`ml-2 ${
-                          filter.type === 'recipe' ? 'hover:text-blue-600' :
-                          filter.type === 'author' ? 'hover:text-purple-600' :
-                          'hover:text-green-600'
-                        }`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                  
-                  {/* Traditional Filters */}
-                  {filters.difficulty && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                      Difficulté: {filters.difficulty === 'easy' ? 'Facile' : filters.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-                      <button
-                        onClick={() => removeFilter('difficulty')}
-                        className="ml-2 hover:text-blue-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filters.author && !isAlreadyInSmartFilters('author', filters.author) && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                      Auteur: {filters.author}
-                      <button
-                        onClick={() => removeFilter('author')}
-                        className="ml-2 hover:text-purple-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filters.min_rating && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                      Note min: {filters.min_rating} ⭐
-                      <button
-                        onClick={() => removeFilter('min_rating')}
-                        className="ml-2 hover:text-yellow-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filters.max_total_time && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                      Max {filters.max_total_time}min
-                      <button
-                        onClick={() => removeFilter('max_total_time')}
-                        className="ml-2 hover:text-green-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  )}
-                  {filters.categories?.map(catId => {
-                    const category = categories.find(c => c.id.toString() === catId);
-                    return category ? (
-                      <span key={catId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                        {category.name}
-                        <button
-                          onClick={() => removeFilter('categories', catId)}
-                          className="ml-2 hover:text-purple-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ) : null;
-                  })}
-                  {filters.tags?.map(tagId => {
-                    const tag = tags.find(t => t.id.toString() === tagId);
-                    return tag ? (
-                      <span key={tagId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
-                        {tag.name}
-                        <button
-                          onClick={() => removeFilter('tags', tagId)}
-                          className="ml-2 hover:text-indigo-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ) : null;
-                  })}
+                  {getAllActiveTags().map(tag => tag.element)}
                 </div>
               </div>
             )}
