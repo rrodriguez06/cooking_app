@@ -47,27 +47,35 @@ func (r *recipeListRepository) GetByID(ctx context.Context, id uint) (*dto.Recip
 
 // GetByUser récupère les listes de recettes d'un utilisateur avec pagination
 func (r *recipeListRepository) GetByUser(ctx context.Context, userID uint, limit, offset int) ([]*dto.RecipeList, int64, error) {
+	log.Printf("[RECIPE_LIST_REPO] GetByUser called - UserID: %d, Limit: %d, Offset: %d", userID, limit, offset)
+
 	var lists []*dto.RecipeList
 	var total int64
 
 	// Compter le total
+	log.Printf("[RECIPE_LIST_REPO] Counting user recipe lists...")
 	if err := r.db.WithContext(ctx).
 		Model(&dto.RecipeList{}).
 		Where("user_id = ?", userID).
 		Count(&total).Error; err != nil {
+		log.Printf("[RECIPE_LIST_REPO] Error counting user recipe lists: %v", err)
 		return nil, 0, ormerrors.NewDatabaseError("count user recipe lists", err)
 	}
+	log.Printf("[RECIPE_LIST_REPO] Found %d total lists for user %d", total, userID)
 
-	// Récupérer les listes avec pagination
+	// Récupérer les listes avec pagination (sans le preload problématique pour commencer)
+	log.Printf("[RECIPE_LIST_REPO] Fetching user recipe lists...")
 	if err := r.db.WithContext(ctx).
-		Preload("Items.Recipe.Author").
+		Preload("User").
 		Where("user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
 		Order("created_at DESC").
 		Find(&lists).Error; err != nil {
+		log.Printf("[RECIPE_LIST_REPO] Error fetching user recipe lists: %v", err)
 		return nil, 0, ormerrors.NewDatabaseError("get user recipe lists", err)
 	}
+	log.Printf("[RECIPE_LIST_REPO] Successfully fetched %d lists", len(lists))
 
 	return lists, total, nil
 }

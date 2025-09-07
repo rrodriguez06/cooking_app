@@ -134,15 +134,19 @@ func (h *RecipeListHandler) GetRecipeList(c *gin.Context) {
 // @Failure 500 {object} gin.H "Erreur serveur"
 // @Router /api/recipe-lists [get]
 func (h *RecipeListHandler) GetUserRecipeLists(c *gin.Context) {
+	log.Printf("[RECIPE_LIST_HANDLER] GetUserRecipeLists called - Request: %s %s", c.Request.Method, c.Request.URL.Path)
+
 	// Récupérer l'utilisateur connecté
 	userID, exists := c.Get("user_id")
 	if !exists {
+		log.Printf("[RECIPE_LIST_HANDLER] Error: User not authenticated")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "Unauthorized",
 			"message": "User not authenticated",
 		})
 		return
 	}
+	log.Printf("[RECIPE_LIST_HANDLER] User authenticated - UserID: %v", userID)
 
 	// Récupérer les paramètres de pagination
 	page := 1
@@ -161,21 +165,26 @@ func (h *RecipeListHandler) GetUserRecipeLists(c *gin.Context) {
 
 	offset := (page - 1) * limit
 	userIDUint := userID.(uint)
+	log.Printf("[RECIPE_LIST_HANDLER] Pagination params - Page: %d, Limit: %d, Offset: %d", page, limit, offset)
 
+	log.Printf("[RECIPE_LIST_HANDLER] Calling repository GetByUser...")
 	lists, total, err := h.ormService.RecipeListRepository.GetByUser(c.Request.Context(), userIDUint, limit, offset)
 	if err != nil {
+		log.Printf("[RECIPE_LIST_HANDLER] Error from repository: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Database error",
 			"message": "Failed to get user recipe lists",
 		})
 		return
 	}
+	log.Printf("[RECIPE_LIST_HANDLER] Repository call successful - Lists: %d, Total: %d", len(lists), total)
 
 	// Calculer les métadonnées de pagination
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
 	hasNext := page < totalPages
 	hasPrev := page > 1
 
+	log.Printf("[RECIPE_LIST_HANDLER] Sending response with %d lists", len(lists))
 	c.JSON(http.StatusOK, dto.CustomRecipeListsResponse{
 		Success: true,
 		Data: struct {
