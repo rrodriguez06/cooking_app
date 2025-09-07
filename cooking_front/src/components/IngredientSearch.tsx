@@ -34,7 +34,11 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
       const ingredient = ingredients.find(ing => ing.id === selectedIngredientId);
       if (ingredient) {
         setSelectedIngredient(ingredient);
-        setSearchQuery(ingredient.name);
+        // Afficher le nom avec l'icône si elle existe
+        const displayName = ingredient.icon 
+          ? `${ingredient.icon} ${ingredient.name}` 
+          : ingredient.name;
+        setSearchQuery(displayName);
       }
     } else {
       setSelectedIngredient(null);
@@ -47,10 +51,22 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
     if (!searchQuery.trim()) {
       setFilteredIngredients(ingredients);
     } else {
-      const filtered = ingredients.filter(ingredient =>
-        ingredient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ingredient.category?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      // Nettoyer la requête de recherche (supprimer les emojis pour la recherche)
+      const cleanQuery = searchQuery.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+      
+      const filtered = ingredients.filter(ingredient => {
+        // Rechercher dans le nom de l'ingrédient et sa catégorie
+        const nameMatch = ingredient.name.toLowerCase().includes(cleanQuery.toLowerCase());
+        const categoryMatch = ingredient.category?.toLowerCase().includes(cleanQuery.toLowerCase());
+        
+        // Aussi permettre la recherche avec l'emoji inclus dans la requête
+        const fullDisplayName = ingredient.icon 
+          ? `${ingredient.icon} ${ingredient.name}` 
+          : ingredient.name;
+        const fullMatch = fullDisplayName.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        return nameMatch || categoryMatch || fullMatch;
+      });
       setFilteredIngredients(filtered);
     }
     setHighlightedIndex(-1);
@@ -91,7 +107,11 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
 
   const handleIngredientSelect = (ingredient: Ingredient) => {
     setSelectedIngredient(ingredient);
-    setSearchQuery(ingredient.name);
+    // Afficher le nom avec l'icône si elle existe
+    const displayName = ingredient.icon 
+      ? `${ingredient.icon} ${ingredient.name}` 
+      : ingredient.name;
+    setSearchQuery(displayName);
     setIsOpen(false);
     onSelect(ingredient);
     inputRef.current?.blur();
