@@ -162,18 +162,25 @@ func (r *recipeListRepository) AddRecipe(ctx context.Context, listID, recipeID u
 
 // RemoveRecipe supprime une recette d'une liste
 func (r *recipeListRepository) RemoveRecipe(ctx context.Context, listID, recipeID uint) error {
+	fmt.Printf("DEBUG: RemoveRecipe - listID: %d, recipeID: %d\n", listID, recipeID)
+
 	result := r.db.WithContext(ctx).
 		Where("recipe_list_id = ? AND recipe_id = ?", listID, recipeID).
 		Delete(&dto.RecipeListItem{})
 
 	if result.Error != nil {
+		fmt.Printf("DEBUG: Database error in RemoveRecipe: %v\n", result.Error)
 		return ormerrors.NewDatabaseError("remove recipe from list", result.Error)
 	}
 
+	fmt.Printf("DEBUG: RemoveRecipe - RowsAffected: %d\n", result.RowsAffected)
+
 	if result.RowsAffected == 0 {
+		fmt.Printf("DEBUG: No rows affected - recipe not found in list\n")
 		return ormerrors.NewNotFoundError("recipe in list", fmt.Sprintf("list %d, recipe %d", listID, recipeID))
 	}
 
+	fmt.Printf("DEBUG: Recipe removed successfully\n")
 	return nil
 }
 

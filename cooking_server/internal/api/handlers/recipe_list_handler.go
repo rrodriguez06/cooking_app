@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -534,6 +535,8 @@ func (h *RecipeListHandler) RemoveRecipeFromList(c *gin.Context) {
 		})
 		return
 	}
+
+	fmt.Printf("DEBUG: RemoveRecipeFromList - listID: %d, recipeID: %d, userID: %v\n", listID, recipeID, userID)
 
 	// Vérifier que l'utilisateur est propriétaire de la liste
 	list, err := h.ormService.RecipeListRepository.GetByID(c.Request.Context(), uint(listID))
