@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, ChefHat, X } from 'lucide-react';
+import { Search, User, ChefHat } from 'lucide-react';
 import type { Ingredient } from '../types';
 
 export interface SearchSuggestion {
@@ -31,7 +31,7 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [activeSuggestions, setActiveSuggestions] = useState<SearchSuggestion[]>([]);
+
   
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -120,14 +120,6 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
     setQuery('');
     setIsOpen(false);
     setSuggestions([]);
-    setActiveSuggestions(prev => {
-      // Éviter les doublons
-      const exists = prev.some(s => 
-        s.type === suggestion.type && s.value === suggestion.value
-      );
-      if (exists) return prev;
-      return [...prev, suggestion];
-    });
     onSearch(suggestion);
     inputRef.current?.blur();
   };
@@ -173,23 +165,6 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
     }
   };
 
-  const removeSuggestion = (suggestionToRemove: SearchSuggestion) => {
-    setActiveSuggestions(prev => 
-      prev.filter(s => 
-        !(s.type === suggestionToRemove.type && s.value === suggestionToRemove.value)
-      )
-    );
-    onClear();
-  };
-
-  const clearAll = () => {
-    setQuery('');
-    setActiveSuggestions([]);
-    setIsOpen(false);
-    onClear();
-    inputRef.current?.focus();
-  };
-
   const getSuggestionIcon = (suggestion: SearchSuggestion) => {
     switch (suggestion.type) {
       case 'recipe':
@@ -224,36 +199,6 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Suggestions actives */}
-      {activeSuggestions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {activeSuggestions.map((suggestion, index) => (
-            <span
-              key={`${suggestion.type}-${suggestion.value}-${index}`}
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${getSuggestionTypeColor(suggestion.type)}`}
-            >
-              {getSuggestionIcon(suggestion)}
-              <span className="ml-1">{suggestion.label}</span>
-              <button
-                onClick={() => removeSuggestion(suggestion)}
-                className="ml-2 hover:text-gray-600"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-          {activeSuggestions.length > 1 && (
-            <button
-              onClick={clearAll}
-              className="inline-flex items-center px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-3 w-3 mr-1" />
-              Tout effacer
-            </button>
-          )}
-        </div>
-      )}
-
       {/* Barre de recherche */}
       <div className="relative">
         <div className="relative">
