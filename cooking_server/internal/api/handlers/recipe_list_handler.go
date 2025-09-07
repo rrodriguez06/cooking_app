@@ -101,6 +101,8 @@ func (h *RecipeListHandler) GetRecipeList(c *gin.Context) {
 		return
 	}
 
+	fmt.Printf("DEBUG: GetRecipeList - listID: %d\n", listID)
+
 	list, err := h.ormService.RecipeListRepository.GetByID(c.Request.Context(), uint(listID))
 	if err != nil {
 		if errors.Is(err, ormerrors.ErrRecordNotFound) {
@@ -115,6 +117,12 @@ func (h *RecipeListHandler) GetRecipeList(c *gin.Context) {
 			"message": "Failed to get recipe list",
 		})
 		return
+	}
+
+	fmt.Printf("DEBUG: GetRecipeList - Found list: %s with %d items\n", list.Name, len(list.Items))
+	for i, item := range list.Items {
+		fmt.Printf("DEBUG: Item %d - RecipeID: %d, Recipe.ID: %d, Recipe.Title: %s\n",
+			i, item.RecipeID, item.Recipe.ID, item.Recipe.Title)
 	}
 
 	c.JSON(http.StatusOK, dto.CustomRecipeListResponse{

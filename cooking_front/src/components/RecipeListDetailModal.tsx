@@ -40,17 +40,27 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
     setError(null);
     
     try {
+      console.log('DEBUG: fetchListRecipes - list:', list);
+      
       // Si la liste a déjà ses recettes, les utiliser
       if (list.items && list.items.length > 0) {
+        console.log('DEBUG: Using existing items from list:', list.items);
         const listRecipes = list.items.map(item => item.recipe).filter(Boolean);
+        console.log('DEBUG: Extracted recipes from items:', listRecipes);
         setRecipes(listRecipes as Recipe[]);
       } else {
         // Sinon, récupérer les détails de la liste depuis l'API
+        console.log('DEBUG: Fetching list details from API for list ID:', list.id);
         const response = await recipeListService.getRecipeList(list.id);
+        console.log('DEBUG: API response:', response);
+        
         if (response.success && response.data.items) {
+          console.log('DEBUG: Items from API:', response.data.items);
           const listRecipes = response.data.items.map(item => item.recipe).filter(Boolean);
+          console.log('DEBUG: Extracted recipes from API items:', listRecipes);
           setRecipes(listRecipes as Recipe[]);
         } else {
+          console.log('DEBUG: No items found in API response');
           setRecipes([]);
         }
       }

@@ -67,7 +67,9 @@ func (r *recipeListRepository) GetByUser(ctx context.Context, userID uint, limit
 	log.Printf("[RECIPE_LIST_REPO] Fetching user recipe lists...")
 	if err := r.db.WithContext(ctx).
 		Preload("User").
-		Preload("Items").
+		Preload("Items.Recipe.Author").
+		Preload("Items.Recipe.Categories").
+		Preload("Items.Recipe.Tags").
 		Where("user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
