@@ -226,6 +226,8 @@ export const RecipeEditPage: React.FC = () => {
     try {
       const recipeData: RecipeCreateRequest = {
         ...data,
+        // Traiter la description vide comme undefined pour permettre la suppression
+        description: data.description && data.description.trim() !== '' ? data.description.trim() : undefined,
         equipments: data.equipment_ids.map(equipmentId => ({
           equipment_id: equipmentId,
           is_required: true,
