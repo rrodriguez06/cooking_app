@@ -33,24 +33,36 @@ export const ProfilePage: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('useEffect ProfilePage déclenché, user:', user);
     const fetchUserData = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('Pas d\'utilisateur connecté, arrêt de fetchUserData');
+        return;
+      }
+      
+      console.log('fetchUserData appelée pour l\'utilisateur:', user);
       
       try {
         // Charger les recettes de l'utilisateur
+        console.log('Chargement des recettes pour l\'utilisateur:', user.id);
         const recipesResponse = await recipeService.getUserRecipes(parseInt(user.id));
+        console.log('Réponse getUserRecipes:', recipesResponse);
         if (recipesResponse.success) {
           setUserRecipes(recipesResponse.data.recipes);
         }
 
         // Charger les favoris
+        console.log('Chargement des favoris');
         const favoritesResponse = await favoriteService.getUserFavorites();
+        console.log('Réponse getUserFavorites:', favoritesResponse);
         if (favoritesResponse.success) {
           setFavoriteRecipes(favoritesResponse.data.recipes);
         }
 
         // Charger les listes
+        console.log('Chargement des listes');
         const listsResponse = await recipeListService.getUserRecipeLists();
+        console.log('Réponse getUserRecipeLists:', listsResponse);
         if (listsResponse.success) {
           setRecipeLists(listsResponse.data.lists);
         }
