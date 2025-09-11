@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal } from '../components';
-import { mealPlanService } from '../services';
+import { Layout, Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal, GeneratePlanModal } from '../components';
+import { mealPlanService, mealPlanGenerator } from '../services';
 import { formatDate, getCurrentDate, addDays, getStartOfWeek } from '../utils';
 import type { MealPlan } from '../types';
+import type { GenerationOptions } from '../components/GeneratePlanModal';
 import { Calendar, Plus, ChefHat, ShoppingCart, Trash2, Edit2, Check, Eye } from 'lucide-react';
 
 export const PlanningPage: React.FC = () => {
@@ -13,6 +14,7 @@ export const PlanningPage: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(getStartOfWeek(getCurrentDate()));
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showShoppingListModal, setShowShoppingListModal] = useState(false);
+  const [showGeneratePlanModal, setShowGeneratePlanModal] = useState(false);
   const [mealToEdit, setMealToEdit] = useState<MealPlan | undefined>(undefined);
   const [currentMealContext, setCurrentMealContext] = useState<{
     date?: string;
@@ -100,6 +102,53 @@ export const PlanningPage: React.FC = () => {
       console.log('Meal marked as completed!');
     } catch (error) {
       console.error('PlanningPage: Error marking meal as completed:', error);
+    }
+  };
+
+  const handleGeneratePlan = async (options: GenerationOptions) => {
+    try {
+      console.log('🎯 Génération de planning demandée:', options);
+      
+      // Générer le planning
+      const result = await mealPlanGenerator.generateWeeklyPlan(currentWeek, options);
+      
+      if (!result.success) {
+        alert(result.message || 'Erreur lors de la génération du planning.');
+        setShowGeneratePlanModal(false);
+        return;
+      }
+      
+      console.log('✅ Planning généré:', result);
+      
+      // Créer les meal plans dans la base de données
+      let successCount = 0;
+      for (const mealPlan of result.mealPlans) {
+        try {
+          await mealPlanService.createMealPlan(mealPlan);
+          successCount++;
+        } catch (error) {
+          console.error('Erreur lors de la création d\'un meal plan:', error);
+        }
+      }
+      
+      // Fermer la modal et rafraîchir
+      setShowGeneratePlanModal(false);
+      await refreshMealPlans();
+      
+      // Afficher les résultats
+      const message = `Planning généré avec succès ! 
+      
+🍽️ ${successCount} repas ajoutés sur ${result.mealPlans.length} prévus
+📊 ${result.stats.recipesUsed} recettes différentes utilisées
+🎯 Score de diversité: ${Math.round(result.stats.diversityScore * 100)}%
+📝 Source: ${result.stats.sourceType}`;
+      
+      alert(message);
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la génération:', error);
+      alert('Erreur lors de la génération du planning.');
+      setShowGeneratePlanModal(false);
     }
   };
 
@@ -325,7 +374,11 @@ export const PlanningPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="secondary" className="justify-start h-auto p-4">
+              <Button 
+                variant="secondary" 
+                className="justify-start h-auto p-4"
+                onClick={() => setShowGeneratePlanModal(true)}
+              >
                 <ChefHat className="h-6 w-6 mr-3" />
                 <div className="text-left">
                   <div className="font-medium">Générer un planning</div>
@@ -380,6 +433,14 @@ export const PlanningPage: React.FC = () => {
         onClose={() => setShowShoppingListModal(false)}
         startDate={currentWeek}
         endDate={weekEndDate}
+      />
+
+      {/* Generate Plan Modal */}
+      <GeneratePlanModal
+        isOpen={showGeneratePlanModal}
+        onClose={() => setShowGeneratePlanModal(false)}
+        onGenerate={handleGeneratePlan}
+        currentWeekStart={currentWeek}
       />
     </Layout>
   );
