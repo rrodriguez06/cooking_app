@@ -740,7 +740,7 @@ export const RecipeEditPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Actions */
+        {/* Actions */}
         <div className="flex justify-end space-x-4">
           <Button
             type="button"
