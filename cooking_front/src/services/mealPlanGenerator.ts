@@ -13,31 +13,31 @@ import type { GenerationOptions } from '../components/GeneratePlanModal';
  */
 
 // Mapping entre les catégories de recettes et les types de repas
+// Basé sur les catégories réelles du système : entrées, plats principaux, desserts, apéritifs, 
+// soupes, salades, pates, viandes, poissons, végétarien, Boissons, Petit-déjeuner, ingrédient
 const CATEGORY_TO_MEAL_TYPE: Record<string, string[]> = {
-  // Catégories pour petit-déjeuner
+  // Catégories spécifiques au petit-déjeuner
   'petit-déjeuner': ['breakfast'],
-  'breakfast': ['breakfast'],
-  'brunch': ['breakfast', 'lunch'],
   
-  // Catégories pour déjeuner/dîner  
-  'plat principal': ['lunch', 'dinner'],
-  'entrée': ['lunch', 'dinner'],
-  'soupe': ['lunch', 'dinner'],
-  'salade': ['lunch', 'dinner'],
-  'pizza': ['lunch', 'dinner'],
-  'pâtes': ['lunch', 'dinner'],
-  'riz': ['lunch', 'dinner'],
+  // Catégories pour déjeuner et dîner (repas principaux)
+  'entrées': ['lunch', 'dinner'],
+  'plats principaux': ['lunch', 'dinner'],
+  'soupes': ['lunch', 'dinner'],
+  'salades': ['lunch', 'dinner'], // Salades peuvent être légères pour le dîner aussi
+  'pates': ['lunch', 'dinner'],
+  'viandes': ['lunch', 'dinner'],
+  'poissons': ['lunch', 'dinner'],
   
-  // Catégories pour collations
-  'dessert': ['snack'],
-  'collation': ['snack'],
-  'boisson': ['snack'],
-  'smoothie': ['snack'],
+  // Catégories pour collations/desserts
+  'desserts': ['snack', 'lunch', 'dinner'], // Desserts peuvent finir un repas ou être une collation
+  'apéritifs': ['snack'],
+  'boissons': ['snack'], // Smoothies, boissons nutritives
   
-  // Catégories polyvalentes (peuvent aller partout selon le contexte)
-  'végétarien': ['breakfast', 'lunch', 'dinner'],
-  'vegan': ['breakfast', 'lunch', 'dinner'],
-  'sans gluten': ['breakfast', 'lunch', 'dinner'],
+  // Catégories transversales (s'adaptent selon le contexte)
+  'végétarien': ['breakfast', 'lunch', 'dinner', 'snack'],
+  
+  // Catégories à ignorer complètement
+  'ingrédient': [] // Les recettes d'ingrédients (pâte brisée, etc.) ne sont pas des plats
 };
 
 // Fonction pour déterminer quels types de repas conviennent à une recette
@@ -50,16 +50,24 @@ const getRecipeMealTypes = (recipe: Recipe): string[] => {
       const categoryName = category.name.toLowerCase();
       const mappedMealTypes = CATEGORY_TO_MEAL_TYPE[categoryName];
       
-      if (mappedMealTypes) {
+      if (mappedMealTypes && mappedMealTypes.length > 0) {
         mappedMealTypes.forEach(mealType => mealTypes.add(mealType));
       }
     });
   }
   
-  // Si aucune catégorie correspondante, considérer comme plat principal par défaut
+  // Si aucune catégorie correspondante ou que des catégories "ingrédient", 
+  // considérer comme plat principal par défaut (sauf si catégorie ingrédient uniquement)
   if (mealTypes.size === 0) {
-    mealTypes.add('lunch');
-    mealTypes.add('dinner');
+    // Vérifier si la recette n'a que des catégories "ingrédient"
+    const hasOnlyIngredientCategory = recipe.categories?.every(cat => 
+      cat.name.toLowerCase() === 'ingrédient'
+    );
+    
+    if (!hasOnlyIngredientCategory) {
+      mealTypes.add('lunch');
+      mealTypes.add('dinner');
+    }
   }
   
   return Array.from(mealTypes);
@@ -131,14 +139,19 @@ export interface GenerationResult {
  * 1. Récupère les meal plans existants pour éviter les conflits de créneaux
  * 2. Si "éviter la répétition" est activé, identifie les recettes déjà planifiées à éviter
  * 3. Récupère les recettes selon la source choisie (favoris, liste, populaires)
- * 4. Filtre les recettes selon leurs catégories pour les assigner aux bons types de repas
- * 5. Pour chaque jour de la semaine et chaque type de repas demandé :
+ * 4. Filtre les recettes "ingrédient" qui ne sont pas des plats complets
+ * 5. Filtre les recettes selon leurs catégories réelles pour les assigner aux bons types de repas
+ * 6. Pour chaque jour de la semaine et chaque type de repas demandé :
  *    - Vérifie si le créneau est libre (pas de repas déjà planifié)
- *    - Sélectionne une recette appropriée en évitant les répétitions (y compris les plats déjà prévus)
+ *    - Sélectionne une recette appropriée au créneau en évitant les répétitions
  *    - Diversifie les catégories si demandé
- * 6. Retourne un planning équilibré et varié avec les créneaux sautés
+ * 7. Retourne un planning équilibré et varié avec les créneaux sautés
  * 
- * ✨ Amélioration: Respecte les choix existants de l'utilisateur et évite de reproposer des plats déjà prévus
+ * ✨ Améliorations: 
+ * - Respecte les choix existants de l'utilisateur
+ * - Évite de reproposer des plats déjà prévus
+ * - Utilise les vraies catégories du système pour une meilleure adéquation créneau/plat
+ * - Filtre automatiquement les recettes "ingrédient" inappropriées
  */
 export const mealPlanGenerator = {
   async generateWeeklyPlan(weekStart: string, options: GenerationOptions): Promise<GenerationResult> {
@@ -153,19 +166,31 @@ export const mealPlanGenerator = {
       console.log('🚫 Créneaux occupés:', Array.from(occupiedSlots.keys()));
       
       // 2. Récupérer les recettes selon la source
-      const recipes = await this.getRecipesBySource(options.source);
+      const rawRecipes = await this.getRecipesBySource(options.source);
+      
+      // Filtrer les recettes "ingrédient" qui ne sont pas des plats complets
+      const recipes = rawRecipes.filter(recipe => {
+        if (!recipe.categories || recipe.categories.length === 0) return true;
+        
+        // Exclure les recettes qui n'ont QUE la catégorie "ingrédient"
+        const onlyIngredientCategory = recipe.categories.every(cat => 
+          cat.name.toLowerCase() === 'ingrédient'
+        );
+        
+        return !onlyIngredientCategory;
+      });
+      
+      console.log(`📚 ${rawRecipes.length} recettes récupérées, ${recipes.length} après filtrage des ingrédients`);
       
       if (recipes.length === 0) {
         return {
           success: false,
-          message: 'Aucune recette trouvée pour la source sélectionnée.',
+          message: 'Aucune recette adaptée trouvée pour la source sélectionnée (après filtrage des ingrédients).',
           mealPlans: [],
           stats: { totalMeals: 0, recipesUsed: 0, sourceType: options.source.type, diversityScore: 0, skippedSlots: [] }
         };
       }
-      
-      console.log(`📚 ${recipes.length} recettes disponibles`);
-      
+
       // 3. Récupérer les recettes déjà planifiées si on veut éviter la répétition
       const alreadyPlannedRecipeIds = new Set<number>();
       if (options.settings.avoidRepetition) {
