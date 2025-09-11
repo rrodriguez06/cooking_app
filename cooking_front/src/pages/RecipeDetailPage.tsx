@@ -17,11 +17,16 @@ export const RecipeDetailPage: React.FC = () => {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const timerRef = useRef<TimerRef>(null);
+  const mobileTimerRef = useRef<TimerRef>(null);
 
   // Fonction pour démarrer le timer avec la durée d'une étape
   const handleStepTimerClick = (duration: number) => {
-    if (timerRef.current) {
-      timerRef.current.startTimer(duration);
+    // Démarrer le timer approprié selon la taille d'écran
+    const isMobile = window.innerWidth < 1024; // lg breakpoint
+    const activeTimerRef = isMobile ? mobileTimerRef : timerRef;
+    
+    if (activeTimerRef.current) {
+      activeTimerRef.current.startTimer(duration);
       // Pas de scroll automatique pour ne pas perturber la lecture des instructions
     }
   };
@@ -117,14 +122,81 @@ export const RecipeDetailPage: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto">
-        <div className="flex gap-6">
+        <div className="lg:flex lg:gap-6">
           {/* Contenu principal */}
-          <div className="flex-1 space-y-6">
+          <div className="lg:flex-1 space-y-6">
             {/* Back button */}
             <Link to="/" className="inline-flex items-center text-gray-600 hover:text-gray-900">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Link>
+
+            {/* Version mobile du volet d'actions - en haut */}
+            <div className="lg:hidden">
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold">Actions rapides</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Timer intégré - version mobile */}
+                    <div className="col-span-2">
+                      <Timer ref={mobileTimerRef} className="mb-4" />
+                    </div>
+                    
+                    <Button 
+                      variant="secondary" 
+                      className="w-full justify-center" 
+                      size="sm" 
+                      onClick={() => setShowPlanModal(true)}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Planning
+                    </Button>
+
+                    {isOwner ? (
+                      <Link to={`/recipe/${recipe.id}/edit`} className="block">
+                        <Button variant="ghost" className="w-full justify-center" size="sm">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-center" 
+                        size="sm" 
+                        onClick={handleCopyAndEdit}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copier
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Actions de la recette (favoris et listes) - version mobile */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-medium mb-3">Mes listes</h4>
+                    <RecipeActions recipeId={recipe.id} size="sm" />
+                  </div>
+
+                  {/* Action de suppression pour le propriétaire - version mobile */}
+                  {isOwner && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-center text-red-600 hover:text-red-800 hover:bg-red-50" 
+                        size="sm" 
+                        onClick={handleDeleteRecipe}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer la recette
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Recipe Header */}
             <Card>
@@ -384,8 +456,8 @@ export const RecipeDetailPage: React.FC = () => {
             <CommentSection recipeId={recipe.id} />
           </div>
 
-          {/* Sidebar d'actions */}
-          <div className="w-64 flex-shrink-0">
+          {/* Sidebar d'actions - seulement sur desktop */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-6 space-y-4">
               {/* Actions principales */}
               <Card>
