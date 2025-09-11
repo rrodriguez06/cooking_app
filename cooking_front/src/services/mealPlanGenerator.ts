@@ -129,15 +129,16 @@ export interface GenerationResult {
  * 
  * Algorithme transparent (mis à jour):
  * 1. Récupère les meal plans existants pour éviter les conflits de créneaux
- * 2. Récupère les recettes selon la source choisie (favoris, liste, populaires)
- * 3. Filtre les recettes selon leurs catégories pour les assigner aux bons types de repas
- * 4. Pour chaque jour de la semaine et chaque type de repas demandé :
+ * 2. Si "éviter la répétition" est activé, identifie les recettes déjà planifiées à éviter
+ * 3. Récupère les recettes selon la source choisie (favoris, liste, populaires)
+ * 4. Filtre les recettes selon leurs catégories pour les assigner aux bons types de repas
+ * 5. Pour chaque jour de la semaine et chaque type de repas demandé :
  *    - Vérifie si le créneau est libre (pas de repas déjà planifié)
- *    - Sélectionne une recette appropriée en évitant les répétitions
+ *    - Sélectionne une recette appropriée en évitant les répétitions (y compris les plats déjà prévus)
  *    - Diversifie les catégories si demandé
- * 5. Retourne un planning équilibré et varié avec les créneaux sautés
+ * 6. Retourne un planning équilibré et varié avec les créneaux sautés
  * 
- * ✨ Amélioration: Respecte les choix existants de l'utilisateur
+ * ✨ Amélioration: Respecte les choix existants de l'utilisateur et évite de reproposer des plats déjà prévus
  */
 export const mealPlanGenerator = {
   async generateWeeklyPlan(weekStart: string, options: GenerationOptions): Promise<GenerationResult> {
@@ -165,9 +166,20 @@ export const mealPlanGenerator = {
       
       console.log(`📚 ${recipes.length} recettes disponibles`);
       
-      // 3. Générer le planning jour par jour en évitant les créneaux occupés
+      // 3. Récupérer les recettes déjà planifiées si on veut éviter la répétition
+      const alreadyPlannedRecipeIds = new Set<number>();
+      if (options.settings.avoidRepetition) {
+        existingMealPlans.forEach(mealPlan => {
+          if (mealPlan.recipe_id) {
+            alreadyPlannedRecipeIds.add(mealPlan.recipe_id);
+          }
+        });
+        console.log(`🚫 ${alreadyPlannedRecipeIds.size} recettes déjà planifiées à éviter`);
+      }
+
+      // 4. Générer le planning jour par jour en évitant les créneaux occupés
       const mealPlans: MealPlanCreateRequest[] = [];
-      const usedRecipes = new Set<number>();
+      const usedRecipes = new Set<number>(alreadyPlannedRecipeIds); // Commencer avec les recettes déjà planifiées
       const categoryStats = new Map<string, number>();
       const skippedSlots: string[] = [];
       
@@ -250,13 +262,14 @@ export const mealPlanGenerator = {
         }
       }
       
-      // 3. Calculer les statistiques
+      // 5. Calculer les statistiques
       const diversityScore = this.calculateDiversityScore(categoryStats, mealPlans.length);
       
       console.log('📊 Génération terminée:', {
         totalMeals: mealPlans.length,
-        recipesUsed: usedRecipes.size,
-        diversityScore: Math.round(diversityScore * 100) / 100
+        recipesUsed: usedRecipes.size - alreadyPlannedRecipeIds.size, // Exclure les recettes déjà planifiées du compte
+        diversityScore: Math.round(diversityScore * 100) / 100,
+        skippedExistingRecipes: alreadyPlannedRecipeIds.size
       });
       
       return {
@@ -264,7 +277,7 @@ export const mealPlanGenerator = {
         mealPlans,
         stats: {
           totalMeals: mealPlans.length,
-          recipesUsed: usedRecipes.size,
+          recipesUsed: usedRecipes.size - alreadyPlannedRecipeIds.size, // Nouvelles recettes utilisées seulement
           sourceType: options.source.type,
           diversityScore,
           skippedSlots
