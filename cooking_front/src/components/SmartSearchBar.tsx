@@ -292,7 +292,8 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
                   </div>
                   <div className={`text-xs px-2 py-1 rounded ${getSuggestionTypeColor(suggestion.type)}`}>
                     {suggestion.type === 'recipe' ? 'Recette' : 
-                     suggestion.type === 'author' ? 'Auteur' : 'Ingrédient'}
+                     suggestion.type === 'author' ? 'Auteur' : 
+                     suggestion.type === 'equipment' ? 'Équipement' : 'Ingrédient'}
                   </div>
                 </button>
               ))}
