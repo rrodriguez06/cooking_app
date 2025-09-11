@@ -3,7 +3,13 @@ import type { Recipe, MealPlanCreateRequest } from '../types';
 import type { GenerationOptions } from '../components/GeneratePlanModal';
 
 /**
- * Service pour la génération automatique de planning de repas
+ * Service pour la génération automatique de p        case 'popular':
+          const popularResponse = await recipeService.getPopularRecipes(50);
+          return popularResponse.success ? popularResponse.data.recipes : [];
+          
+        case 'trending':
+          const trendingResponse = await recipeService.getLatestRecipes(30);
+          return trendingResponse.success ? trendingResponse.data.recipes : [];s
  */
 
 // Mapping entre les catégories de recettes et les types de repas
@@ -203,7 +209,7 @@ export const mealPlanGenerator = {
             
             mealPlans.push({
               recipe_id: selectedRecipe.id,
-              planned_date: day,
+              planned_date: this.formatDateTimeForMealType(day, mealType),
               meal_type: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
               servings: this.getDefaultServings(mealType),
               notes: `Généré automatiquement - ${options.source.type}`
@@ -332,5 +338,19 @@ export const mealPlanGenerator = {
     // Normaliser entre 0 et 1
     const maxEntropy = Math.log2(categoryStats.size);
     return maxEntropy > 0 ? entropy / maxEntropy : 0;
+  },
+
+  // Formater la date avec l'heure appropriée selon le type de repas
+  formatDateTimeForMealType(dateString: string, mealType: string): string {
+    // Heures par défaut selon le type de repas
+    const defaultTimes = {
+      breakfast: '08:00:00.000Z',
+      lunch: '12:30:00.000Z', 
+      dinner: '19:00:00.000Z',
+      snack: '15:30:00.000Z'
+    };
+
+    const time = defaultTimes[mealType as keyof typeof defaultTimes] || '12:00:00.000Z';
+    return new Date(dateString + 'T' + time).toISOString();
   }
 };
