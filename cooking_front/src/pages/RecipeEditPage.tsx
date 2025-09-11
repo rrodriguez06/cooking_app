@@ -516,8 +516,17 @@ export const RecipeEditPage: React.FC = () => {
 
         {/* Ingrédients */}
         <Card className="p-6">
-          <div className="mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Ingrédients</h2>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowAddIngredientModal(true)}
+              className="flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>Nouvel ingrédient</span>
+            </Button>
           </div>
 
           <div className="space-y-3">
@@ -588,7 +597,7 @@ export const RecipeEditPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex justify-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+          <div className="flex justify-center mt-4 pt-4 border-t border-gray-200">
             <Button
               type="button"
               variant="secondary"
@@ -597,15 +606,6 @@ export const RecipeEditPage: React.FC = () => {
             >
               <span>+</span>
               <span>Ajouter un ingrédient</span>
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShowAddIngredientModal(true)}
-              className="flex items-center space-x-2"
-            >
-              <span>+</span>
-              <span>Nouvel ingrédient</span>
             </Button>
           </div>
         </Card>
