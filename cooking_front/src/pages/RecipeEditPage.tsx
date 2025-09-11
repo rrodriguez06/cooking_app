@@ -516,26 +516,8 @@ export const RecipeEditPage: React.FC = () => {
 
         {/* Ingrédients */}
         <Card className="p-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4">
             <h2 className="text-xl font-semibold">Ingrédients</h2>
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setShowAddIngredientModal(true)}
-                className="flex items-center space-x-2"
-              >
-                <span>+</span>
-                <span>Nouvel ingrédient</span>
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => addIngredient({ ingredient_id: ingredients[0]?.id || 1, quantity: 0, unit: '', notes: '' })}
-              >
-                Ajouter un ingrédient
-              </Button>
-            </div>
           </div>
 
           <div className="space-y-3">
@@ -605,27 +587,33 @@ export const RecipeEditPage: React.FC = () => {
               </div>
             ))}
           </div>
+
+          <div className="flex justify-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => addIngredient({ ingredient_id: ingredients[0]?.id || 1, quantity: 0, unit: '', notes: '' })}
+              className="flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>Ajouter un ingrédient</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowAddIngredientModal(true)}
+              className="flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>Nouvel ingrédient</span>
+            </Button>
+          </div>
         </Card>
 
         {/* Instructions */}
         <Card className="p-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4">
             <h2 className="text-xl font-semibold">Instructions</h2>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => addInstruction({ 
-                step_number: instructionFields.length + 1, 
-                description: '', 
-                title: '',
-                duration: 0,
-                temperature: 0,
-                tips: '',
-                referenced_recipe_id: ''
-              })}
-            >
-              Ajouter une étape
-            </Button>
           </div>
 
           <div className="space-y-4">
@@ -730,9 +718,29 @@ export const RecipeEditPage: React.FC = () => {
               </div>
             ))}
           </div>
+
+          <div className="flex justify-center mt-4 pt-4 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => addInstruction({ 
+                step_number: instructionFields.length + 1, 
+                description: '', 
+                title: '',
+                duration: 0,
+                temperature: 0,
+                tips: '',
+                referenced_recipe_id: ''
+              })}
+              className="flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>Ajouter une étape</span>
+            </Button>
+          </div>
         </Card>
 
-        {/* Actions */}
+        {/* Actions */
         <div className="flex justify-end space-x-4">
           <Button
             type="button"

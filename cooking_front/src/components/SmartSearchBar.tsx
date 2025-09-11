@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, ChefHat } from 'lucide-react';
-import type { Ingredient, User as UserType } from '../types';
+import { Search, User, ChefHat, Wrench } from 'lucide-react';
+import type { Ingredient, User as UserType, Equipment } from '../types';
 
 export interface SearchSuggestion {
-  type: 'recipe' | 'author' | 'ingredient';
+  type: 'recipe' | 'author' | 'ingredient' | 'equipment';
   value: string;
   label: string;
   icon?: string;
@@ -13,6 +13,7 @@ export interface SearchSuggestion {
 interface SmartSearchBarProps {
   onSearch: (suggestion: SearchSuggestion) => void;
   ingredients: Ingredient[];
+  equipments?: Equipment[]; // Nouvelle prop pour les équipements
   users?: UserType[]; // Nouvelle prop pour les utilisateurs
   placeholder?: string;
   disabled?: boolean;
@@ -22,8 +23,9 @@ interface SmartSearchBarProps {
 export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
   onSearch,
   ingredients,
+  equipments = [], // Valeur par défaut
   users = [], // Valeur par défaut
-  placeholder = "Rechercher une recette, un auteur, un ingrédient...",
+  placeholder = "Rechercher une recette, un auteur, un ingrédient, un équipement...",
   disabled = false,
   className = ""
 }) => {
@@ -99,9 +101,27 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
       });
     });
 
+    // Rechercher dans les équipements
+    const matchingEquipments = equipments
+      .filter(equipment => 
+        equipment.name.toLowerCase().includes(searchTerm) ||
+        equipment.category?.toLowerCase().includes(searchTerm)
+      )
+      .slice(0, 5); // Limiter à 5 suggestions d'équipements
+
+    matchingEquipments.forEach(equipment => {
+      newSuggestions.push({
+        type: 'equipment',
+        value: equipment.name,
+        label: `Équipement: ${equipment.name}`,
+        icon: equipment.icon,
+        meta: equipment.category
+      });
+    });
+
     setSuggestions(newSuggestions);
     setHighlightedIndex(-1);
-  }, [query, ingredients, users]);
+  }, [query, ingredients, equipments, users]);
 
   // Fermer le dropdown quand on clique ailleurs
   useEffect(() => {
@@ -195,6 +215,12 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
             <span className="text-xs text-green-600">🥬</span>
           </div>
         );
+      case 'equipment':
+        return suggestion.icon ? (
+          <span className="text-sm">{suggestion.icon}</span>
+        ) : (
+          <Wrench className="h-4 w-4 text-orange-600" />
+        );
       default:
         return null;
     }
@@ -208,6 +234,8 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
         return 'bg-purple-100 text-purple-800';
       case 'ingredient':
         return 'bg-green-100 text-green-800';
+      case 'equipment':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
