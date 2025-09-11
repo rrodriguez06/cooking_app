@@ -1,4 +1,4 @@
-import { recipeService, favoriteService, recipeListService } from './index';
+import { recipeService, favoriteService, recipeListService, mealPlanService } from './index';
 import type { Recipe, MealPlanCreateRequest } from '../types';
 import type { GenerationOptions } from '../components/GeneratePlanModal';
 
@@ -120,26 +120,38 @@ export interface GenerationResult {
     recipesUsed: number;
     sourceType: string;
     diversityScore: number; // 0-1, mesure de la diversité des catégories
+    skippedSlots: string[]; // Créneaux qui étaient déjà occupés
   };
 }
 
 /**
  * Génère un planning de repas automatiquement
  * 
- * Algorithme transparent :
- * 1. Récupère les recettes selon la source choisie (favoris, liste, populaires)
- * 2. Filtre les recettes selon leurs catégories pour les assigner aux bons types de repas
- * 3. Pour chaque jour de la semaine et chaque type de repas demandé :
+ * Algorithme transparent (mis à jour):
+ * 1. Récupère les meal plans existants pour éviter les conflits de créneaux
+ * 2. Récupère les recettes selon la source choisie (favoris, liste, populaires)
+ * 3. Filtre les recettes selon leurs catégories pour les assigner aux bons types de repas
+ * 4. Pour chaque jour de la semaine et chaque type de repas demandé :
+ *    - Vérifie si le créneau est libre (pas de repas déjà planifié)
  *    - Sélectionne une recette appropriée en évitant les répétitions
  *    - Diversifie les catégories si demandé
- * 4. Retourne un planning équilibré et varié
+ * 5. Retourne un planning équilibré et varié avec les créneaux sautés
+ * 
+ * ✨ Amélioration: Respecte les choix existants de l'utilisateur
  */
 export const mealPlanGenerator = {
   async generateWeeklyPlan(weekStart: string, options: GenerationOptions): Promise<GenerationResult> {
     try {
       console.log('🎯 Génération de planning:', { weekStart, options });
       
-      // 1. Récupérer les recettes selon la source
+      // 1. Récupérer les meal plans existants pour la semaine
+      const existingMealPlans = await this.getExistingMealPlans(weekStart);
+      const occupiedSlots = this.createOccupiedSlotsMap(existingMealPlans);
+      
+      console.log(`📋 ${existingMealPlans.length} repas déjà planifiés trouvés`);
+      console.log('🚫 Créneaux occupés:', Array.from(occupiedSlots.keys()));
+      
+      // 2. Récupérer les recettes selon la source
       const recipes = await this.getRecipesBySource(options.source);
       
       if (recipes.length === 0) {
@@ -147,16 +159,17 @@ export const mealPlanGenerator = {
           success: false,
           message: 'Aucune recette trouvée pour la source sélectionnée.',
           mealPlans: [],
-          stats: { totalMeals: 0, recipesUsed: 0, sourceType: options.source.type, diversityScore: 0 }
+          stats: { totalMeals: 0, recipesUsed: 0, sourceType: options.source.type, diversityScore: 0, skippedSlots: [] }
         };
       }
       
       console.log(`📚 ${recipes.length} recettes disponibles`);
       
-      // 2. Générer le planning jour par jour
+      // 3. Générer le planning jour par jour en évitant les créneaux occupés
       const mealPlans: MealPlanCreateRequest[] = [];
       const usedRecipes = new Set<number>();
       const categoryStats = new Map<string, number>();
+      const skippedSlots: string[] = [];
       
       // Obtenir les jours de la semaine
       const weekDays = this.getWeekDays(weekStart);
@@ -175,6 +188,15 @@ export const mealPlanGenerator = {
           if (dailyMealCount >= options.settings.maxRecipesPerDay) {
             console.log(`⏹️  Limite quotidienne atteinte (${options.settings.maxRecipesPerDay})`);
             break;
+          }
+          
+          // Vérifier si ce créneau est déjà occupé
+          const slotKey = `${day}_${mealType}`;
+          if (occupiedSlots.has(slotKey)) {
+            const existingMeal = occupiedSlots.get(slotKey);
+            console.log(`🚫 Créneau ${day} ${mealType} déjà occupé par: ${existingMeal?.recipe?.title || 'repas existant'}`);
+            skippedSlots.push(`${this.formatDateForDisplay(day)} - ${this.getMealTypeLabel(mealType)}`);
+            continue;
           }
           
           // Filtrer les recettes appropriées pour ce type de repas
@@ -244,7 +266,8 @@ export const mealPlanGenerator = {
           totalMeals: mealPlans.length,
           recipesUsed: usedRecipes.size,
           sourceType: options.source.type,
-          diversityScore
+          diversityScore,
+          skippedSlots
         }
       };
       
@@ -254,7 +277,7 @@ export const mealPlanGenerator = {
         success: false,
         message: 'Erreur lors de la génération du planning.',
         mealPlans: [],
-        stats: { totalMeals: 0, recipesUsed: 0, sourceType: options.source.type, diversityScore: 0 }
+        stats: { totalMeals: 0, recipesUsed: 0, sourceType: options.source.type, diversityScore: 0, skippedSlots: [] }
       };
     }
   },
@@ -352,5 +375,60 @@ export const mealPlanGenerator = {
 
     const time = defaultTimes[mealType as keyof typeof defaultTimes] || '12:00:00.000Z';
     return new Date(dateString + 'T' + time).toISOString();
+  },
+
+  // Récupérer les meal plans existants pour une semaine
+  async getExistingMealPlans(weekStart: string) {
+    try {
+      const response = await mealPlanService.getWeeklyMealPlan(weekStart);
+      if (response.success && response.data && response.data.meal_plans) {
+        // Convertir le map de meal plans en tableau plat
+        const allMealPlans: any[] = [];
+        Object.values(response.data.meal_plans).forEach(dayMealPlans => {
+          if (Array.isArray(dayMealPlans)) {
+            allMealPlans.push(...dayMealPlans);
+          }
+        });
+        return allMealPlans;
+      }
+      return [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des meal plans existants:', error);
+      return [];
+    }
+  },
+
+  // Créer une map des créneaux occupés (date_mealType -> mealPlan)
+  createOccupiedSlotsMap(existingMealPlans: any[]): Map<string, any> {
+    const occupiedSlots = new Map();
+    
+    existingMealPlans.forEach(mealPlan => {
+      // Extraire la date du planned_date (format: "2025-08-07T14:00:00+02:00")
+      const dateOnly = mealPlan.planned_date.split('T')[0];
+      const slotKey = `${dateOnly}_${mealPlan.meal_type}`;
+      occupiedSlots.set(slotKey, mealPlan);
+    });
+    
+    return occupiedSlots;
+  },
+
+  // Formater une date pour l'affichage (YYYY-MM-DD -> "7 août")
+  formatDateForDisplay(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+      day: 'numeric', 
+      month: 'long' 
+    });
+  },
+
+  // Obtenir le label français d'un type de repas
+  getMealTypeLabel(mealType: string): string {
+    const labels = {
+      breakfast: 'Petit-déjeuner',
+      lunch: 'Déjeuner', 
+      dinner: 'Dîner',
+      snack: 'Collation'
+    };
+    return labels[mealType as keyof typeof labels] || mealType;
   }
 };

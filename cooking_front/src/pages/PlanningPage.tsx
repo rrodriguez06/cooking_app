@@ -136,12 +136,18 @@ export const PlanningPage: React.FC = () => {
       await refreshMealPlans();
       
       // Afficher les résultats
-      const message = `Planning généré avec succès ! 
+      let message = `Planning généré avec succès ! 
       
 🍽️ ${successCount} repas ajoutés sur ${result.mealPlans.length} prévus
 📊 ${result.stats.recipesUsed} recettes différentes utilisées
 🎯 Score de diversité: ${Math.round(result.stats.diversityScore * 100)}%
 📝 Source: ${result.stats.sourceType}`;
+
+      // Ajouter les créneaux sautés s'il y en a
+      if (result.stats.skippedSlots.length > 0) {
+        message += `\n\n🚫 Créneaux conservés (déjà planifiés):
+${result.stats.skippedSlots.map(slot => `• ${slot}`).join('\n')}`;
+      }
       
       alert(message);
       
