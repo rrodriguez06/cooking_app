@@ -315,17 +315,20 @@ export const SearchPage: React.FC = () => {
           <span key={`smart-${index}`} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
             filter.type === 'recipe' ? 'bg-blue-100 text-blue-800' :
             filter.type === 'author' ? 'bg-purple-100 text-purple-800' :
+            filter.type === 'equipment' ? 'bg-orange-100 text-orange-800' :
             'bg-green-100 text-green-800'
           }`}>
             {filter.type === 'recipe' && '📋 '}
             {filter.type === 'author' && '👤 '}
             {filter.type === 'ingredient' && '🥕 '}
+            {filter.type === 'equipment' && '🔧 '}
             {filter.label}
             <button
               onClick={() => removeSmartSearchFilter(index)}
               className={`ml-2 ${
                 filter.type === 'recipe' ? 'hover:text-blue-600' :
                 filter.type === 'author' ? 'hover:text-purple-600' :
+                filter.type === 'equipment' ? 'hover:text-orange-600' :
                 'hover:text-green-600'
               }`}
             >
