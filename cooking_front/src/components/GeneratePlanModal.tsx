@@ -33,6 +33,7 @@ export interface GenerationOptions {
     diversifyCategories: boolean; // Diversifier les catégories
     maxRecipesPerDay: number; // Limite de recettes par jour
     considerDifficulty: boolean; // Prendre en compte la difficulté
+    defaultServings: number; // Nombre de portions par défaut pour tous les repas
   };
 }
 
@@ -58,7 +59,8 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
     avoidRepetition: true,
     diversifyCategories: true,
     maxRecipesPerDay: 3,
-    considerDifficulty: false
+    considerDifficulty: false,
+    defaultServings: 4
   });
 
   // États pour les données
@@ -69,6 +71,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadData();
+      setIsLoading(false); // Réinitialiser l'état de chargement à l'ouverture
     }
   }, [isOpen]);
 
@@ -318,6 +321,27 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Recommandé: 2-4 recettes par jour
+                </p>
+              </div>
+
+              {/* Nombre de portions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre de portions par repas
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={settings.defaultServings}
+                  onChange={(e) => setSettings(prev => ({ 
+                    ...prev, 
+                    defaultServings: parseInt(e.target.value) || 4 
+                  }))}
+                  className="w-20"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Nombre de personnes pour chaque repas généré
                 </p>
               </div>
             </div>

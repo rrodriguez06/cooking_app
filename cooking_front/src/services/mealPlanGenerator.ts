@@ -233,7 +233,7 @@ export const mealPlanGenerator = {
               recipe_id: selectedRecipe.id,
               planned_date: this.formatDateTimeForMealType(day, mealType),
               meal_type: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
-              servings: this.getDefaultServings(mealType),
+              servings: options.settings.defaultServings,
               notes: `Généré automatiquement - ${options.source.type}`
             });
             

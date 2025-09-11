@@ -135,21 +135,18 @@ export const PlanningPage: React.FC = () => {
       setShowGeneratePlanModal(false);
       await refreshMealPlans();
       
-      // Afficher les résultats
-      let message = `Planning généré avec succès ! 
-      
-🍽️ ${successCount} repas ajoutés sur ${result.mealPlans.length} prévus
-📊 ${result.stats.recipesUsed} recettes différentes utilisées
-🎯 Score de diversité: ${Math.round(result.stats.diversityScore * 100)}%
-📝 Source: ${result.stats.sourceType}`;
+      // Log des résultats au lieu d'afficher une alerte
+      console.log(`Planning généré avec succès !`);
+      console.log(`🍽️ ${successCount} repas ajoutés sur ${result.mealPlans.length} prévus`);
+      console.log(`📊 ${result.stats.recipesUsed} recettes différentes utilisées`);
+      console.log(`🎯 Score de diversité: ${Math.round(result.stats.diversityScore * 100)}%`);
+      console.log(`📝 Source: ${result.stats.sourceType}`);
 
-      // Ajouter les créneaux sautés s'il y en a
+      // Log des créneaux sautés s'il y en a
       if (result.stats.skippedSlots.length > 0) {
-        message += `\n\n🚫 Créneaux conservés (déjà planifiés):
-${result.stats.skippedSlots.map(slot => `• ${slot}`).join('\n')}`;
+        console.log('🚫 Créneaux conservés (déjà planifiés):');
+        result.stats.skippedSlots.forEach(slot => console.log(`• ${slot}`));
       }
-      
-      alert(message);
       
     } catch (error) {
       console.error('❌ Erreur lors de la génération:', error);
