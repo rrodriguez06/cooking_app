@@ -13,8 +13,8 @@ import type { GenerationOptions } from '../components/GeneratePlanModal';
  */
 
 // Mapping entre les catégories de recettes et les types de repas
-// Basé sur les catégories réelles du système : entrées, plats principaux, desserts, apéritifs, 
-// soupes, salades, pates, viandes, poissons, végétarien, Boissons, Petit-déjeuner, ingrédient
+// Basé sur les catégories réelles du système (avec majuscules) : Entrées, Plats principaux, Desserts, Apéritifs, 
+// Soupes, Salades, Pates, Viandes, Poissons, Végétarien, Boissons, Petit-déjeuner, Ingrédient
 const CATEGORY_TO_MEAL_TYPE: Record<string, string[]> = {
   // Catégories spécifiques au petit-déjeuner
   'petit-déjeuner': ['breakfast'],
@@ -59,7 +59,7 @@ const getRecipeMealTypes = (recipe: Recipe): string[] => {
   // Si aucune catégorie correspondante ou que des catégories "ingrédient", 
   // considérer comme plat principal par défaut (sauf si catégorie ingrédient uniquement)
   if (mealTypes.size === 0) {
-    // Vérifier si la recette n'a que des catégories "ingrédient"
+    // Vérifier si la recette n'a que des catégories "Ingrédient"
     const hasOnlyIngredientCategory = recipe.categories?.every(cat => 
       cat.name.toLowerCase() === 'ingrédient'
     );
@@ -172,7 +172,7 @@ export const mealPlanGenerator = {
       const recipes = rawRecipes.filter(recipe => {
         if (!recipe.categories || recipe.categories.length === 0) return true;
         
-        // Exclure les recettes qui n'ont QUE la catégorie "ingrédient"
+        // Exclure les recettes qui n'ont QUE la catégorie "Ingrédient"
         const onlyIngredientCategory = recipe.categories.every(cat => 
           cat.name.toLowerCase() === 'ingrédient'
         );
