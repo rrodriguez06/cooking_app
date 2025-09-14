@@ -25,6 +25,7 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	recipeListHandler := handlers.NewRecipeListHandler(ormService)
 	feedHandler := handlers.NewFeedHandler(ormService)
 	uploadHandler := handlers.NewUploadHandler(ormService)
+	fridgeHandler := handlers.NewFridgeHandler(ormService)
 
 	// Configuration des routes pour chaque entité
 	SetupUserRoutes(api, userHandler, jwtService)
@@ -39,4 +40,5 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	SetupRecipeListRoutes(api, recipeListHandler, jwtService)
 	SetupFeedRoutes(api, feedHandler, jwtService)
 	SetupUploadRoutes(api, uploadHandler, jwtService)
+	SetupFridgeRoutes(api, fridgeHandler, jwtService)
 }
