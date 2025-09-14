@@ -51,16 +51,21 @@ export interface RecipeSearchByIngredientsRequest {
 
 // Résultat d'une suggestion de recette basée sur les ingrédients du frigo
 export interface RecipeSuggestion {
-  recipe_id: number;
-  recipe_title: string;
-  recipe_description?: string;
-  recipe_image_url?: string;
-  recipe_categories?: string[];
-  matching_ingredients: number; // Nombre d'ingrédients qui matchent
-  total_ingredients: number; // Nombre total d'ingrédients de la recette
-  missing_ingredients: Ingredient[]; // Ingrédients manquants
-  match_percentage: number; // Pourcentage de match (0-100)
-  can_cook: boolean; // true si on peut cuisiner avec ce qu'on a
+  recipe: {
+    id: number;
+    title: string;
+    description?: string;
+    imageUrl?: string;
+    categories?: string[];
+    cookingTime?: number;
+    servings?: number;
+    averageRating?: number;
+  };
+  matchingIngredients: number; // Nombre d'ingrédients qui matchent
+  totalIngredients: number; // Nombre total d'ingrédients de la recette
+  missingIngredients: Ingredient[]; // Ingrédients manquants
+  matchPercentage: number; // Pourcentage de match (0-100)
+  canCook: boolean; // true si on peut cuisiner avec ce qu'on a
 }
 
 // Réponse pour les suggestions de recettes
@@ -72,8 +77,8 @@ export interface RecipeSuggestionsResponse {
 
 // Statistiques du frigo
 export interface FridgeStats {
-  total_items: number;
-  expiring_soon: number; // Nombre d'items qui expirent dans les 3 prochains jours
+  totalItems: number;
+  expiringSoon: number; // Nombre d'items qui expirent dans les 3 prochains jours
   expired: number; // Nombre d'items expirés
-  categories_covered: string[]; // Catégories d'ingrédients représentées
+  categoriesCount: number; // Nombre de catégories représentées
 }
