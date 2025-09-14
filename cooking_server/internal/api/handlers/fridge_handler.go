@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/romainrodriguez/cooking_server/internal/api/middleware"
 	"github.com/romainrodriguez/cooking_server/internal/dto"
 	"github.com/romainrodriguez/cooking_server/internal/services/orm"
 )
@@ -22,9 +23,8 @@ func NewFridgeHandler(ormService *orm.ORMService) *FridgeHandler {
 
 // GetFridgeItems récupère tous les items du frigo pour l'utilisateur connecté
 func (h *FridgeHandler) GetFridgeItems(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -45,9 +45,8 @@ func (h *FridgeHandler) GetFridgeItems(c *gin.Context) {
 
 // CreateFridgeItem ajoute un nouvel item au frigo
 func (h *FridgeHandler) CreateFridgeItem(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -67,7 +66,7 @@ func (h *FridgeHandler) CreateFridgeItem(c *gin.Context) {
 
 	// Créer un nouvel item (ou mettre à jour s'il existe déjà)
 	fridgeItem := dto.FridgeItem{
-		UserID:       userID.(uint),
+		UserID:       userID,
 		IngredientID: request.IngredientID,
 		Quantity:     request.Quantity,
 		Unit:         request.Unit,
@@ -89,9 +88,8 @@ func (h *FridgeHandler) CreateFridgeItem(c *gin.Context) {
 
 // UpdateFridgeItem met à jour un item du frigo
 func (h *FridgeHandler) UpdateFridgeItem(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -143,9 +141,8 @@ func (h *FridgeHandler) UpdateFridgeItem(c *gin.Context) {
 
 // DeleteFridgeItem supprime un item du frigo
 func (h *FridgeHandler) DeleteFridgeItem(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -172,9 +169,8 @@ func (h *FridgeHandler) DeleteFridgeItem(c *gin.Context) {
 
 // GetFridgeStats récupère les statistiques du frigo
 func (h *FridgeHandler) GetFridgeStats(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -230,9 +226,8 @@ func (h *FridgeHandler) GetFridgeStats(c *gin.Context) {
 
 // ClearFridge supprime tous les items du frigo de l'utilisateur
 func (h *FridgeHandler) ClearFridge(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 
@@ -247,9 +242,8 @@ func (h *FridgeHandler) ClearFridge(c *gin.Context) {
 
 // RemoveExpiredItems supprime tous les items expirés du frigo
 func (h *FridgeHandler) RemoveExpiredItems(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+	userID, ok := middleware.RequireCurrentUser(c)
+	if !ok {
 		return
 	}
 

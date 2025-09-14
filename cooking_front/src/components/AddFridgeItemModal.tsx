@@ -55,7 +55,7 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
 
   const loadIngredients = async () => {
     try {
-      const response = await ingredientService.getIngredients();
+      const response = await ingredientService.getIngredients({ limit: 1000 });
       if (response.success && response.data) {
         setAvailableIngredients(response.data);
       }
