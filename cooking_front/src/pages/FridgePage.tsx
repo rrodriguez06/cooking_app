@@ -51,18 +51,13 @@ const FridgePage: React.FC = () => {
   const loadFridgeData = async () => {
     setLoading(true);
     try {
-      const [itemsResponse, statsResponse] = await Promise.all([
+      const [itemsData, statsData] = await Promise.all([
         fridgeService.getFridgeItems(),
         fridgeService.getFridgeStats()
       ]);
 
-      if (itemsResponse.success && itemsResponse.data) {
-        setFridgeItems(itemsResponse.data.fridge_items);
-      }
-
-      if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
-      }
+      setFridgeItems(itemsData);
+      setStats(statsData);
     } catch (error) {
       console.error('Erreur lors du chargement des données du frigo:', error);
     } finally {
@@ -73,10 +68,8 @@ const FridgePage: React.FC = () => {
   const loadRecipeSuggestions = async () => {
     setSuggestionsLoading(true);
     try {
-      const response = await fridgeService.getRecipeSuggestions(suggestionParams);
-      if (response.success && response.data) {
-        setRecipeSuggestions(response.data.suggestions);
-      }
+      const suggestions = await fridgeService.getRecipeSuggestions(suggestionParams);
+      setRecipeSuggestions(suggestions);
     } catch (error) {
       console.error('Erreur lors du chargement des suggestions:', error);
     } finally {
@@ -86,10 +79,8 @@ const FridgePage: React.FC = () => {
 
   const handleDeleteItem = async (id: number) => {
     try {
-      const response = await fridgeService.deleteFridgeItem(id);
-      if (response.success) {
-        setFridgeItems(prev => prev.filter(item => item.id !== id));
-      }
+      await fridgeService.deleteFridgeItem(id);
+      setFridgeItems(prev => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
     }
@@ -97,10 +88,8 @@ const FridgePage: React.FC = () => {
 
   const handleRemoveExpired = async () => {
     try {
-      const response = await fridgeService.removeExpiredItems();
-      if (response.success) {
-        await loadFridgeData(); // Recharger toutes les données
-      }
+      await fridgeService.removeExpiredItems();
+      await loadFridgeData(); // Recharger toutes les données
     } catch (error) {
       console.error('Erreur lors de la suppression des items expirés:', error);
     }
@@ -108,10 +97,8 @@ const FridgePage: React.FC = () => {
 
   const handleAddFridgeItem = async (item: FridgeItemCreateRequest) => {
     try {
-      const response = await fridgeService.addFridgeItem(item);
-      if (response.success) {
-        await loadFridgeData(); // Recharger les données
-      }
+      await fridgeService.addFridgeItem(item);
+      await loadFridgeData(); // Recharger les données
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'item:', error);
       throw error; // Rethrow pour que le modal puisse gérer l'erreur
@@ -176,12 +163,12 @@ const FridgePage: React.FC = () => {
         {stats && (
           <div className="flex gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.total_items}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.totalItems}</div>
               <div className="text-sm text-gray-600">Ingrédients</div>
             </div>
-            {stats.expiring_soon > 0 && (
+            {stats.expiringSoon > 0 && (
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{stats.expiring_soon}</div>
+                <div className="text-2xl font-bold text-orange-600">{stats.expiringSoon}</div>
                 <div className="text-sm text-gray-600">À consommer</div>
               </div>
             )}
@@ -363,32 +350,32 @@ const FridgePage: React.FC = () => {
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {recipeSuggestions.map(suggestion => (
-                  <div key={suggestion.recipe_id} className="p-3 border rounded-lg hover:bg-gray-50">
+                  <div key={suggestion.recipe.id} className="p-3 border rounded-lg hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-medium">{suggestion.recipe_title}</h3>
-                        {suggestion.recipe_description && (
+                        <h3 className="font-medium">{suggestion.recipe.title}</h3>
+                        {suggestion.recipe.description && (
                           <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {suggestion.recipe_description}
+                            {suggestion.recipe.description}
                           </p>
                         )}
                         
                         <div className="flex items-center gap-2 mt-2">
                           <Badge className={`text-xs ${
-                            suggestion.can_cook 
+                            suggestion.canCook 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-orange-100 text-orange-800'
                           }`}>
-                            {suggestion.match_percentage}% compatible
+                            {suggestion.matchPercentage}% compatible
                           </Badge>
                           
                           <span className="text-xs text-gray-500">
-                            {suggestion.matching_ingredients}/{suggestion.total_ingredients} ingrédients
+                            {suggestion.matchingIngredients}/{suggestion.totalIngredients} ingrédients
                           </span>
                           
-                          {suggestion.missing_ingredients.length > 0 && (
+                          {suggestion.missingIngredients.length > 0 && (
                             <span className="text-xs text-orange-600">
-                              {suggestion.missing_ingredients.length} manquant(s)
+                              {suggestion.missingIngredients.length} manquant(s)
                             </span>
                           )}
                         </div>
