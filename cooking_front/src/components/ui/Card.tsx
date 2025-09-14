@@ -49,6 +49,28 @@ export const CardContent: React.FC<CardContentProps> = ({ children, className, .
   );
 };
 
+// Ajout du composant CardTitle manquant
+interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children: React.ReactNode;
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+}
+
+export const CardTitle: React.FC<CardTitleProps> = ({ 
+  children, 
+  className, 
+  as: Component = 'h3',
+  ...props 
+}) => {
+  return (
+    <Component
+      className={cn('text-lg font-semibold text-gray-900', className)}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+};
+
 interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }

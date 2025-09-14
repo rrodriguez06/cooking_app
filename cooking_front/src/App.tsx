@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { ProtectedRoute } from './components';
-import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage } from './pages';
+import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage, FridgePage } from './pages';
 
 function App() {
   return (
@@ -27,6 +27,12 @@ function App() {
           <Route path="/planning" element={
             <ProtectedRoute>
               <PlanningPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/fridge" element={
+            <ProtectedRoute>
+              <FridgePage />
             </ProtectedRoute>
           } />
           

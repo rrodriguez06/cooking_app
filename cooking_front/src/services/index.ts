@@ -7,6 +7,7 @@ export * from './recipeListService';
 export * from './shoppingListService';
 export * from './userFollowService';
 export * from './feedService';
+export * from './fridgeService';
 export * from './data';
 export * from './mealPlanGenerator';
 export { default as api } from './api';

@@ -11,7 +11,8 @@ import {
   Menu, 
   X,
   LogOut,
-  ChefHat
+  ChefHat,
+  Refrigerator
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -23,6 +24,7 @@ export const Header: React.FC = () => {
     { name: 'Accueil', href: '/', icon: Home },
     { name: 'Recherche', href: '/search', icon: Search },
     { name: 'Planning', href: '/planning', icon: Calendar },
+    { name: 'Mon Frigo', href: '/fridge', icon: Refrigerator },
     { name: 'Nouvelle recette', href: '/recipe/new', icon: PlusCircle },
   ];
 

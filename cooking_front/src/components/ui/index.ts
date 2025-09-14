@@ -3,3 +3,7 @@ export * from './Input';
 export * from './Card';
 export * from './Loading';
 export * from './Modal';
+export * from './Badge';
+export * from './Select';
+export * from './Badge';
+export * from './Select';

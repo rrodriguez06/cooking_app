@@ -4,3 +4,4 @@ export * from './recipe';
 export * from './mealPlan';
 export * from './recipeList';
 export * from './api';
+export * from './fridge';
