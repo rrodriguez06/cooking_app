@@ -77,8 +77,9 @@ export interface RecipeSuggestionsResponse {
 
 // Statistiques du frigo
 export interface FridgeStats {
-  totalItems: number;
-  expiringSoon: number; // Nombre d'items qui expirent dans les 3 prochains jours
+  total_items: number;
+  expiring_soon: number; // Nombre d'items qui expirent dans les 3 prochains jours
   expired: number; // Nombre d'items expirés
-  categoriesCount: number; // Nombre de catégories représentées
+  categories_count: number; // Nombre de catégories représentées
+  categories: string[]; // Liste des catégories
 }

@@ -163,12 +163,12 @@ const FridgePage: React.FC = () => {
         {stats && (
           <div className="flex gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalItems}</div>
+              <div className="text-2xl font-bold text-blue-600">{stats.total_items}</div>
               <div className="text-sm text-gray-600">Ingrédients</div>
             </div>
-            {stats.expiringSoon > 0 && (
+            {stats.expiring_soon > 0 && (
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{stats.expiringSoon}</div>
+                <div className="text-2xl font-bold text-orange-600">{stats.expiring_soon}</div>
                 <div className="text-sm text-gray-600">À consommer</div>
               </div>
             )}

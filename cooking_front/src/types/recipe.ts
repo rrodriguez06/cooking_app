@@ -33,9 +33,9 @@ export interface RecipeEquipment {
 export interface Ingredient {
   id: number;
   name: string;
-  category?: string;
-  icon?: string;
-  unit_type: string;
+  description?: string;
+  category: string;
+  icon: string;
   created_at: string;
   updated_at: string;
 }
