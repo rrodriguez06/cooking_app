@@ -44,10 +44,13 @@ export const RecipeEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(!!id);
+  const [initialLoading, setInitialLoading] = useState(!!id && id !== 'new');
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  
+  // Vérifier si nous sommes en mode création (nouvelle recette)
+  const isCreatingNew = !id || id === 'new';
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [showAddIngredientModal, setShowAddIngredientModal] = useState(false);
@@ -399,9 +402,9 @@ export const RecipeEditPage: React.FC = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">
-            {id ? 'Modifier la recette' : 'Créer une recette'}
+            {isCreatingNew ? 'Créer une recette' : 'Modifier la recette'}
           </h1>
-          {!id && (
+          {isCreatingNew && (
             <Button
               type="button"
               variant="secondary"
@@ -420,7 +423,7 @@ export const RecipeEditPage: React.FC = () => {
         <Card className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Informations générales</h2>
-            {!id && (
+            {isCreatingNew && (
               <Button
                 type="button"
                 variant="secondary"
