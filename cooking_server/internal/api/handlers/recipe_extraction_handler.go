@@ -38,6 +38,7 @@ func NewRecipeExtractionHandler() *RecipeExtractionHandler {
 func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 	// Vérifier que le service LLM est accessible
 	if err := h.llmService.CheckHealth(); err != nil {
+		fmt.Printf("[RecipeExtraction] LLM health check failed: %v\n", err)
 		c.JSON(http.StatusServiceUnavailable, dto.ExtractRecipeResponse{
 			Success: false,
 			Message: "Service d'IA temporairement indisponible. Veuillez réessayer plus tard.",
@@ -48,6 +49,7 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 	// Récupérer le fichier uploadé
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
+		fmt.Printf("[RecipeExtraction] No image provided: %v\n", err)
 		c.JSON(http.StatusBadRequest, dto.ExtractRecipeResponse{
 			Success: false,
 			Message: "Aucune image fournie. Veuillez sélectionner un fichier image.",
@@ -58,6 +60,7 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 
 	// Valider le format de l'image
 	if err := h.ocrService.ValidateImageFile(header.Filename); err != nil {
+		fmt.Printf("[RecipeExtraction] Invalid image format: %v\n", err)
 		c.JSON(http.StatusBadRequest, dto.ExtractRecipeResponse{
 			Success: false,
 			Message: fmt.Sprintf("Format d'image invalide: %s", err.Error()),
@@ -68,6 +71,7 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 	// Vérifier la taille du fichier (limite à 10MB)
 	const maxFileSize = 10 * 1024 * 1024 // 10MB
 	if header.Size > maxFileSize {
+		fmt.Printf("[RecipeExtraction] Image too large: %d bytes\n", header.Size)
 		c.JSON(http.StatusBadRequest, dto.ExtractRecipeResponse{
 			Success: false,
 			Message: "L'image est trop volumineuse. Taille maximale: 10MB.",
@@ -76,8 +80,10 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 	}
 
 	// Étape 1: Extraction du texte avec OCR
+	fmt.Printf("[RecipeExtraction] Starting OCR for image: %s\n", header.Filename)
 	extractedText, err := h.ocrService.ExtractTextFromImage(file, header.Filename)
 	if err != nil {
+		fmt.Printf("[RecipeExtraction] OCR error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, dto.ExtractRecipeResponse{
 			Success:       false,
 			Message:       "Erreur lors de l'analyse de l'image. Assurez-vous que l'image contient du texte lisible.",
@@ -85,9 +91,11 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 		})
 		return
 	}
+	fmt.Printf("[RecipeExtraction] OCR extracted text: %s\n", extractedText)
 
 	// Vérifier que du texte a été extrait
 	if strings.TrimSpace(extractedText) == "" {
+		fmt.Printf("[RecipeExtraction] No text detected in image.\n")
 		c.JSON(http.StatusBadRequest, dto.ExtractRecipeResponse{
 			Success:       false,
 			Message:       "Aucun texte détecté dans l'image. Veuillez utiliser une image plus claire ou avec plus de texte.",
@@ -98,6 +106,7 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 
 	// Vérifier que le texte semble contenir une recette
 	if !h.containsRecipeKeywords(extractedText) {
+		fmt.Printf("[RecipeExtraction] Extracted text does not contain recipe keywords.\n")
 		c.JSON(http.StatusBadRequest, dto.ExtractRecipeResponse{
 			Success:       false,
 			Message:       "Le texte extrait ne semble pas contenir une recette. Veuillez utiliser une image de recette.",
@@ -107,8 +116,10 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 	}
 
 	// Étape 2: Extraction structurée avec LLM
+	fmt.Printf("[RecipeExtraction] Sending extracted text to LLM...\n")
 	recipeData, err := h.llmService.ExtractRecipeFromText(extractedText)
 	if err != nil {
+		fmt.Printf("[RecipeExtraction] LLM error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, dto.ExtractRecipeResponse{
 			Success:       false,
 			Message:       "Erreur lors de l'analyse de la recette. Le texte extrait ne peut pas être traité correctement.",
@@ -116,6 +127,7 @@ func (h *RecipeExtractionHandler) ExtractFromImage(c *gin.Context) {
 		})
 		return
 	}
+	fmt.Printf("[RecipeExtraction] LLM returned recipe data: %+v\n", recipeData)
 
 	// Retourner la réponse avec succès
 	c.JSON(http.StatusOK, dto.ExtractRecipeResponse{
