@@ -418,7 +418,20 @@ export const RecipeEditPage: React.FC = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Informations de base */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Informations générales</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Informations générales</h2>
+            {!id && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowPhotoImportModal(true)}
+                className="flex items-center space-x-2 bg-blue-100 hover:bg-blue-200 text-blue-700"
+              >
+                <span>📸</span>
+                <span>Importer depuis une photo</span>
+              </Button>
+            )}
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
