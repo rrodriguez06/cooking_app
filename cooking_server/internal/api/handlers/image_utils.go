@@ -22,12 +22,12 @@ func buildFullImageURL(c *gin.Context, imageURL string) string {
 	// Si c'est une URL relative, construire l'URL complète
 	if strings.HasPrefix(imageURL, "/") {
 		baseURL := getBaseURL(c)
-		return fmt.Sprintf("%s%s", baseURL, imageURL)
+		return fmt.Sprintf("%s/api/v1%s", baseURL, imageURL)
 	}
 
 	// Si ce n'est ni relatif ni absolu, considérer comme relatif et ajouter le préfixe
 	baseURL := getBaseURL(c)
-	return fmt.Sprintf("%s/uploads/images/%s", baseURL, imageURL)
+	return fmt.Sprintf("%s/api/v1/uploads/images/%s", baseURL, imageURL)
 }
 
 // processRecipeImageURL traite l'URL d'image d'une recette

@@ -12,6 +12,9 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	// Groupe API v1
 	api := router.Group("/api/v1")
 
+	// Servir les fichiers statiques pour les images uploadées sous /api/v1/uploads
+	api.Static("/uploads", "./uploads")
+
 	// Initialisation des handlers avec la nouvelle structure
 	h := handlers.NewHandlers(ormService, jwtService)
 

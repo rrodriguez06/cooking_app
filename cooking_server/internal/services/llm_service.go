@@ -62,16 +62,18 @@ func (s *LLMService) ExtractRecipeFromText(extractedText string) (*dto.Extracted
 
 // buildRecipeExtractionPrompt construit le prompt pour l'extraction de recette
 func (s *LLMService) buildRecipeExtractionPrompt(text string) string {
-	return fmt.Sprintf(`Tu es un assistant spécialisé dans l'extraction de recettes. Le texte suivant a été extrait d'une image par OCR et peut contenir des erreurs typiques (lettres manquantes, confusion i/l, caractères mal reconnus).
+	return fmt.Sprintf(`Tu es un assistant spécialisé dans l'extraction de recettes. Le texte suivant a été extrait d'une image par OCR et contient des erreurs typiques que tu dois corriger avant l'extraction.
 
 PREMIÈRE ÉTAPE - Correction du texte OCR :
-- Corrige les erreurs OCR courantes : lettres manquantes (surtout i, l), mots coupés, caractères mal reconnus
-- Reconstitue les mots de cuisine courants (toignon → oignon, hule → huile, cui. → cuillère, etc.)
-- Corrige les unités de mesure (g, ml, c. à soupe, etc.)
-- Rétablis la ponctuation et l'espacement correct
+Corrige ces erreurs courantes :
+- Lettres manquantes/confondues : "toignon" → "oignon", "hule" → "huile", "gousses d'ai" → "gousses d'ail"
+- Unités mal reconnues : "eui. à soupe" → "c. à soupe", "cui. à cofé" → "c. à café", "5009" → "500g"
+- Mots coupés : "Temos de" → "Temps de", "concossées" → "concassées"
+- Espacement : "pendantenviron" → "pendant environ", "remuont" → "remuant"
+- Ponctuation : "jusqu' ce" → "jusqu'à ce", "ovec" → "avec"
 
 DEUXIÈME ÉTAPE - Extraction JSON :
-Retourne UNIQUEMENT un objet JSON valide (pas de texte supplémentaire) :
+Utilise le texte CORRIGÉ pour extraire les informations et retourne UNIQUEMENT un objet JSON valide :
 
 {
   "title": "string",
@@ -91,7 +93,7 @@ Retourne UNIQUEMENT un objet JSON valide (pas de texte supplémentaire) :
   "instructions": [
     {
       "step_number": number,
-      "title": "string",
+      "title": "string", 
       "description": "string",
       "duration": number,
       "temperature": number,
@@ -103,14 +105,15 @@ Retourne UNIQUEMENT un objet JSON valide (pas de texte supplémentaire) :
 }
 
 Règles d'extraction :
-- Temps en minutes (défaut: prep_time=30, cook_time=45)
-- Quantités en nombres (ex: "1/2" = 0.5)
+- Utilise les informations corrigées (pas le texte OCR brut)
+- Temps en minutes (défaut: prep_time=15, cook_time=45 si non spécifié)
+- Quantités en nombres (ex: "1/2" = 0.5, "500g" = 500)
 - Unités standard (g, ml, c. à soupe, c. à café)
 - Températures en Celsius
 - Difficulté par défaut: "medium"
-- Servings par défaut: 4
+- Servings : extrais le nombre exact ou défaut 4
 
-Texte OCR à corriger et analyser :
+Texte OCR à corriger puis analyser:
 %s`, text)
 }
 

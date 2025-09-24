@@ -214,9 +214,6 @@ func (h *RecipeHandler) GetRecipe(c *gin.Context) {
 		return
 	}
 
-	// Traiter l'URL de l'image pour la rendre complète
-	processRecipeImageURL(c, recipe)
-
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    recipe,
@@ -609,9 +606,6 @@ func (h *RecipeHandler) ListRecipes(c *gin.Context) {
 		return
 	}
 
-	// Traiter les URLs d'images pour les rendre complètes
-	processRecipesImageURLs(c, recipes)
-
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -751,9 +745,6 @@ func (h *RecipeHandler) SearchRecipes(c *gin.Context) {
 		})
 		return
 	}
-
-	// Traiter les URLs d'images pour les rendre complètes
-	processRecipesImageURLs(c, recipes)
 
 	totalPages := int((total + int64(searchQuery.Limit) - 1) / int64(searchQuery.Limit))
 

@@ -71,9 +71,6 @@ func (s *Server) setupRoutes() {
 	// Route Swagger pour la documentation
 	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Servir les fichiers statiques pour les images uploadées
-	s.router.Static("/uploads", "./uploads")
-
 	// Configurer toutes les routes API
 	routes.SetupRoutes(s.router, s.ormService, s.jwtService)
 }
