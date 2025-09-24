@@ -5,7 +5,7 @@ FROM golang:1.25-alpine AS builder
 RUN apk add --no-cache git ca-certificates tzdata \
     tesseract-ocr tesseract-ocr-dev \
     tesseract-ocr-data-fra tesseract-ocr-data-eng \
-    leptonica-dev pkg-config gcc musl-dev
+    leptonica-dev pkgconfig gcc musl-dev
 
 # Créer le répertoire de travail
 WORKDIR /app
