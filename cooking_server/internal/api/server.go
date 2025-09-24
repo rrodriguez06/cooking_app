@@ -117,8 +117,11 @@ func (s *Server) healthCheck(c *gin.Context) {
 // Start démarre le serveur HTTP
 func (s *Server) Start() error {
 	srv := &http.Server{
-		Addr:    ":" + s.port,
-		Handler: s.router,
+		Addr:         ":" + s.port,
+		Handler:      s.router,
+		ReadTimeout:  10 * time.Minute, // 10 minutes pour les gros uploads et LLM
+		WriteTimeout: 10 * time.Minute, // 10 minutes pour les réponses LLM
+		IdleTimeout:  2 * time.Minute,  // 2 minutes pour les connexions idle
 	}
 
 	// Canal pour recevoir les signaux d'interruption

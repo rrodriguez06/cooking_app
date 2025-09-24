@@ -28,7 +28,7 @@ func NewLLMService() *LLMService {
 	return &LLMService{
 		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second, // 2 minutes timeout pour les requêtes LLM
+			Timeout: 300 * time.Second, // 5 minutes timeout pour les requêtes LLM
 		},
 		model: "gemma2:2b",
 	}
@@ -62,50 +62,24 @@ func (s *LLMService) ExtractRecipeFromText(extractedText string) (*dto.Extracted
 
 // buildRecipeExtractionPrompt construit le prompt pour l'extraction de recette
 func (s *LLMService) buildRecipeExtractionPrompt(text string) string {
-	return fmt.Sprintf(`Tu es un assistant spécialisé dans l'extraction de recettes. Analyse le texte suivant extrait d'une image de recette et retourne UNIQUEMENT un objet JSON valide contenant les informations structurées de la recette.
+	return fmt.Sprintf(`Extrait la recette du texte suivant en JSON:
 
-Format de réponse attendu (JSON uniquement, sans texte supplémentaire):
 {
   "title": "string",
   "description": "string",
-  "prep_time": number,
-  "cook_time": number,
-  "servings": number,
-  "difficulty": "easy|medium|hard",
-  "ingredients": [
-    {
-      "name": "string",
-      "quantity": number,
-      "unit": "string",
-      "notes": "string"
-    }
-  ],
-  "instructions": [
-    {
-      "step_number": number,
-      "title": "string",
-      "description": "string",
-      "duration": number,
-      "temperature": number,
-      "tips": "string"
-    }
-  ],
-  "tips": ["string"],
-  "equipment": ["string"]
+  "prep_time": 30,
+  "cook_time": 45,
+  "servings": 4,
+  "difficulty": "medium",
+  "ingredients": [{"name": "string", "quantity": 1, "unit": "g", "notes": ""}],
+  "instructions": [{"step_number": 1, "title": "", "description": "string", "duration": 0, "temperature": 0, "tips": ""}],
+  "tips": [],
+  "equipment": []
 }
 
-Règles d'extraction:
-- Si une information n'est pas disponible, utilise des valeurs par défaut raisonnables
-- prep_time et cook_time en minutes (défaut: 30 et 30)
-- servings par défaut: 4
-- difficulty: "medium" par défaut
-- Convertis toutes les quantités en nombres (ex: "1/2" = 0.5)
-- Pour les unités, utilise les abréviations standard (g, ml, c. à soupe, etc.)
-- Les températures en degrés Celsius
-- Numérotation des étapes à partir de 1
+Texte: %s
 
-Texte à analyser:
-%s`, text)
+JSON uniquement:`, text)
 }
 
 // callOllama fait un appel HTTP au service Ollama
