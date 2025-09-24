@@ -1,8 +1,11 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-# Installer les dépendances nécessaires
-RUN apk add --no-cache git ca-certificates tzdata
+# Installer les dépendances nécessaires incluant tesseract
+RUN apk add --no-cache git ca-certificates tzdata \
+    tesseract-ocr tesseract-ocr-dev \
+    tesseract-ocr-data-fra tesseract-ocr-data-eng \
+    leptonica-dev pkg-config gcc musl-dev
 
 # Créer le répertoire de travail
 WORKDIR /app
@@ -16,8 +19,8 @@ RUN go mod download
 # Copier tout le code source
 COPY . .
 
-# Compiler l'application principale
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Compiler l'application principale avec CGO activé pour Tesseract
+RUN CGO_ENABLED=1 GOOS=linux go build -a -o main .
 
 # Compiler le seeder
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o seeder ./seed_data
@@ -25,8 +28,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o seeder ./seed_dat
 # Production stage
 FROM alpine:latest
 
-# Installer ca-certificates pour les connexions HTTPS
-RUN apk --no-cache add ca-certificates tzdata
+# Installer les dépendances runtime incluant tesseract
+RUN apk --no-cache add ca-certificates tzdata \
+    tesseract-ocr tesseract-ocr-data-fra tesseract-ocr-data-eng \
+    leptonica
 
 # Créer un utilisateur non-root
 RUN addgroup -g 1001 -S appgroup && \

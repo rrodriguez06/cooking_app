@@ -10,4 +10,5 @@ export * from './feedService';
 export * from './fridgeService';
 export * from './data';
 export * from './mealPlanGenerator';
+export * from './recipeExtractionService';
 export { default as api } from './api';

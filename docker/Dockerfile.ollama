@@ -1,0 +1,15 @@
+# Dockerfile pour le service Ollama avec Gemma 2B
+FROM ollama/ollama:latest
+
+# Créer le répertoire de travail
+WORKDIR /app
+
+# Copier le script d'initialisation
+COPY ollama-init.sh /app/ollama-init.sh
+RUN chmod +x /app/ollama-init.sh
+
+# Exposer le port Ollama
+EXPOSE 11434
+
+# Script de démarrage qui lance Ollama et télécharge le modèle
+CMD ["/app/ollama-init.sh"]

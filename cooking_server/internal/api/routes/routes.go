@@ -12,7 +12,10 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	// Groupe API v1
 	api := router.Group("/api/v1")
 
-	// Initialisation des handlers
+	// Initialisation des handlers avec la nouvelle structure
+	h := handlers.NewHandlers(ormService, jwtService)
+
+	// Anciens handlers individuels pour compatibilité
 	userHandler := handlers.NewUserHandler(ormService, jwtService)
 	recipeHandler := handlers.NewRecipeHandler(ormService)
 	ingredientHandler := handlers.NewIngredientHandler(ormService)
@@ -41,4 +44,7 @@ func SetupRoutes(router *gin.Engine, ormService *orm.ORMService, jwtService *aut
 	SetupFeedRoutes(api, feedHandler, jwtService)
 	SetupUploadRoutes(api, uploadHandler, jwtService)
 	SetupFridgeRoutes(api, fridgeHandler, jwtService)
+
+	// Nouvelles routes d'extraction de recette
+	SetupRecipeExtractionRoutes(api, h, jwtService)
 }

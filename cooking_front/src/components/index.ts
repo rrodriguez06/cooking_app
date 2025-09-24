@@ -23,3 +23,4 @@ export * from './Timer';
 export * from './IngredientSearch';
 export * from './SmartSearchBar';
 export * from './GeneratePlanModal';
+export * from './RecipePhotoImport';
