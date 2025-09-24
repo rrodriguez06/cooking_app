@@ -62,24 +62,56 @@ func (s *LLMService) ExtractRecipeFromText(extractedText string) (*dto.Extracted
 
 // buildRecipeExtractionPrompt construit le prompt pour l'extraction de recette
 func (s *LLMService) buildRecipeExtractionPrompt(text string) string {
-	return fmt.Sprintf(`Extrait la recette du texte suivant en JSON:
+	return fmt.Sprintf(`Tu es un assistant spécialisé dans l'extraction de recettes. Le texte suivant a été extrait d'une image par OCR et peut contenir des erreurs typiques (lettres manquantes, confusion i/l, caractères mal reconnus).
+
+PREMIÈRE ÉTAPE - Correction du texte OCR :
+- Corrige les erreurs OCR courantes : lettres manquantes (surtout i, l), mots coupés, caractères mal reconnus
+- Reconstitue les mots de cuisine courants (toignon → oignon, hule → huile, cui. → cuillère, etc.)
+- Corrige les unités de mesure (g, ml, c. à soupe, etc.)
+- Rétablis la ponctuation et l'espacement correct
+
+DEUXIÈME ÉTAPE - Extraction JSON :
+Retourne UNIQUEMENT un objet JSON valide (pas de texte supplémentaire) :
 
 {
   "title": "string",
-  "description": "string",
-  "prep_time": 30,
-  "cook_time": 45,
-  "servings": 4,
-  "difficulty": "medium",
-  "ingredients": [{"name": "string", "quantity": 1, "unit": "g", "notes": ""}],
-  "instructions": [{"step_number": 1, "title": "", "description": "string", "duration": 0, "temperature": 0, "tips": ""}],
-  "tips": [],
-  "equipment": []
+  "description": "string", 
+  "prep_time": number,
+  "cook_time": number,
+  "servings": number,
+  "difficulty": "easy|medium|hard",
+  "ingredients": [
+    {
+      "name": "string",
+      "quantity": number,
+      "unit": "string",
+      "notes": "string"
+    }
+  ],
+  "instructions": [
+    {
+      "step_number": number,
+      "title": "string",
+      "description": "string",
+      "duration": number,
+      "temperature": number,
+      "tips": "string"
+    }
+  ],
+  "tips": ["string"],
+  "equipment": ["string"]
 }
 
-Texte: %s
+Règles d'extraction :
+- Temps en minutes (défaut: prep_time=30, cook_time=45)
+- Quantités en nombres (ex: "1/2" = 0.5)
+- Unités standard (g, ml, c. à soupe, c. à café)
+- Températures en Celsius
+- Difficulté par défaut: "medium"
+- Servings par défaut: 4
 
-JSON uniquement:`, text)
+Texte OCR à corriger et analyser :
+%s`, text)
 }
 
 // callOllama fait un appel HTTP au service Ollama
