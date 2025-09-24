@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './api';
+import api from './api';
 
 export interface ExtractedIngredient {
   name: string;
@@ -43,8 +43,6 @@ export interface ExtractionHealthResponse {
 }
 
 class RecipeExtractionService {
-  private baseURL = `${API_BASE_URL}/v1/recipes`;
-
   /**
    * Extrait une recette depuis une image
    */
@@ -53,23 +51,13 @@ class RecipeExtractionService {
     formData.append('image', imageFile);
 
     try {
-      const response = await fetch(`${this.baseURL}/extract-from-image`, {
-        method: 'POST',
+      const response = await api.post('/recipes/extract-from-image', formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          success: false,
-          message: 'Erreur de communication avec le serveur'
-        }));
-        return errorData;
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Erreur lors de l\'extraction de recette:', error);
       return {
@@ -84,13 +72,9 @@ class RecipeExtractionService {
    */
   async checkHealth(): Promise<ExtractionHealthResponse> {
     try {
-      const response = await fetch(`${this.baseURL}/extraction/health`);
+      const response = await api.get('/recipes/extraction/health');
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Erreur lors de la vérification de santé:', error);
       return {
