@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,6 +43,7 @@ type RecipeFormData = z.infer<typeof recipeSchema>;
 export const RecipeEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!!id && id !== 'new');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,7 +51,7 @@ export const RecipeEditPage: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   
   // Vérifier si nous sommes en mode création (nouvelle recette)
-  const isCreatingNew = !id || id === 'new';
+  const isCreatingNew = location.pathname === '/recipe/new' || (!id || id === 'new');
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [showAddIngredientModal, setShowAddIngredientModal] = useState(false);
@@ -419,6 +420,25 @@ export const RecipeEditPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Bouton d'import de photo - Visible en création */}
+        {isCreatingNew && (
+          <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-blue-900">🚀 Nouveau ! Créer depuis une photo</h3>
+                <p className="text-sm text-blue-700">Prenez en photo votre recette et laissez l'IA la convertir automatiquement</p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setShowPhotoImportModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg font-medium"
+              >
+                📸 Importer une photo
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Informations de base */}
         <Card className="p-6">
           <div className="flex justify-between items-center mb-4">
