@@ -1,6 +1,9 @@
 # Dockerfile pour le service Ollama avec Gemma 2B
 FROM ollama/ollama:latest
 
+# Installer curl pour les health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Créer le répertoire de travail
 WORKDIR /app
 
