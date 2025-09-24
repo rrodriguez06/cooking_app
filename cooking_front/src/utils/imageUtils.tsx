@@ -22,13 +22,13 @@ export const getFullImageUrl = (imageUrl?: string): string => {
   // Si c'est une URL relative, construire l'URL complète
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
   
-  // Extraire l'URL de base (sans /api/v1) pour construire l'URL complète avec /api/v1/
+  // Extraire l'URL de base (sans /api/v1) pour les images
   const baseUrl = apiUrl.replace(/\/api\/v1$/, '');
   
   // S'assurer que l'URL commence par "/"
   const cleanUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
   
-  // Construire l'URL avec /api/v1/
+  // Les images sont servies directement sous /api/v1/uploads
   return `${baseUrl}/api/v1${cleanUrl}`;
 };
 
