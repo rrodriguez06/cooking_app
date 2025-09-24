@@ -1,11 +1,11 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-# Installer les dépendances nécessaires incluant tesseract
+# Installer les dépendances nécessaires incluant tesseract et g++
 RUN apk add --no-cache git ca-certificates tzdata \
     tesseract-ocr tesseract-ocr-dev \
     tesseract-ocr-data-fra tesseract-ocr-data-eng \
-    leptonica-dev pkgconfig gcc musl-dev
+    leptonica-dev pkgconfig gcc musl-dev g++
 
 # Créer le répertoire de travail
 WORKDIR /app
