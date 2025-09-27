@@ -133,7 +133,7 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 	// Construire l'URL complète du serveur
 	baseURL := getBaseURL(c)
 	relativeURL := fmt.Sprintf("/uploads/images/%s", fileName)
-	fullImageURL := fmt.Sprintf("%s%s", baseURL, relativeURL)
+	fullImageURL := fmt.Sprintf("%s/api/v1%s", baseURL, relativeURL)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
@@ -350,7 +350,7 @@ func (h *UploadHandler) UploadProfileImage(c *gin.Context) {
 	// Construire l'URL complète du serveur
 	baseURL := getBaseURL(c)
 	relativeURL := fmt.Sprintf("/uploads/images/%s", fileName)
-	fullImageURL := fmt.Sprintf("%s%s", baseURL, relativeURL)
+	fullImageURL := fmt.Sprintf("%s/api/v1%s", baseURL, relativeURL)
 
 	// Mettre à jour l'avatar de l'utilisateur dans la base de données
 	user.Avatar = relativeURL

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { User } from '../types/user';
+import { getFullImageUrl } from '../utils/imageUtils';
 
 interface UserLinkProps {
   user: User;
@@ -37,7 +38,7 @@ export const UserLink: React.FC<UserLinkProps> = ({
         <div className="w-6 h-6 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
           {user.avatar ? (
             <img 
-              src={user.avatar} 
+              src={getFullImageUrl(user.avatar)} 
               alt={user.username}
               className="w-full h-full rounded-full object-cover"
             />

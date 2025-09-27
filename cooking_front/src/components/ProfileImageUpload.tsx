@@ -72,8 +72,8 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         const imageUrl = response.data.image_url; // URL relative pour stockage
         const fullUrl = response.data.full_url;   // URL complète pour affichage
         onChange(imageUrl);
-        // Utiliser l'URL complète si disponible, sinon construire l'URL
-        setPreview(fullUrl || `${import.meta.env.VITE_API_URL}${imageUrl}`);
+        // Utiliser l'URL complète si disponible, sinon construire avec getFullImageUrl
+        setPreview(fullUrl || getFullImageUrl(imageUrl));
       } else {
         throw new Error(response.data.message || 'Erreur lors de l\'upload');
       }

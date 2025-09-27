@@ -125,7 +125,7 @@ export const UserProfilePage: React.FC = () => {
                 <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   {profile.user.avatar ? (
                     <img 
-                      src={profile.user.avatar} 
+                      src={getFullImageUrl(profile.user.avatar)} 
                       alt={profile.user.username}
                       className="w-full h-full rounded-full object-cover"
                     />
