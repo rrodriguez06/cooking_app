@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Button, Input, Card, Loading, AddIngredientModal, AddEquipmentModal, ImageUpload, IngredientSearch, RecipePhotoImport } from '../components';
 import { recipeService } from '../services/recipe';
 import { categoryService, tagService, ingredientService, equipmentService } from '../services/data';
@@ -64,6 +65,7 @@ export const RecipeEditPage: React.FC = () => {
     handleSubmit,
     formState: { errors },
     setValue,
+    getValues,
     watch
   } = useForm<RecipeFormData>({
     resolver: zodResolver(recipeSchema),
@@ -101,6 +103,41 @@ export const RecipeEditPage: React.FC = () => {
     control,
     name: 'instructions'
   });
+
+  // Fonctions pour déplacer les étapes
+  const moveInstructionUp = (index: number) => {
+    if (index === 0) return; // Déjà en haut
+    
+    const instructions = getValues('instructions');
+    const newInstructions = [...instructions];
+    
+    // Échanger avec l'élément précédent
+    [newInstructions[index - 1], newInstructions[index]] = [newInstructions[index], newInstructions[index - 1]];
+    
+    // Mettre à jour les numéros d'étapes
+    newInstructions.forEach((instruction, i) => {
+      instruction.step_number = i + 1;
+    });
+    
+    setValue('instructions', newInstructions);
+  };
+
+  const moveInstructionDown = (index: number) => {
+    const instructions = getValues('instructions');
+    if (index === instructions.length - 1) return; // Déjà en bas
+    
+    const newInstructions = [...instructions];
+    
+    // Échanger avec l'élément suivant
+    [newInstructions[index], newInstructions[index + 1]] = [newInstructions[index + 1], newInstructions[index]];
+    
+    // Mettre à jour les numéros d'étapes
+    newInstructions.forEach((instruction, i) => {
+      instruction.step_number = i + 1;
+    });
+    
+    setValue('instructions', newInstructions);
+  };
 
   const selectedTagIds = watch('tag_ids') || [];
   const selectedCategoryIds = watch('category_ids') || [];
@@ -714,6 +751,9 @@ export const RecipeEditPage: React.FC = () => {
         <Card className="p-6">
           <div className="mb-4">
             <h2 className="text-xl font-semibold">Instructions</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Décrivez les étapes de préparation. Vous pouvez réorganiser les étapes avec les boutons ↑ ↓.
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -730,15 +770,46 @@ export const RecipeEditPage: React.FC = () => {
                       className="flex-1"
                     />
                   </div>
-                  {instructionFields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => removeInstruction(index)}
-                    >
-                      Supprimer
-                    </Button>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {/* Boutons de déplacement */}
+                    {instructionFields.length > 1 && (
+                      <div className="flex flex-col">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => moveInstructionUp(index)}
+                          disabled={index === 0}
+                          className="p-1 h-6 w-6 hover:bg-gray-100"
+                          title={`Déplacer l'étape ${index + 1} vers le haut`}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => moveInstructionDown(index)}
+                          disabled={index === instructionFields.length - 1}
+                          className="p-1 h-6 w-6 hover:bg-gray-100"
+                          title={`Déplacer l'étape ${index + 1} vers le bas`}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                    {instructionFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => removeInstruction(index)}
+                        title={`Supprimer l'étape ${index + 1}`}
+                      >
+                        Supprimer
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
