@@ -2,6 +2,8 @@ export * from './HomePage';
 export * from './LoginPage';
 export * from './ProfilePage';
 export * from './UserProfilePage';
+export * from './UserRecipesPage';
+export * from './DataManagementPage';
 export * from './RecipeDetailPage';
 export * from './SearchPage';
 export * from './PlanningPage';

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload } from '../components';
+import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination } from '../components';
 import { useAuth } from '../context';
 import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
+import { usePagination } from '../hooks';
 import { formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, RecipeList, User as UserType } from '../types';
@@ -26,11 +27,75 @@ export const ProfilePage: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedList, setSelectedList] = useState<RecipeList | null>(null);
   const [editingList, setEditingList] = useState<RecipeList | null>(null);
+  
+  // Pagination pour les recettes
+  const recipesPagination = usePagination(1);
+  const favoritesPagination = usePagination(1);
+  
   const [editForm, setEditForm] = useState({
     username: user?.username || '',
     email: user?.email || '',
     avatar: user?.avatar || '',
   });
+
+  // Fonctions pour charger les données avec pagination
+  const loadUserRecipes = async (page: number = 1) => {
+    if (!user) return;
+    
+    try {
+      console.log('Chargement des recettes pour l\'utilisateur:', user.id, 'page:', page);
+      const recipesResponse = await recipeService.getUserRecipes(parseInt(user.id), {
+        page,
+        limit: 12 // 12 recettes par page
+      });
+      console.log('Réponse getUserRecipes:', recipesResponse);
+      if (recipesResponse.success) {
+        setUserRecipes(recipesResponse.data.recipes);
+        recipesPagination.setPaginationData({
+          currentPage: recipesResponse.data.current_page,
+          totalPages: recipesResponse.data.total_pages,
+          totalCount: recipesResponse.data.total_count,
+          hasNext: recipesResponse.data.has_next,
+          hasPrev: recipesResponse.data.has_prev
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des recettes:', error);
+    }
+  };
+
+  const loadFavoriteRecipes = async (page: number = 1) => {
+    if (!user) return;
+    
+    try {
+      console.log('Chargement des favoris, page:', page);
+      const favoritesResponse = await favoriteService.getUserFavorites(page, 12);
+      console.log('Réponse getUserFavorites:', favoritesResponse);
+      if (favoritesResponse.success) {
+        setFavoriteRecipes(favoritesResponse.data.recipes);
+        favoritesPagination.setPaginationData({
+          currentPage: favoritesResponse.data.current_page,
+          totalPages: favoritesResponse.data.total_pages,
+          totalCount: favoritesResponse.data.total_count,
+          hasNext: favoritesResponse.data.has_next,
+          hasPrev: favoritesResponse.data.has_prev
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des favoris:', error);
+    }
+  };
+
+  // Gestionnaires de changement de page
+  const handleRecipesPageChange = (page: number) => {
+    recipesPagination.goToPage(page);
+    loadUserRecipes(page);
+  };
+
+  const handleFavoritesPageChange = (page: number) => {
+    favoritesPagination.goToPage(page);
+    loadFavoriteRecipes(page);
+  };
 
   useEffect(() => {
     console.log('useEffect ProfilePage déclenché, user:', user);
@@ -43,29 +108,11 @@ export const ProfilePage: React.FC = () => {
       console.log('fetchUserData appelée pour l\'utilisateur:', user);
       
       try {
-        // Charger les recettes de l'utilisateur
-        try {
-          console.log('Chargement des recettes pour l\'utilisateur:', user.id);
-          const recipesResponse = await recipeService.getUserRecipes(parseInt(user.id));
-          console.log('Réponse getUserRecipes:', recipesResponse);
-          if (recipesResponse.success) {
-            setUserRecipes(recipesResponse.data.recipes);
-          }
-        } catch (error) {
-          console.error('Erreur lors du chargement des recettes:', error);
-        }
+        // Charger les recettes de l'utilisateur avec pagination
+        await loadUserRecipes(1);
 
-        // Charger les favoris
-        try {
-          console.log('Chargement des favoris');
-          const favoritesResponse = await favoriteService.getUserFavorites();
-          console.log('Réponse getUserFavorites:', favoritesResponse);
-          if (favoritesResponse.success) {
-            setFavoriteRecipes(favoritesResponse.data.recipes);
-          }
-        } catch (error) {
-          console.error('Erreur lors du chargement des favoris:', error);
-        }
+        // Charger les favoris avec pagination
+        await loadFavoriteRecipes(1);
 
         // Charger les listes
         try {
@@ -447,6 +494,15 @@ export const ProfilePage: React.FC = () => {
                   ))}
                 </div>
               )}
+              
+              {/* Pagination pour les recettes */}
+              <Pagination
+                currentPage={recipesPagination.pagination.currentPage}
+                totalPages={recipesPagination.pagination.totalPages}
+                totalCount={recipesPagination.pagination.totalCount}
+                onPageChange={handleRecipesPageChange}
+                className="mt-6"
+              />
             </CardContent>
           </Card>
         )}
@@ -495,6 +551,15 @@ export const ProfilePage: React.FC = () => {
                   ))}
                 </div>
               )}
+              
+              {/* Pagination pour les favoris */}
+              <Pagination
+                currentPage={favoritesPagination.pagination.currentPage}
+                totalPages={favoritesPagination.pagination.totalPages}
+                totalCount={favoritesPagination.pagination.totalCount}
+                onPageChange={handleFavoritesPageChange}
+                className="mt-6"
+              />
             </CardContent>
           </Card>
         )}

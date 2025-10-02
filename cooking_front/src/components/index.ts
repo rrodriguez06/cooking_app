@@ -24,3 +24,4 @@ export * from './IngredientSearch';
 export * from './SmartSearchBar';
 export * from './GeneratePlanModal';
 export * from './RecipePhotoImport';
+export * from './Pagination';
