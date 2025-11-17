@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeActions, UserLink, SmartSearchBar } from '../components';
+import { Layout, Card, CardContent, Button, RecipeActions, UserLink, SmartSearchBar, Pagination } from '../components';
 import type { SearchSuggestion } from '../components/SmartSearchBar';
 import { recipeService, categoryService, tagService, ingredientService, equipmentService, userService } from '../services';
-import { useDebounce } from '../hooks';
+import { useDebounce, usePagination } from '../hooks';
 import { formatTime } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, SearchFilters, Category, Tag, Ingredient, Equipment, User } from '../types';
@@ -112,6 +112,9 @@ export const SearchPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [smartSearchFilters, setSmartSearchFilters] = useState<SearchSuggestion[]>([]);
   
+  // Pagination
+  const pagination = usePagination(1);
+  
   // Reference data
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -167,13 +170,20 @@ export const SearchPage: React.FC = () => {
         const searchFilters: SearchFilters = {
           q: debouncedSearchQuery || undefined,
           ...filters,
-          page: 1,
+          page: pagination.pagination.currentPage,
           limit: 20,
         };
 
         const response = await recipeService.searchRecipes(searchFilters);
         if (response.success) {
           setRecipes(response.data.recipes);
+          pagination.setPaginationData({
+            currentPage: response.data.current_page,
+            totalPages: response.data.total_pages,
+            totalCount: response.data.total_count,
+            hasNext: response.data.has_next,
+            hasPrev: response.data.has_prev
+          });
         }
       } catch (error) {
         console.error('Error searching recipes:', error);
@@ -183,10 +193,11 @@ export const SearchPage: React.FC = () => {
     };
 
     searchRecipes();
-  }, [debouncedSearchQuery, filters]);
+  }, [debouncedSearchQuery, filters, pagination.pagination.currentPage]);
 
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    pagination.resetPagination(); // Retour à la page 1 lors d'un changement de filtre
   };
 
   const handleMultiSelectChange = (key: keyof SearchFilters, value: string, checked: boolean) => {
@@ -198,6 +209,7 @@ export const SearchPage: React.FC = () => {
         return { ...prev, [key]: currentArray.filter(item => item !== value) };
       }
     });
+    pagination.resetPagination(); // Retour à la page 1 lors d'un changement de filtre
   };
 
   const handleSmartSearch = (suggestion: SearchSuggestion) => {
@@ -231,6 +243,7 @@ export const SearchPage: React.FC = () => {
     }
 
     setFilters(newFilters);
+    pagination.resetPagination(); // Retour à la page 1 lors d'une nouvelle recherche
   };
 
   const removeSmartSearchFilter = (index: number) => {
@@ -273,6 +286,12 @@ export const SearchPage: React.FC = () => {
     setSearchQuery('');
     setSmartSearchFilters([]);
     setSearchParams({});
+    pagination.resetPagination();
+  };
+
+  const handlePageChange = (page: number) => {
+    pagination.goToPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const removeFilter = (key: keyof SearchFilters, value?: string) => {
@@ -726,7 +745,7 @@ export const SearchPage: React.FC = () => {
             <>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {recipes.length} recette{recipes.length > 1 ? 's' : ''} trouvée{recipes.length > 1 ? 's' : ''}
+                  {pagination.pagination.totalCount || recipes.length} recette{(pagination.pagination.totalCount || recipes.length) > 1 ? 's' : ''} trouvée{(pagination.pagination.totalCount || recipes.length) > 1 ? 's' : ''}
                 </h2>
               </div>
               
@@ -735,6 +754,16 @@ export const SearchPage: React.FC = () => {
                   <RecipeCard key={recipe.id} recipe={recipe} />
                 ))}
               </div>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={pagination.pagination.currentPage}
+                totalPages={pagination.pagination.totalPages}
+                totalCount={pagination.pagination.totalCount}
+                onPageChange={handlePageChange}
+                itemsPerPage={20}
+                className="mt-8"
+              />
             </>
           )}
         </div>

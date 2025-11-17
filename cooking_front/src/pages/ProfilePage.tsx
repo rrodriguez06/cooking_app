@@ -453,42 +453,63 @@ export const ProfilePage: React.FC = () => {
                   {userRecipes.map((recipe) => (
                     <div
                       key={recipe.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                     >
-                      <h3 className="font-semibold mb-2">{recipe.title}</h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {recipe.description}
-                      </p>
-                      <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
-                        <span>{formatDate(recipe.created_at)}</span>
+                      {/* Image de la recette */}
+                      <div 
+                        className="w-full h-48 bg-gray-200 cursor-pointer"
+                        onClick={() => navigate(`/recipe/${recipe.id}`)}
+                      >
+                        {recipe.image_url ? (
+                          <img
+                            src={getFullImageUrl(recipe.image_url)}
+                            alt={recipe.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ChefHat className="h-16 w-16 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                      <div className="flex justify-between items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/recipe/${recipe.id}`)}
-                          className="flex-1"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
-                          className="flex-1"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Modifier
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteRecipe(recipe.id, recipe.title)}
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      
+                      {/* Contenu de la carte */}
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-2 line-clamp-1">{recipe.title}</h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {recipe.description}
+                        </p>
+                        <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+                          <span>{formatDate(recipe.created_at)}</span>
+                        </div>
+                        <div className="flex justify-between items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/recipe/${recipe.id}`)}
+                            className="flex-1"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Voir
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
+                            className="flex-1"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteRecipe(recipe.id, recipe.title)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -532,21 +553,42 @@ export const ProfilePage: React.FC = () => {
                   {favoriteRecipes.map((recipe) => (
                     <div
                       key={recipe.id}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                     >
-                      <h3 className="font-semibold mb-2">{recipe.title}</h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {recipe.description}
-                      </p>
-                      <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>Par {recipe.author?.username}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/recipe/${recipe.id}`)}
-                        >
-                          Voir
-                        </Button>
+                      {/* Image de la recette */}
+                      <div 
+                        className="w-full h-48 bg-gray-200 cursor-pointer"
+                        onClick={() => navigate(`/recipe/${recipe.id}`)}
+                      >
+                        {recipe.image_url ? (
+                          <img
+                            src={getFullImageUrl(recipe.image_url)}
+                            alt={recipe.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ChefHat className="h-16 w-16 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Contenu de la carte */}
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-2 line-clamp-1">{recipe.title}</h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {recipe.description}
+                        </p>
+                        <div className="flex justify-between items-center text-sm text-gray-500">
+                          <span>Par {recipe.author?.username}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/recipe/${recipe.id}`)}
+                          >
+                            Voir
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
