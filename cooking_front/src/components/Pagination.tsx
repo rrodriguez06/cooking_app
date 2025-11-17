@@ -9,6 +9,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   className?: string;
   showInfo?: boolean;
+  itemsPerPage?: number;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -17,7 +18,8 @@ export const Pagination: React.FC<PaginationProps> = ({
   totalCount,
   onPageChange,
   className = "",
-  showInfo = true
+  showInfo = true,
+  itemsPerPage = 20
 }) => {
   if (totalPages <= 1) return null;
 
@@ -68,8 +70,8 @@ export const Pagination: React.FC<PaginationProps> = ({
         <div className="text-sm text-gray-600">
           {totalCount > 0 ? (
             <>
-              Affichage de {Math.max(1, (currentPage - 1) * 20 + 1)} à{' '}
-              {Math.min(currentPage * 20, totalCount)} sur {totalCount} résultats
+              Affichage de {Math.max(1, (currentPage - 1) * itemsPerPage + 1)} à{' '}
+              {Math.min(currentPage * itemsPerPage, totalCount)} sur {totalCount} résultats
             </>
           ) : (
             'Aucun résultat'

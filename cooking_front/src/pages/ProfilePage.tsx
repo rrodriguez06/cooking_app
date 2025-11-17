@@ -325,7 +325,7 @@ export const ProfilePage: React.FC = () => {
           <Card>
             <CardContent className="p-6 text-center">
               <ChefHat className="h-8 w-8 text-primary-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{userRecipes.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{recipesPagination.pagination.totalCount || 0}</div>
               <div className="text-sm text-gray-500">Recettes créées</div>
             </CardContent>
           </Card>
@@ -333,7 +333,7 @@ export const ProfilePage: React.FC = () => {
           <Card>
             <CardContent className="p-6 text-center">
               <Heart className="h-8 w-8 text-red-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{favoriteRecipes.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{favoritesPagination.pagination.totalCount || 0}</div>
               <div className="text-sm text-gray-500">Recettes favorites</div>
             </CardContent>
           </Card>
@@ -375,7 +375,7 @@ export const ProfilePage: React.FC = () => {
               }`}
             >
               <ChefHat className="h-4 w-4 inline mr-2" />
-              Mes Recettes ({userRecipes.length})
+              Mes Recettes ({recipesPagination.pagination.totalCount || 0})
             </button>
             
             <button
@@ -387,7 +387,7 @@ export const ProfilePage: React.FC = () => {
               }`}
             >
               <Heart className="h-4 w-4 inline mr-2" />
-              Favoris ({favoriteRecipes.length})
+              Favoris ({favoritesPagination.pagination.totalCount || 0})
             </button>
             
             <button
@@ -501,6 +501,7 @@ export const ProfilePage: React.FC = () => {
                 totalPages={recipesPagination.pagination.totalPages}
                 totalCount={recipesPagination.pagination.totalCount}
                 onPageChange={handleRecipesPageChange}
+                itemsPerPage={12}
                 className="mt-6"
               />
             </CardContent>
@@ -558,6 +559,7 @@ export const ProfilePage: React.FC = () => {
                 totalPages={favoritesPagination.pagination.totalPages}
                 totalCount={favoritesPagination.pagination.totalCount}
                 onPageChange={handleFavoritesPageChange}
+                itemsPerPage={12}
                 className="mt-6"
               />
             </CardContent>
