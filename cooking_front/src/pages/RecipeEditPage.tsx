@@ -148,24 +148,62 @@ export const RecipeEditPage: React.FC = () => {
     const fetchAllIngredients = async () => {
       let allIngredients: Ingredient[] = [];
       let page = 1;
-      let totalPages = 1;
+      let hasMore = true;
       const limit = 50;
-      do {
-        const response = await ingredientService.getIngredients({ page, limit });
-        if (response.success) {
-          if (Array.isArray(response.data)) {
-            // API renvoie directement un tableau
-            allIngredients = allIngredients.concat(response.data);
-            totalPages = 1;
-          } else if (response.data && Array.isArray((response.data as { ingredients: Ingredient[] }).ingredients)) {
-            // API paginée
-            const paged = response.data as { ingredients: Ingredient[]; total_pages?: number };
-            allIngredients = allIngredients.concat(paged.ingredients);
-            totalPages = paged.total_pages || 1;
+      
+      console.log('Début de la récupération paginée des ingrédients...');
+      
+      while (hasMore) {
+        console.log(`Récupération de la page ${page} des ingrédients...`);
+        try {
+          const response = await ingredientService.getIngredients({ page, limit });
+          
+          if (response.success) {
+            if (Array.isArray(response.data)) {
+              // API renvoie directement un tableau (pas de pagination)
+              allIngredients = allIngredients.concat(response.data);
+              console.log(`Page ${page}: ${response.data.length} ingrédients récupérés`);
+              hasMore = false; // Pas de pagination, on s'arrête
+            } else if (response.data && typeof response.data === 'object') {
+              // API paginée
+              const paged = response.data as { 
+                ingredients?: Ingredient[]; 
+                total_pages?: number;
+                has_next?: boolean;
+                current_page?: number;
+              };
+              
+              if (paged.ingredients && Array.isArray(paged.ingredients)) {
+                allIngredients = allIngredients.concat(paged.ingredients);
+                console.log(`Page ${page}: ${paged.ingredients.length} ingrédients récupérés`);
+                
+                // Vérifier s'il y a une page suivante
+                if (paged.has_next === false || paged.ingredients.length < limit) {
+                  hasMore = false;
+                } else if (paged.total_pages && page >= paged.total_pages) {
+                  hasMore = false;
+                } else {
+                  page++;
+                }
+              } else {
+                console.warn('Format de réponse inattendu:', response.data);
+                hasMore = false;
+              }
+            } else {
+              console.warn('Format de réponse invalide');
+              hasMore = false;
+            }
+          } else {
+            console.error('Erreur lors de la récupération des ingrédients:', response);
+            hasMore = false;
           }
+        } catch (error) {
+          console.error(`Erreur lors de la récupération de la page ${page}:`, error);
+          hasMore = false;
         }
-        page++;
-      } while (page <= totalPages);
+      }
+      
+      console.log(`Total d'ingrédients récupérés: ${allIngredients.length}`);
       return allIngredients;
     };
 
