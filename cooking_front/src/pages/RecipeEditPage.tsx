@@ -194,9 +194,17 @@ export const RecipeEditPage: React.FC = () => {
         setEquipments(equipmentsData);
         setRecipes(recipesData);
 
-        // Mettre à jour les valeurs par défaut avec le premier ingrédient disponible
+        // S'assurer que le tableau d'ingrédients du formulaire est bien initialisé
         if (ingredientsData.length > 0) {
-          setValue('ingredients.0.ingredient_id', ingredientsData[0].id);
+          const currentIngredients = getValues('ingredients');
+          if (!Array.isArray(currentIngredients) || currentIngredients.length === 0) {
+            setValue('ingredients', [{ ingredient_id: ingredientsData[0].id, quantity: 0, unit: '', notes: '' }]);
+          } else if (!currentIngredients[0].ingredient_id) {
+            setValue('ingredients.0.ingredient_id', ingredientsData[0].id);
+          }
+        } else {
+          // Si aucun ingrédient n'est disponible, initialiser avec un id fictif
+          setValue('ingredients', [{ ingredient_id: 1, quantity: 0, unit: '', notes: '' }]);
         }
 
         if (id && !isNaN(parseInt(id))) {
