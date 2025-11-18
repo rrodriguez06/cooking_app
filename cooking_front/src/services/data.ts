@@ -71,8 +71,26 @@ export const tagService = {
 
 // Ingredients service
 export const ingredientService = {
-  async getIngredients(params?: QueryParams): Promise<{ success: boolean; data: Ingredient[] }> {
+  async getIngredients(params?: QueryParams): Promise<{ 
+    success: boolean; 
+    data: Ingredient[] | {
+      ingredients: Ingredient[];
+      total_count?: number;
+      current_page?: number;
+      total_pages?: number;
+      has_next?: boolean;
+      has_prev?: boolean;
+    }
+  }> {
     const response = await api.get('/ingredients', { params });
+    // Si on passe des paramètres de pagination, retourner la structure paginée complète
+    if (params && (params.page || params.limit)) {
+      return {
+        success: response.data.success,
+        data: response.data.data || { ingredients: [] }
+      };
+    }
+    // Sinon, retourner juste le tableau (compatibilité avec l'ancien code)
     return {
       success: response.data.success,
       data: response.data.data?.ingredients || []
