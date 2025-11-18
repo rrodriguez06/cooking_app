@@ -57,7 +57,11 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
     try {
       const response = await ingredientService.getIngredients({ limit: 1000 });
       if (response.success && response.data) {
-        setAvailableIngredients(response.data);
+        // Gérer le nouveau format paginé ou l'ancien format tableau
+        const ingredientsArray = Array.isArray(response.data) 
+          ? response.data 
+          : response.data.ingredients || [];
+        setAvailableIngredients(ingredientsArray);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des ingrédients:', error);

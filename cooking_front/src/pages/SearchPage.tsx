@@ -152,7 +152,13 @@ export const SearchPage: React.FC = () => {
 
         if (categoriesRes.success) setCategories(categoriesRes.data);
         if (tagsRes.success) setTags(tagsRes.data);
-        if (ingredientsRes.success) setIngredients(ingredientsRes.data);
+        if (ingredientsRes.success) {
+          // Gérer le nouveau format paginé ou l'ancien format tableau
+          const ingredientsArray = Array.isArray(ingredientsRes.data) 
+            ? ingredientsRes.data 
+            : ingredientsRes.data.ingredients || [];
+          setIngredients(ingredientsArray);
+        }
         if (equipmentsRes.success) setEquipments(equipmentsRes.data);
         if (usersRes.success) setUsers(usersRes.data.users);
       } catch (error) {
