@@ -144,59 +144,50 @@ export const RecipeEditPage: React.FC = () => {
   const selectedEquipmentIds = watch('equipment_ids') || [];
 
   useEffect(() => {
+    // Fonction utilitaire pour charger tous les ingrédients paginés
+    const fetchAllIngredients = async () => {
+      let allIngredients: Ingredient[] = [];
+      let page = 1;
+      let totalPages = 1;
+      const limit = 50;
+      do {
+        const response = await ingredientService.getIngredients({ page, limit });
+        if (response.success) {
+          if (Array.isArray(response.data)) {
+            // API renvoie directement un tableau
+            allIngredients = allIngredients.concat(response.data);
+            totalPages = 1;
+          } else if (response.data && Array.isArray((response.data as { ingredients: Ingredient[] }).ingredients)) {
+            // API paginée
+            const paged = response.data as { ingredients: Ingredient[]; total_pages?: number };
+            allIngredients = allIngredients.concat(paged.ingredients);
+            totalPages = paged.total_pages || 1;
+          }
+        }
+        page++;
+      } while (page <= totalPages);
+      return allIngredients;
+    };
+
     const loadData = async () => {
       console.log('RecipeEditPage: Loading data...');
       try {
         console.log('RecipeEditPage: Fetching categories, tags, ingredients, equipments, recipes...');
-        const [categoriesResponse, tagsResponse, ingredientsResponse, equipmentsResponse, recipesResponse] = await Promise.all([
+        const [categoriesResponse, tagsResponse, equipmentsResponse, recipesResponse, allIngredients] = await Promise.all([
           categoryService.getCategories({ limit: 100 }).catch(e => { console.error('Categories error:', e); return { success: false, data: [] }; }),
           tagService.getTags({ limit: 100 }).catch(e => { console.error('Tags error:', e); return { success: false, data: [] }; }),
-          ingredientService.getIngredients({ limit: 100 }).catch(e => { console.error('Ingredients error:', e); return { success: false, data: [] }; }),
           equipmentService.getEquipments({ limit: 100 }).catch(e => { console.error('Equipments error:', e); return { success: false, data: [] }; }),
-          recipeService.searchRecipes({}).catch(e => { console.error('Recipes error:', e); return { success: false, data: { recipes: [] } }; })
+          recipeService.searchRecipes({}).catch(e => { console.error('Recipes error:', e); return { success: false, data: { recipes: [] } }; }),
+          fetchAllIngredients()
         ]);
-        
-        console.log('RecipeEditPage: Raw responses:', {
-          categoriesResponse,
-          tagsResponse, 
-          ingredientsResponse,
-          equipmentsResponse
-        });
-        
-        // Log des comptes pour vérifier qu'on récupère tous les éléments
-        console.log('Categories count:', categoriesResponse.data?.length || 0);
-        console.log('Tags count:', tagsResponse.data?.length || 0);
-        console.log('Ingredients count:', ingredientsResponse.data?.length || 0);
-        console.log('Equipments count:', equipmentsResponse.data?.length || 0);
-        
-        // Log each response structure individually
-        console.log('Categories response details:', JSON.stringify(categoriesResponse, null, 2));
-        console.log('Tags response details:', JSON.stringify(tagsResponse, null, 2));
-        console.log('Ingredients response details:', JSON.stringify(ingredientsResponse, null, 2));
-        console.log('Equipments response details:', JSON.stringify(equipmentsResponse, null, 2));
-        
-        console.log('RecipeEditPage: Data loaded:', {
-          categories: categoriesResponse.data?.length || 'undefined/error',
-          tags: tagsResponse.data?.length || 'undefined/error',
-          ingredients: ingredientsResponse.data?.length || 'undefined/error',
-          equipments: equipmentsResponse.data?.length || 'undefined/error'
-        });
-        
+
         // Set data with fallbacks to empty arrays and ensure they are arrays
         const categoriesData = Array.isArray(categoriesResponse.data) ? categoriesResponse.data : [];
         const tagsData = Array.isArray(tagsResponse.data) ? tagsResponse.data : [];
-        const ingredientsData = Array.isArray(ingredientsResponse.data) ? ingredientsResponse.data : [];
         const equipmentsData = Array.isArray(equipmentsResponse.data) ? equipmentsResponse.data : [];
         const recipesData = Array.isArray(recipesResponse.data?.recipes) ? recipesResponse.data.recipes : [];
-        
-        console.log('RecipeEditPage: Processed data:', {
-          categoriesLength: categoriesData.length,
-          tagsLength: tagsData.length,
-          ingredientsLength: ingredientsData.length,
-          equipmentsLength: equipmentsData.length,
-          recipesLength: recipesData.length
-        });
-        
+        const ingredientsData = Array.isArray(allIngredients) ? allIngredients : [];
+
         setCategories(categoriesData);
         setTags(tagsData);
         setIngredients(ingredientsData);
@@ -213,7 +204,7 @@ export const RecipeEditPage: React.FC = () => {
           const recipeResponse = await recipeService.getRecipe(parseInt(id));
           const recipe = recipeResponse.data;
           console.log('RecipeEditPage: Recipe loaded:', recipe.title);
-          
+
           setValue('title', recipe.title);
           setValue('description', recipe.description || '');
           setValue('image_url', recipe.image_url || '');
@@ -225,7 +216,7 @@ export const RecipeEditPage: React.FC = () => {
           setValue('tag_ids', recipe.tags?.map(tag => tag.id) || []);
           setValue('category_ids', recipe.categories?.map(cat => cat.id) || []);
           setValue('equipment_ids', recipe.equipments?.map(eq => eq.equipment_id) || []);
-          
+
           if (recipe.ingredients?.length > 0) {
             setValue('ingredients', recipe.ingredients.map(ing => ({
               ingredient_id: ing.ingredient_id,
@@ -234,7 +225,7 @@ export const RecipeEditPage: React.FC = () => {
               notes: ing.notes || ''
             })));
           }
-          
+
           if (recipe.instructions?.length > 0) {
             setValue('instructions', recipe.instructions.map((inst, index) => ({
               step_number: index + 1,
