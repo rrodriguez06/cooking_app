@@ -188,6 +188,9 @@ export const RecipeEditPage: React.FC = () => {
         const recipesData = Array.isArray(recipesResponse.data?.recipes) ? recipesResponse.data.recipes : [];
         const ingredientsData = Array.isArray(allIngredients) ? allIngredients : [];
 
+        // Log détaillé des ingrédients récupérés (dans la portée locale)
+        console.log('Ingrédients récupérés:', Array.isArray(ingredientsData) ? ingredientsData.map((ing: Ingredient) => ing.name) : []);
+
         setCategories(categoriesData);
         setTags(tagsData);
         setIngredients(ingredientsData);
