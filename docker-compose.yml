@@ -2,38 +2,7 @@ version: '3.8'
 
 services:
   # Traefik - Reverse Proxy
-  traefik:
-    image: traefik:v3.0
-    container_name: cooking_traefik
-    restart: unless-stopped
-    command:
-      - --api.dashboard=true
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.letsencrypt.acme.email=your-email@rrodriguez.dev
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --entrypoints.web.http.redirections.entrypoint.permanent=true
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080" # Dashboard Traefik
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik_letsencrypt:/letsencrypt
-    networks:
-      - cooking_network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.rrodriguez.dev`)"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik.service=api@internal"
+
 
   # Base de données PostgreSQL
   postgres:
@@ -85,6 +54,7 @@ services:
         condition: service_started
     networks:
       - cooking_network
+      - traefik-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cooking-api.rule=Host(`cooking.rrodriguez.dev`) && (PathPrefix(`/api`) || PathPrefix(`/uploads`))"
@@ -103,6 +73,7 @@ services:
       - cooking-server
     networks:
       - cooking_network
+      - traefik-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cooking-frontend.rule=Host(`cooking.rrodriguez.dev`)"
@@ -124,6 +95,7 @@ services:
       - ollama_models:/root/.ollama
     networks:
       - cooking_network
+      - traefik-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ollama.rule=Host(`ollama.rrodriguez.dev`)"
@@ -144,6 +116,7 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     networks:
       - cooking_network
+      - traefik-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -159,8 +132,7 @@ volumes:
     name: cooking_postgres_data
   pgadmin_data:
     name: cooking_pgadmin_data
-  traefik_letsencrypt:
-    name: cooking_traefik_letsencrypt
+
   cooking_uploads:
     name: cooking_uploads_data
   ollama_models:
@@ -170,3 +142,5 @@ networks:
   cooking_network:
     name: cooking_network
     driver: bridge
+  traefik-net:
+    external: true
