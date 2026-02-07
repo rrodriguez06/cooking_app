@@ -61,6 +61,7 @@ services:
       - "traefik.http.routers.cooking-api.tls=true"
       - "traefik.http.routers.cooking-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.cooking-api.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik-net"
 
   # Frontend React
   cooking-frontend:
@@ -80,6 +81,7 @@ services:
       - "traefik.http.routers.cooking-frontend.tls=true"
       - "traefik.http.routers.cooking-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.cooking-frontend.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik-net"
 
   # Service LLM avec Ollama
   ollama-llm:
@@ -102,6 +104,7 @@ services:
       - "traefik.http.routers.ollama.tls=true"
       - "traefik.http.routers.ollama.tls.certresolver=letsencrypt"
       - "traefik.http.services.ollama.loadbalancer.server.port=11434"
+      - "traefik.docker.network=traefik-net"
 
   # pgAdmin (optionnel)
   pgadmin:
@@ -126,6 +129,7 @@ services:
       - "traefik.http.routers.pgadmin.tls=true"
       - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik-net"
 
 volumes:
   postgres_data:
