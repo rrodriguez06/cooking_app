@@ -19,6 +19,7 @@ services:
       - ./cooking_server/docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - cooking_network
+      - traefik-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cooking_db"]
       interval: 10s
@@ -106,36 +107,12 @@ services:
       - "traefik.http.services.ollama.loadbalancer.server.port=11434"
       - "traefik.docker.network=traefik-net"
 
-  # pgAdmin (optionnel)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: cooking_pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rrodriguez.dev}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin_password}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - cooking_network
-      - traefik-net
-    depends_on:
-      postgres:
-        condition: service_healthy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.rrodriguez.dev`)"
-      - "traefik.http.routers.pgadmin.tls=true"
-      - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik-net"
+
 
 volumes:
   postgres_data:
     name: cooking_postgres_data
-  pgadmin_data:
-    name: cooking_pgadmin_data
+
 
   cooking_uploads:
     name: cooking_uploads_data
