@@ -1,12 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { ProtectedRoute } from './components';
+import { ConfirmProvider } from './components/ConfirmDialog';
+import { Toaster } from './components/ui/sonner';
 import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage, FridgePage } from './pages';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <ConfirmProvider>
+        <Toaster />
+        <Router>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -69,7 +73,8 @@ function App() {
           {/* Redirect unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+        </Router>
+      </ConfirmProvider>
     </AuthProvider>
   );
 }

@@ -3,29 +3,103 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
+  :root {
+    /* Neutres chauds (fond / texte / surfaces) */
+    --background: 40 30% 98%;
+    --foreground: 25 12% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 25 12% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 12% 16%;
+    /* Marque (paprika chaud) */
+    --primary: 15 78% 49%;
+    --primary-foreground: 40 30% 98%;
+    /* Surfaces secondaires / muettes */
+    --secondary: 30 16% 92%;
+    --secondary-foreground: 25 14% 22%;
+    --muted: 30 16% 94%;
+    --muted-foreground: 25 8% 45%;
+    --accent: 30 18% 93%;
+    --accent-foreground: 25 14% 22%;
+    /* Destructif / erreur (rouge, distinct de la marque) */
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    /* Bordures / champs / focus */
+    --border: 30 16% 88%;
+    --input: 30 16% 88%;
+    --ring: 15 78% 49%;
+    --radius: 0.75rem;
   }
-  
+
+  .dark {
+    --background: 25 14% 10%;
+    --foreground: 30 16% 92%;
+    --card: 25 12% 13%;
+    --card-foreground: 30 16% 92%;
+    --popover: 25 12% 13%;
+    --popover-foreground: 30 16% 92%;
+    --primary: 18 84% 56%;
+    --primary-foreground: 25 30% 10%;
+    --secondary: 25 8% 20%;
+    --secondary-foreground: 30 16% 92%;
+    --muted: 25 8% 18%;
+    --muted-foreground: 30 10% 62%;
+    --accent: 25 8% 22%;
+    --accent-foreground: 30 16% 92%;
+    --destructive: 0 62% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 25 8% 24%;
+    --input: 25 8% 24%;
+    --ring: 18 84% 56%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2 {
+    @apply font-display;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-3 py-2 border border-input bg-background rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors duration-200;
   }
-  
+
   .card {
-    @apply bg-white rounded-lg shadow-md border border-gray-200;
+    @apply bg-card text-card-foreground rounded-2xl shadow-soft border border-border;
+  }
+}
+
+/* Feuille d'impression dédiée : n'imprimer que le conteneur .print-sheet (liste de courses). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-sheet,
+  .print-sheet * {
+    visibility: visible;
+  }
+  .print-sheet {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem;
+  }
+  .print-hidden {
+    display: none !important;
   }
 }

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select';
 import { Badge } from '../components/ui/Badge';
+import { Layout } from '../components';
 import { fridgeService } from '../services';
 import AddFridgeItemModal from '../components/AddFridgeItemModal';
 import type { 
@@ -130,52 +131,53 @@ const FridgePage: React.FC = () => {
     threeDaysFromNow.setDate(now.getDate() + 3);
     
     if (expiry < now) {
-      return { status: 'expired', label: 'Expiré', color: 'bg-red-100 text-red-800' };
+      return { status: 'expired', label: 'Expiré', color: 'bg-destructive/15 text-destructive' };
     } else if (expiry <= threeDaysFromNow) {
-      return { status: 'expiring', label: 'Expire bientôt', color: 'bg-orange-100 text-orange-800' };
+      return { status: 'expiring', label: 'Expire bientôt', color: 'bg-amber-100 text-amber-700' };
     }
     
-    return { status: 'fresh', label: 'Frais', color: 'bg-green-100 text-green-800' };
+    return { status: 'fresh', label: 'Frais', color: 'bg-herb-100 text-herb-700' };
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Chargement de votre frigo...</div>
+      <Layout>
+        <div className="flex h-64 items-center justify-center">
+          <div className="text-lg text-muted-foreground">Chargement de votre frigo...</div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <Layout>
+    <div className="space-y-6">
       {/* En-tête avec statistiques */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <Refrigerator className="h-8 w-8 text-blue-600" />
+          <Refrigerator className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mon Frigo</h1>
-            <p className="text-gray-600">Gérez vos ingrédients et découvrez des recettes</p>
+            <h1 className="text-3xl font-bold font-display text-foreground">Mon Frigo</h1>
+            <p className="text-muted-foreground">Gérez vos ingrédients et découvrez des recettes</p>
           </div>
         </div>
         
         {stats && (
           <div className="flex gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.total_items}</div>
-              <div className="text-sm text-gray-600">Ingrédients</div>
+              <div className="text-2xl font-bold text-primary">{stats.total_items}</div>
+              <div className="text-sm text-muted-foreground">Ingrédients</div>
             </div>
             {stats.expiring_soon > 0 && (
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{stats.expiring_soon}</div>
-                <div className="text-sm text-gray-600">À consommer</div>
+                <div className="text-2xl font-bold text-amber-600">{stats.expiring_soon}</div>
+                <div className="text-sm text-muted-foreground">À consommer</div>
               </div>
             )}
             {stats.expired > 0 && (
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
-                <div className="text-sm text-gray-600">Expirés</div>
+                <div className="text-2xl font-bold text-destructive">{stats.expired}</div>
+                <div className="text-sm text-muted-foreground">Expirés</div>
               </div>
             )}
           </div>
@@ -192,7 +194,7 @@ const FridgePage: React.FC = () => {
         {stats && stats.expired > 0 && (
           <Button 
             variant="secondary" 
-            className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+            className="flex items-center gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
             onClick={handleRemoveExpired}
           >
             <Trash2 className="h-4 w-4" />
@@ -225,7 +227,7 @@ const FridgePage: React.FC = () => {
                   variant="secondary"
                   size="sm"
                   onClick={() => setFilterExpiring(!filterExpiring)}
-                  className={filterExpiring ? 'bg-orange-50 border-orange-200' : ''}
+                  className={filterExpiring ? 'bg-amber-50 border-amber-200' : ''}
                 >
                   <Clock className="h-4 w-4" />
                   {filterExpiring ? 'Tous' : 'Expiration'}
@@ -236,10 +238,10 @@ const FridgePage: React.FC = () => {
           
           <CardContent>
             {filteredItems.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 {fridgeItems.length === 0 ? (
                   <>
-                    <Refrigerator className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <Refrigerator className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
                     <p>Votre frigo est vide</p>
                     <p className="text-sm">Ajoutez des ingrédients pour voir des suggestions de recettes !</p>
                   </>
@@ -252,12 +254,12 @@ const FridgePage: React.FC = () => {
                 {filteredItems.map(item => {
                   const expiryStatus = getExpiryStatus(item.expiry_date);
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{item.ingredient.name}</span>
                           {item.quantity && (
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-muted-foreground">
                               {item.quantity} {item.unit || ''}
                             </span>
                           )}
@@ -271,7 +273,7 @@ const FridgePage: React.FC = () => {
                             </Badge>
                           )}
                           {item.notes && (
-                            <span className="text-xs text-gray-500">{item.notes}</span>
+                            <span className="text-xs text-muted-foreground">{item.notes}</span>
                           )}
                         </div>
                       </div>
@@ -280,7 +282,7 @@ const FridgePage: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteItem(item.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -339,42 +341,42 @@ const FridgePage: React.FC = () => {
           <CardContent>
             {suggestionsLoading ? (
               <div className="text-center py-8">
-                <div className="text-sm text-gray-500">Recherche de recettes...</div>
+                <div className="text-sm text-muted-foreground">Recherche de recettes...</div>
               </div>
             ) : recipeSuggestions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Search className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
                 <p>Aucune suggestion trouvée</p>
                 <p className="text-sm">Ajoutez plus d'ingrédients ou modifiez les filtres</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {recipeSuggestions.map(suggestion => (
-                  <div key={suggestion.recipe.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                  <div key={suggestion.recipe.id} className="p-3 border rounded-lg hover:bg-muted">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="font-medium">{suggestion.recipe.title}</h3>
                         {suggestion.recipe.description && (
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {suggestion.recipe.description}
                           </p>
                         )}
                         
                         <div className="flex items-center gap-2 mt-2">
                           <Badge className={`text-xs ${
-                            suggestion.canCook 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-orange-100 text-orange-800'
+                            suggestion.canCook
+                              ? 'bg-herb-100 text-herb-700'
+                              : 'bg-amber-100 text-amber-700'
                           }`}>
                             {suggestion.matchPercentage}% compatible
                           </Badge>
                           
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {suggestion.matchingIngredients}/{suggestion.totalIngredients} ingrédients
                           </span>
                           
                           {suggestion.missingIngredients.length > 0 && (
-                            <span className="text-xs text-orange-600">
+                            <span className="text-xs text-amber-600">
                               {suggestion.missingIngredients.length} manquant(s)
                             </span>
                           )}
@@ -406,6 +408,7 @@ const FridgePage: React.FC = () => {
         onSubmit={handleAddFridgeItem}
       />
     </div>
+    </Layout>
   );
 };
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, ChefHat, Heart, List, TrendingUp, Settings, Shuffle, Info } from 'lucide-react';
+import { Clock, ChefHat, Heart, List, TrendingUp, Settings, Shuffle, Info } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { recipeListService } from '../services';
+import { toast } from './ui/sonner';
 import type { RecipeList } from '../types';
 
 interface GeneratePlanModalProps {
@@ -20,13 +22,13 @@ export interface GenerationOptions {
     dinner: boolean;
     snack: boolean;
   };
-  
+
   // Source des recettes
   source: {
     type: 'favorites' | 'list' | 'popular' | 'trending';
     listId?: number; // Si type = 'list'
   };
-  
+
   // Paramètres de génération
   settings: {
     avoidRepetition: boolean; // Éviter de répéter les recettes dans la semaine
@@ -102,7 +104,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
     // Vérifier qu'au moins un repas est sélectionné
     const selectedMeals = Object.values(mealTypes).some(selected => selected);
     if (!selectedMeals) {
-      alert('Veuillez sélectionner au moins un type de repas à générer.');
+      toast.error('Veuillez sélectionner au moins un type de repas à générer.');
       return;
     }
 
@@ -120,38 +122,30 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
     const start = new Date(weekStart);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
-    
+
     return {
       start: start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
       end: end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
     };
   };
 
-  if (!isOpen) return null;
-
   const weekDates = formatWeekDates(currentWeekStart);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Générer un planning</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Du {weekDates.start} au {weekDates.end}
-            </p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Générer un planning</DialogTitle>
+          <DialogDescription>
+            Du {weekDates.start} au {weekDates.end}
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
           {/* Section 1: Types de repas */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-blue-600" />
+            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+              <Clock className="h-5 w-5 mr-2 text-primary" />
               Quels repas générer ?
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -166,8 +160,8 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onClick={() => handleMealTypeToggle(meal.key as keyof typeof mealTypes)}
                   className={`p-3 rounded-lg border-2 transition-all text-center ${
                     mealTypes[meal.key as keyof typeof mealTypes]
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:border-border'
                   }`}
                 >
                   <div className="text-2xl mb-1">{meal.icon}</div>
@@ -179,13 +173,13 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
 
           {/* Section 2: Source des recettes */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <ChefHat className="h-5 w-5 mr-2 text-green-600" />
+            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+              <ChefHat className="h-5 w-5 mr-2 text-herb-600" />
               À partir de quelles recettes ?
             </h3>
             <div className="space-y-3">
               {/* Favoris */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted">
                 <input
                   type="radio"
                   name="source"
@@ -193,15 +187,15 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onChange={() => handleSourceChange({ type: 'favorites' })}
                   className="mr-3"
                 />
-                <Heart className="h-5 w-5 mr-3 text-red-500" />
+                <Heart className="h-5 w-5 mr-3 text-destructive" />
                 <div>
                   <div className="font-medium">Mes recettes favorites</div>
-                  <div className="text-sm text-gray-500">Utiliser vos recettes mises en favoris</div>
+                  <div className="text-sm text-muted-foreground">Utiliser vos recettes mises en favoris</div>
                 </div>
               </label>
 
               {/* Liste personnalisée */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted">
                 <input
                   type="radio"
                   name="source"
@@ -209,18 +203,18 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onChange={() => handleSourceChange({ type: 'list', listId: userLists[0]?.id })}
                   className="mr-3"
                 />
-                <List className="h-5 w-5 mr-3 text-blue-500" />
+                <List className="h-5 w-5 mr-3 text-primary" />
                 <div className="flex-1">
                   <div className="font-medium">Une de mes listes</div>
-                  <div className="text-sm text-gray-500">Choisir une liste personnalisée</div>
+                  <div className="text-sm text-muted-foreground">Choisir une liste personnalisée</div>
                   {source.type === 'list' && (
                     <select
                       value={source.listId || ''}
-                      onChange={(e) => handleSourceChange({ 
-                        type: 'list', 
-                        listId: parseInt(e.target.value) 
+                      onChange={(e) => handleSourceChange({
+                        type: 'list',
+                        listId: parseInt(e.target.value)
                       })}
-                      className="mt-2 block w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                      className="mt-2 block w-full px-3 py-1 border border-border rounded-md text-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <option value="">Sélectionner une liste</option>
@@ -235,7 +229,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
               </label>
 
               {/* Recettes populaires */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted">
                 <input
                   type="radio"
                   name="source"
@@ -243,15 +237,15 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onChange={() => handleSourceChange({ type: 'popular' })}
                   className="mr-3"
                 />
-                <TrendingUp className="h-5 w-5 mr-3 text-orange-500" />
+                <TrendingUp className="h-5 w-5 mr-3 text-amber-500" />
                 <div>
                   <div className="font-medium">Recettes populaires</div>
-                  <div className="text-sm text-gray-500">Les recettes les plus appréciées du site</div>
+                  <div className="text-sm text-muted-foreground">Les recettes les plus appréciées du site</div>
                 </div>
               </label>
 
               {/* Recettes tendance */}
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-muted">
                 <input
                   type="radio"
                   name="source"
@@ -259,10 +253,10 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onChange={() => handleSourceChange({ type: 'trending' })}
                   className="mr-3"
                 />
-                <Shuffle className="h-5 w-5 mr-3 text-purple-500" />
+                <Shuffle className="h-5 w-5 mr-3 text-primary" />
                 <div>
                   <div className="font-medium">Découverte</div>
-                  <div className="text-sm text-gray-500">Mélange de recettes tendance et nouvelles</div>
+                  <div className="text-sm text-muted-foreground">Mélange de recettes tendance et nouvelles</div>
                 </div>
               </label>
             </div>
@@ -270,8 +264,8 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
 
           {/* Section 3: Paramètres avancés */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Settings className="h-5 w-5 mr-2 text-gray-600" />
+            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+              <Settings className="h-5 w-5 mr-2 text-muted-foreground" />
               Paramètres de génération
             </h3>
             <div className="space-y-4">
@@ -285,7 +279,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                 />
                 <div>
                   <div className="font-medium">Éviter les répétitions</div>
-                  <div className="text-sm text-gray-500">Ne pas proposer la même recette plusieurs fois dans la semaine</div>
+                  <div className="text-sm text-muted-foreground">Ne pas proposer la même recette plusieurs fois dans la semaine</div>
                 </div>
               </label>
 
@@ -299,13 +293,13 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                 />
                 <div>
                   <div className="font-medium">Diversifier les catégories</div>
-                  <div className="text-sm text-gray-500">Varier les types de plats (asiatique, italien, français...)</div>
+                  <div className="text-sm text-muted-foreground">Varier les types de plats (asiatique, italien, français...)</div>
                 </div>
               </label>
 
               {/* Limite par jour */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Maximum de recettes par jour
                 </label>
                 <Input
@@ -313,20 +307,20 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   min="1"
                   max="10"
                   value={settings.maxRecipesPerDay}
-                  onChange={(e) => setSettings(prev => ({ 
-                    ...prev, 
-                    maxRecipesPerDay: parseInt(e.target.value) || 3 
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    maxRecipesPerDay: parseInt(e.target.value) || 3
                   }))}
                   className="w-20"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Recommandé: 2-4 recettes par jour
                 </p>
               </div>
 
               {/* Nombre de portions */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Nombre de portions par repas
                 </label>
                 <Input
@@ -334,13 +328,13 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   min="1"
                   max="12"
                   value={settings.defaultServings}
-                  onChange={(e) => setSettings(prev => ({ 
-                    ...prev, 
-                    defaultServings: parseInt(e.target.value) || 4 
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    defaultServings: parseInt(e.target.value) || 4
                   }))}
                   className="w-20"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Nombre de personnes pour chaque repas généré
                 </p>
               </div>
@@ -348,12 +342,12 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
           </div>
 
           {/* Info sur l'algorithme */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
             <div className="flex items-start">
-              <Info className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+              <Info className="h-5 w-5 text-primary mr-3 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900 mb-2">Comment fonctionne la génération ?</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+                <h4 className="font-medium text-primary mb-2">Comment fonctionne la génération ?</h4>
+                <ul className="text-sm text-primary space-y-1">
                   <li>• Les recettes sont sélectionnées selon les catégories (petit-déjeuner, plat principal, etc.)</li>
                   <li>• L'algorithme évite les répétitions et diversifie les choix selon vos paramètres</li>
                   <li>• Vous pourrez modifier individuellement chaque suggestion après génération</li>
@@ -364,18 +358,18 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-border">
           <Button variant="secondary" onClick={onClose}>
             Annuler
           </Button>
-          <Button 
+          <Button
             onClick={handleGenerate}
             disabled={isLoading || !Object.values(mealTypes).some(Boolean)}
             className="flex items-center"
           >
             {isLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                 Génération...
               </>
             ) : (
@@ -386,7 +380,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
             )}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

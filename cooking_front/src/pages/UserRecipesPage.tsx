@@ -75,10 +75,10 @@ export const UserRecipesPage: React.FC = () => {
       <Layout>
         <div className="max-w-6xl mx-auto p-4">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded mb-4"></div>
+            <div className="h-8 bg-muted rounded mb-4"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-gray-200 h-64 rounded-lg"></div>
+                <div key={i} className="bg-muted h-64 rounded-lg"></div>
               ))}
             </div>
           </div>
@@ -102,10 +102,10 @@ export const UserRecipesPage: React.FC = () => {
                 />
               )}
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-foreground font-display">
                   Recettes de {user.username}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   {pagination.pagination.totalCount} recette{pagination.pagination.totalCount > 1 ? 's' : ''} publiée{pagination.pagination.totalCount > 1 ? 's' : ''}
                 </p>
               </div>
@@ -116,11 +116,11 @@ export const UserRecipesPage: React.FC = () => {
         {/* Grille des recettes */}
         {recipes.length === 0 ? (
           <Card className="p-8 text-center">
-            <ChefHat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <ChefHat className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               Aucune recette publiée
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {user?.username} n'a pas encore publié de recettes.
             </p>
           </Card>
@@ -144,17 +144,17 @@ export const UserRecipesPage: React.FC = () => {
                   )}
                   
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
                       {recipe.title}
                     </h3>
                     
                     {recipe.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                         {recipe.description}
                       </p>
                     )}
                     
-                    <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
@@ -169,12 +169,12 @@ export const UserRecipesPage: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="inline-block px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
+                      <span className="inline-block px-2 py-1 bg-primary/15 text-primary text-xs rounded-full">
                         {recipe.difficulty === 'easy' ? 'Facile' : 
                          recipe.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
                       </span>
                       
-                      <div className="flex items-center text-primary-600 text-sm font-medium">
+                      <div className="flex items-center text-primary text-sm font-medium">
                         <Eye className="w-4 h-4 mr-1" />
                         Voir la recette
                       </div>

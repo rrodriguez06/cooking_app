@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, ShoppingCart, Calendar, Clock, ChefHat } from 'lucide-react';
+import { ShoppingCart, Calendar, ChefHat, Printer, Check } from 'lucide-react';
 import { shoppingListService } from '../services';
 import type { WeeklyShoppingList, ShoppingListItem } from '../services';
 import { Button } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { cn } from '../utils';
 
 interface ShoppingListModalProps {
   isOpen: boolean;
@@ -11,206 +13,196 @@ interface ShoppingListModalProps {
   endDate: string;
 }
 
+const mealTypeLabels: Record<string, string> = {
+  breakfast: 'Petit-déjeuner',
+  lunch: 'Déjeuner',
+  dinner: 'Dîner',
+  snack: 'Collation',
+};
+
+// Unités dénombrables qui prennent un « s » au pluriel (les abréviations de mesure restent invariables).
+const PLURALIZABLE = new Set(['pièce', 'gousse', 'tranche', 'pincée', 'verre', 'sachet', 'botte']);
+
+function formatQuantity(quantity: number, unit: string) {
+  const rounded = Math.round(quantity * 100) / 100;
+  let displayUnit = unit || 'pièce';
+  if (rounded > 1 && PLURALIZABLE.has(displayUnit)) displayUnit += 's';
+  return `${rounded} ${displayUnit}`;
+}
+
+function formatDateLong(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
 export function ShoppingListModal({ isOpen, onClose, startDate, endDate }: ShoppingListModalProps) {
   const [shoppingList, setShoppingList] = useState<WeeklyShoppingList | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [checked, setChecked] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (isOpen) {
-      fetchShoppingList();
-    }
+    if (!isOpen) return;
+    const fetchShoppingList = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const list = await shoppingListService.getWeeklyShoppingList(startDate, endDate);
+        setShoppingList(list);
+        setChecked(new Set());
+      } catch {
+        setError('Erreur lors du chargement de la liste de courses.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShoppingList();
   }, [isOpen, startDate, endDate]);
 
-  const fetchShoppingList = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const list = await shoppingListService.getWeeklyShoppingList(startDate, endDate);
-      setShoppingList(list);
-    } catch (err) {
-      console.error('Error fetching shopping list:', err);
-      setError('Erreur lors du chargement de la liste de courses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+  const toggleChecked = (ingredientId: number) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(ingredientId)) next.delete(ingredientId);
+      else next.add(ingredientId);
+      return next;
     });
   };
 
-  const formatQuantity = (quantity: number, unit: string) => {
-    // Arrondir à 2 décimales si nécessaire
-    const rounded = Math.round(quantity * 100) / 100;
-    const displayUnit = unit || 'pièce';
-    return `${rounded} ${displayUnit}`;
-  };
-
-  const getMealTypeLabel = (mealType: string) => {
-    const labels = {
-      breakfast: 'Petit-déjeuner',
-      lunch: 'Déjeuner',
-      dinner: 'Dîner',
-      snack: 'Collation',
-    };
-    return labels[mealType as keyof typeof labels] || mealType;
-  };
-
-  const groupItemsByCategory = (items: ShoppingListItem[]) => {
-    // Pour l'instant, on groupe simplement par ordre alphabétique
-    // Plus tard, on pourrait ajouter des catégories d'ingrédients
-    return items.sort((a, b) => a.ingredient_name.localeCompare(b.ingredient_name));
-  };
-
-  if (!isOpen) return null;
+  const items: ShoppingListItem[] = shoppingList
+    ? [...shoppingList.items].sort((a, b) => a.ingredient_name.localeCompare(b.ingredient_name))
+    : [];
+  const checkedCount = items.filter((i) => checked.has(i.ingredient_id)).length;
+  const dayCount = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <ShoppingCart className="h-6 w-6 text-blue-600" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden p-0">
+        <div className="print-sheet flex max-h-[90vh] flex-col">
+          <DialogHeader className="border-b border-border p-6">
+            <DialogTitle className="flex items-center gap-3">
+              <ShoppingCart className="h-6 w-6 text-primary" />
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Liste de courses
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Du {formatDate(startDate)} au {formatDate(endDate)}
-                </p>
+                <span className="block font-display text-xl font-semibold">Liste de courses</span>
+                <span className="block text-sm font-normal text-muted-foreground">
+                  Du {formatDateLong(startDate)} au {formatDateLong(endDate)}
+                </span>
               </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="p-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Chargement de la liste de courses...</span>
-            </div>
-          )}
+          <div className="flex-1 overflow-y-auto p-6">
+            {loading && (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <div className="mr-3 h-6 w-6 animate-spin rounded-full border-2 border-primary border-b-transparent" />
+                Chargement de la liste…
+              </div>
+            )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-              <p className="text-red-600">{error}</p>
-            </div>
-          )}
+            {error && (
+              <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">{error}</div>
+            )}
 
-          {shoppingList && !loading && (
-            <div className="space-y-6">
-              {/* Summary */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center space-x-4 text-sm text-blue-700">
-                  <div className="flex items-center space-x-1">
+            {shoppingList && !loading && (
+              <div className="space-y-6">
+                {/* Résumé */}
+                <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4" />
-                    <span>{Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} jours</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
+                    {dayCount} jour{dayCount > 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-1.5">
                     <ChefHat className="h-4 w-4" />
-                    <span>{shoppingList.total_recipes} recettes</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
+                    {shoppingList.total_recipes} recettes
+                  </span>
+                  <span className="flex items-center gap-1.5">
                     <ShoppingCart className="h-4 w-4" />
-                    <span>{shoppingList.items.length} ingrédients</span>
+                    {items.length} ingrédients
+                  </span>
+                  {items.length > 0 && (
+                    <span className="ml-auto font-medium text-foreground">
+                      {checkedCount}/{items.length} coché{checkedCount > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+
+                {items.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    <ShoppingCart className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+                    <p>Aucun ingrédient pour cette période.</p>
+                    <p className="text-sm">Planifiez des recettes pour générer votre liste.</p>
                   </div>
-                </div>
-              </div>
-
-              {/* Shopping list items */}
-              {shoppingList.items.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Aucun ingrédient trouvé pour cette période.</p>
-                  <p className="text-sm">Planifiez des recettes pour générer votre liste de courses.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {groupItemsByCategory(shoppingList.items).map((item) => (
-                    <div
-                      key={item.ingredient_id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-gray-900 text-lg">
-                          {item.ingredient_name}
-                        </h3>
-                        <span className="text-lg font-semibold text-blue-600">
-                          {formatQuantity(item.total_quantity, item.unit)}
-                        </span>
-                      </div>
-                      
-                      {/* Recipe details */}
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-gray-700">
-                          Utilisé dans :
-                        </h4>
-                        <div className="space-y-1">
-                          {item.recipes.map((recipe) => (
-                            <div
-                              key={`${recipe.recipe_id}-${recipe.date}-${recipe.meal_type}`}
-                              className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded px-3 py-2"
+                ) : (
+                  <ul className="space-y-2">
+                    {items.map((item) => {
+                      const isChecked = checked.has(item.ingredient_id);
+                      return (
+                        <li key={item.ingredient_id} className="rounded-lg border border-border">
+                          <label className="flex cursor-pointer items-center gap-3 p-3">
+                            <span
+                              className={cn(
+                                'grid h-5 w-5 shrink-0 place-items-center rounded border transition-colors',
+                                isChecked ? 'border-herb-500 bg-herb-500 text-white' : 'border-input',
+                              )}
                             >
-                              <div className="flex items-center space-x-2">
-                                <span className="font-medium">{recipe.recipe_name}</span>
-                                <span className="text-gray-400">•</span>
-                                <span>{getMealTypeLabel(recipe.meal_type)}</span>
-                                <span className="text-gray-400">•</span>
-                                <span>{new Date(recipe.date).toLocaleDateString('fr-FR')}</span>
-                              </div>
-                              <span className="text-gray-500">
-                                {formatQuantity(recipe.quantity, item.unit)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                              {isChecked && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={isChecked}
+                              onChange={() => toggleChecked(item.ingredient_id)}
+                            />
+                            <span className={cn('flex-1 font-medium', isChecked && 'text-muted-foreground line-through')}>
+                              {item.ingredient_name}
+                            </span>
+                            <span className={cn('font-semibold text-primary', isChecked && 'text-muted-foreground line-through')}>
+                              {formatQuantity(item.total_quantity, item.unit)}
+                            </span>
+                          </label>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50">
-          <div className="flex justify-end space-x-3">
+                          {item.recipes.length > 0 && (
+                            <details className="print-hidden group border-t border-border">
+                              <summary className="cursor-pointer px-3 py-2 text-xs text-muted-foreground hover:text-foreground">
+                                Utilisé dans {item.recipes.length} recette{item.recipes.length > 1 ? 's' : ''}
+                              </summary>
+                              <div className="space-y-1 px-3 pb-3">
+                                {item.recipes.map((recipe) => (
+                                  <div
+                                    key={`${recipe.recipe_id}-${recipe.date}-${recipe.meal_type}`}
+                                    className="flex items-center justify-between rounded bg-muted/50 px-3 py-2 text-xs text-muted-foreground"
+                                  >
+                                    <span className="flex flex-wrap items-center gap-x-2">
+                                      <span className="font-medium text-foreground">{recipe.recipe_name}</span>
+                                      <span>• {mealTypeLabels[recipe.meal_type] || recipe.meal_type}</span>
+                                      <span>• {new Date(recipe.date).toLocaleDateString('fr-FR')}</span>
+                                    </span>
+                                    <span>{formatQuantity(recipe.quantity, item.unit)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="print-hidden border-t border-border bg-muted/40 p-4">
             <Button variant="ghost" onClick={onClose}>
               Fermer
             </Button>
-            {shoppingList && shoppingList.items.length > 0 && (
-              <Button
-                onClick={() => {
-                  // TODO: Implémenter l'export ou l'impression
-                  window.print();
-                }}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Imprimer
+            {items.length > 0 && (
+              <Button onClick={() => window.print()} className="gap-2">
+                <Printer className="h-4 w-4" />
+                Imprimer la liste
               </Button>
             )}
-          </div>
+          </DialogFooter>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

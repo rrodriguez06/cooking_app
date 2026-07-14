@@ -40,8 +40,8 @@ const StarRating: React.FC<StarRatingProps> = ({
           <svg
             className={`w-full h-full ${
               star <= rating
-                ? 'text-yellow-400 fill-current'
-                : 'text-gray-300 fill-current'
+                ? 'text-amber-400 fill-current'
+                : 'text-muted-foreground/40 fill-current'
             }`}
             viewBox="0 0 20 20"
           >

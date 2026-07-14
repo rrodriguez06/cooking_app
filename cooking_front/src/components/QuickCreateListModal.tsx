@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
 import { Button, Input } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { recipeListService } from '../services';
 import type { RecipeListCreateRequest } from '../types';
 
@@ -36,7 +36,7 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
       const response = await recipeListService.createRecipeList(formData);
       if (response.success) {
         const listId = response.data.id;
-        
+
         // Si un recipeId est fourni, ajouter automatiquement la recette à la liste
         if (recipeId) {
           await recipeListService.addRecipeToList(listId, {
@@ -45,10 +45,10 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
             position: 0
           });
         }
-        
+
         onListCreated(listId);
         onClose();
-        
+
         // Reset form
         setFormData({
           name: '',
@@ -74,25 +74,17 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">
             Créer une nouvelle liste
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
+          <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded">
             {error}
           </div>
         )}
@@ -109,7 +101,7 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Description (optionnelle)
               </label>
               <textarea
@@ -117,7 +109,7 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Description de votre liste..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               />
             </div>
 
@@ -127,9 +119,9 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
                 id="is_public"
                 checked={formData.is_public}
                 onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary focus:ring-ring border-border rounded"
               />
-              <label htmlFor="is_public" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="is_public" className="ml-2 block text-sm text-foreground">
                 Rendre cette liste publique (pour le partage futur)
               </label>
             </div>
@@ -154,7 +146,7 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

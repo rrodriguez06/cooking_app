@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Calendar, Hash, FileText, Search } from 'lucide-react';
-import { Modal } from './ui/Modal';
+import { Plus, Calendar, Hash, FileText, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { toast } from './ui/sonner';
 import type { FridgeItemCreateRequest, Ingredient } from '../types';
 import { ingredientService } from '../services';
 
@@ -12,10 +13,10 @@ interface AddFridgeItemModalProps {
   onSubmit: (item: FridgeItemCreateRequest) => Promise<void>;
 }
 
-const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit 
+const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit
 }) => {
   // États pour le formulaire
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
@@ -58,8 +59,8 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
       const response = await ingredientService.getIngredients({ limit: 1000 });
       if (response.success && response.data) {
         // Gérer le nouveau format paginé ou l'ancien format tableau
-        const ingredientsArray = Array.isArray(response.data) 
-          ? response.data 
+        const ingredientsArray = Array.isArray(response.data)
+          ? response.data
           : response.data.ingredients || [];
         setAvailableIngredients(ingredientsArray);
       }
@@ -87,14 +88,14 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedIngredient) {
-      alert('Veuillez sélectionner un ingrédient');
+      toast.error('Veuillez sélectionner un ingrédient');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const fridgeItem: FridgeItemCreateRequest = {
         ingredient_id: selectedIngredient.id,
@@ -117,34 +118,22 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose}
-      size="sm"
-    >
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">
             Ajouter au frigo
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Recherche d'ingrédient */}
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Ingrédient *
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Rechercher un ingrédient..."
@@ -154,15 +143,15 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
                 required
               />
             </div>
-            
+
             {/* Liste des suggestions d'ingrédients */}
             {showIngredientsList && searchResults.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
                 {searchResults.map(ingredient => (
                   <button
                     key={ingredient.id}
                     type="button"
-                    className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none transition-colors duration-150"
+                    className="w-full px-3 py-2 text-left hover:bg-muted focus:bg-muted focus:outline-none transition-colors duration-150"
                     onClick={() => handleSelectIngredient(ingredient)}
                   >
                     <div className="flex items-center gap-2">
@@ -175,9 +164,9 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
                 ))}
               </div>
             )}
-            
+
             {showIngredientsList && searchResults.length === 0 && ingredientSearch.trim() && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3 text-sm text-gray-500">
+              <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg p-3 text-sm text-muted-foreground">
                 Aucun ingrédient trouvé
               </div>
             )}
@@ -186,7 +175,7 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
           {/* Quantité et unité */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 <Hash className="inline h-4 w-4 mr-1" />
                 Quantité
               </label>
@@ -200,7 +189,7 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Unité
               </label>
               <Input
@@ -214,7 +203,7 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
 
           {/* Date d'expiration */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               <Calendar className="inline h-4 w-4 mr-1" />
               Date d'expiration
             </label>
@@ -228,7 +217,7 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               <FileText className="inline h-4 w-4 mr-1" />
               Notes
             </label>
@@ -242,17 +231,17 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
 
           {/* Résumé de l'ingrédient sélectionné */}
           {selectedIngredient && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
               <div className="flex items-center gap-2">
                 {selectedIngredient.icon && (
                   <span className="text-lg">{selectedIngredient.icon}</span>
                 )}
                 <div>
-                  <div className="font-medium text-blue-900">
+                  <div className="font-medium text-primary">
                     {selectedIngredient.name}
                   </div>
                   {quantity && (
-                    <div className="text-sm text-blue-700">
+                    <div className="text-sm text-primary">
                       {quantity} {unit || 'unité(s)'}
                     </div>
                   )}
@@ -282,8 +271,8 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
             </Button>
           </div>
         </form>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 };
 

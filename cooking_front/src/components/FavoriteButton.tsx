@@ -31,9 +31,9 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   const baseClasses = `
     inline-flex items-center justify-center rounded-full transition-all duration-200
     ${size === 'sm' ? 'p-1' : size === 'md' ? 'p-2' : 'p-3'}
-    ${isFavorite 
-      ? 'text-red-600 bg-red-50 hover:bg-red-100' 
-      : 'text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-red-500'
+    ${isFavorite
+      ? 'text-destructive bg-destructive/10 hover:bg-destructive/15'
+      : 'text-muted-foreground bg-muted/50 hover:bg-muted hover:text-destructive'
     }
     ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
     ${className}

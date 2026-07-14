@@ -112,16 +112,16 @@ export const DataManagementPage: React.FC = () => {
     <Layout>
       <div className="max-w-6xl mx-auto p-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2 font-display">
             Gestion des données
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Gérez les catégories, tags, ingrédients et équipements de l'application
           </p>
         </div>
 
         {/* Onglets */}
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-border mb-6">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => (
               <button
@@ -129,8 +129,8 @@ export const DataManagementPage: React.FC = () => {
                 onClick={() => handleTabChange(tab.key)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.key
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 }`}
               >
                 {tab.label}
@@ -142,7 +142,7 @@ export const DataManagementPage: React.FC = () => {
         {/* Barre de recherche et actions */}
         <div className="flex justify-between items-center mb-6">
           <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               type="text"
               placeholder={`Rechercher dans ${getTitle(activeTab).toLowerCase()}...`}
@@ -163,16 +163,16 @@ export const DataManagementPage: React.FC = () => {
           <div className="animate-pulse">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-gray-200 h-32 rounded-lg"></div>
+                <div key={i} className="bg-muted h-32 rounded-lg"></div>
               ))}
             </div>
           </div>
         ) : data.length === 0 ? (
           <Card className="p-8 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               Aucun élément trouvé
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {searchTerm ? 
                 `Aucun résultat pour "${searchTerm}"` :
                 `Aucun ${getTitle(activeTab).toLowerCase()} disponible`
@@ -185,7 +185,7 @@ export const DataManagementPage: React.FC = () => {
               {data.map((item) => (
                 <Card key={item.id} className="p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900 line-clamp-1">
+                    <h3 className="font-semibold text-foreground line-clamp-1">
                       {item.name}
                     </h3>
                     <div className="flex space-x-1 ml-2">
@@ -200,7 +200,7 @@ export const DataManagementPage: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="p-1 h-8 w-8 text-red-600 hover:text-red-800 hover:bg-red-50"
+                        className="p-1 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                         title="Supprimer"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -209,12 +209,12 @@ export const DataManagementPage: React.FC = () => {
                   </div>
                   
                   {item.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                       {item.description}
                     </p>
                   )}
                   
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Créé le {new Date(item.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </Card>

@@ -112,7 +112,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       {preview ? (
         <div className="relative">
-          <div className="relative overflow-hidden rounded-full border-4 border-gray-200 w-32 h-32 mx-auto">
+          <div className="relative overflow-hidden rounded-full border-4 border-border w-32 h-32 mx-auto">
             <img
               src={preview}
               alt="Photo de profil"
@@ -128,7 +128,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                   size="sm"
                   onClick={openFileDialog}
                   disabled={isUploading}
-                  className="text-white bg-blue-600 hover:bg-blue-700"
+                  className="text-primary-foreground bg-primary hover:bg-primary/90"
                 >
                   <Upload className="w-4 h-4" />
                 </Button>
@@ -139,7 +139,7 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                   size="sm"
                   onClick={handleRemove}
                   disabled={isUploading}
-                  className="text-white bg-red-600 hover:bg-red-700"
+                  className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -147,37 +147,37 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
             </div>
 
             {isUploading && (
-              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+              <div className="absolute inset-0 bg-card bg-opacity-75 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
             )}
           </div>
           
-          <p className="text-center text-sm text-gray-500 mt-2">
+          <p className="text-center text-sm text-muted-foreground mt-2">
             Survolez pour modifier ou supprimer
           </p>
         </div>
       ) : (
         <div
           onClick={openFileDialog}
-          className={`border-2 border-dashed border-gray-300 rounded-full w-32 h-32 mx-auto cursor-pointer hover:border-gray-400 transition-colors flex items-center justify-center ${
+          className={`border-2 border-dashed border-border rounded-full w-32 h-32 mx-auto cursor-pointer hover:border-muted-foreground transition-colors flex items-center justify-center ${
             isUploading ? 'pointer-events-none opacity-50' : ''
           }`}
         >
           <div className="flex flex-col items-center space-y-2">
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full">
+            <div className="flex items-center justify-center w-12 h-12 bg-muted rounded-full">
               {isUploading ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               ) : (
-                <User className="w-6 h-6 text-gray-500" />
+                <User className="w-6 h-6 text-muted-foreground" />
               )}
             </div>
             
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-foreground">
                 {isUploading ? 'Upload...' : 'Photo de profil'}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Cliquez pour ajouter
               </p>
             </div>

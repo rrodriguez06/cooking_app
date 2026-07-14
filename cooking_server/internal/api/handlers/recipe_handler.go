@@ -104,8 +104,8 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 		return
 	}
 
-	// Ajouter les ingrédients
-	for _, ingredientReq := range req.Ingredients {
+	// Ajouter les ingrédients (position = ordre du tableau envoyé)
+	for i, ingredientReq := range req.Ingredients {
 		// Utiliser "pièce" par défaut si l'unité est vide
 		unit := ingredientReq.Unit
 		if unit == "" {
@@ -119,6 +119,8 @@ func (h *RecipeHandler) CreateRecipe(c *gin.Context) {
 			Unit:         unit,
 			Notes:        ingredientReq.Notes,
 			IsOptional:   ingredientReq.IsOptional,
+			Group:        ingredientReq.Group,
+			Position:     i,
 		}
 		if err := h.ormService.RecipeIngredientRepository.Create(c.Request.Context(), recipeIngredient); err != nil {
 			log.Printf("Failed to create recipe ingredient: %v", err)
@@ -356,8 +358,8 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 			log.Printf("Failed to delete existing recipe ingredients: %v", err)
 		}
 
-		// Ajouter les nouveaux ingrédients
-		for _, ingredientReq := range req.Ingredients {
+		// Ajouter les nouveaux ingrédients (position = ordre du tableau envoyé)
+		for i, ingredientReq := range req.Ingredients {
 			// Utiliser "pièce" par défaut si l'unité est vide
 			unit := ingredientReq.Unit
 			if unit == "" {
@@ -371,6 +373,8 @@ func (h *RecipeHandler) UpdateRecipe(c *gin.Context) {
 				Unit:         unit,
 				Notes:        ingredientReq.Notes,
 				IsOptional:   ingredientReq.IsOptional,
+				Group:        ingredientReq.Group,
+				Position:     i,
 			}
 			if err := h.ormService.RecipeIngredientRepository.Create(c.Request.Context(), recipeIngredient); err != nil {
 				log.Printf("Failed to create recipe ingredient during update: %v", err)

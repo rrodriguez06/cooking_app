@@ -1,32 +1,31 @@
 import { format, parseISO, isValid, formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export const formatDate = (date: string | Date, formatStr: string = 'PPP'): string => {
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    
+
     if (!isValid(dateObj)) {
-      return 'Invalid date';
+      return 'Date invalide';
     }
-    
-    return format(dateObj, formatStr);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid date';
+
+    return format(dateObj, formatStr, { locale: fr });
+  } catch {
+    return 'Date invalide';
   }
 };
 
 export const formatRelativeTime = (date: string | Date): string => {
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    
+
     if (!isValid(dateObj)) {
-      return 'Invalid date';
+      return 'Date invalide';
     }
-    
-    return formatDistanceToNow(dateObj, { addSuffix: true });
-  } catch (error) {
-    console.error('Error formatting relative time:', error);
-    return 'Invalid date';
+
+    return formatDistanceToNow(dateObj, { addSuffix: true, locale: fr });
+  } catch {
+    return 'Date invalide';
   }
 };
 

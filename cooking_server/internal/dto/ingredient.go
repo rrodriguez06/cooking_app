@@ -21,6 +21,8 @@ type RecipeIngredient struct {
 	Unit         string  `json:"unit"`                             // Unité de mesure (grammes, litres, etc.)
 	Notes        string  `json:"notes,omitempty"`                  // Notes facultatives sur l'ingrédient
 	IsOptional   bool    `json:"is_optional" gorm:"default:false"` // Indique si l'ingrédient est optionnel
+	Group        string  `json:"group" gorm:"default:''"`          // Groupe/section (ex. "Pour la pâte"). Vide = liste unique.
+	Position     int     `json:"position" gorm:"default:0"`        // Ordre d'affichage dans la recette (0 = ordre historique par ID)
 
 	Recipe     Recipe     `json:"recipe" gorm:"foreignKey:RecipeID"`
 	Ingredient Ingredient `json:"ingredient" gorm:"foreignKey:IngredientID"`
@@ -32,6 +34,7 @@ type RecipeIngredientRequest struct {
 	Unit         string  `json:"unit,omitempty"`
 	Notes        string  `json:"notes,omitempty"`
 	IsOptional   bool    `json:"is_optional"`
+	Group        string  `json:"group,omitempty"` // Groupe/section optionnel (ex. "Pour la pâte")
 }
 
 // IngredientCreateRequest représente les données pour créer un ingrédient

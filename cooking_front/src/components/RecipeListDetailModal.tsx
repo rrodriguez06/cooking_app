@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Heart, Clock, Users, Eye, Trash2, ChefHat } from 'lucide-react';
+import { Heart, Clock, Users, Eye, Trash2, ChefHat } from 'lucide-react';
 import { Button, Card, CardContent } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { useConfirm } from './ConfirmDialog';
+import { toast } from './ui/sonner';
 import { recipeListService } from '../services';
 import { formatDate, getFullImageUrl } from '../utils';
 import type { RecipeList, Recipe } from '../types';
@@ -22,6 +25,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
   onRecipeRemoved,
 }) => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,10 +42,10 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       console.log('DEBUG: fetchListRecipes - list:', list);
-      
+
       // Si la liste a déjà ses recettes, les utiliser
       if (list.items && list.items.length > 0) {
         console.log('DEBUG: Using existing items from list:', list.items);
@@ -53,7 +57,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
         console.log('DEBUG: Fetching list details from API for list ID:', list.id);
         const response = await recipeListService.getRecipeList(list.id);
         console.log('DEBUG: API response:', response);
-        
+
         if (response.success && response.data.items) {
           console.log('DEBUG: Items from API:', response.data.items);
           const listRecipes = response.data.items.map(item => item.recipe).filter(Boolean);
@@ -80,9 +84,13 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
   const handleRemoveRecipe = async (recipeId: number, recipeTitle: string) => {
     if (!list || !canEdit) return;
 
-    if (!window.confirm(`Êtes-vous sûr de vouloir retirer "${recipeTitle}" de cette liste ?`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Retirer la recette',
+      description: `Êtes-vous sûr de vouloir retirer « ${recipeTitle} » de cette liste ?`,
+      confirmLabel: 'Retirer',
+      destructive: true,
+    });
+    if (!ok) return;
 
     setRemovingRecipeId(recipeId);
     try {
@@ -90,66 +98,56 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
       if (response.success) {
         // Mettre à jour la liste locale en retirant la recette
         setRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
-        
+
         // Notifier le parent que la recette a été supprimée
         if (onRecipeRemoved) {
           onRecipeRemoved(list.id, recipeId);
         }
       } else {
         console.error('Error removing recipe from list:', response);
-        alert('Erreur lors de la suppression de la recette de la liste');
+        toast.error('Erreur lors de la suppression de la recette de la liste');
       }
     } catch (error) {
       console.error('Error removing recipe from list:', error);
-      alert('Erreur lors de la suppression de la recette de la liste');
+      toast.error('Erreur lors de la suppression de la recette de la liste');
     } finally {
       setRemovingRecipeId(null);
     }
   };
 
-  if (!isOpen || !list) return null;
+  if (!list) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">{list.name}</h2>
-            {list.description && (
-              <p className="text-gray-600 mt-1">{list.description}</p>
-            )}
-            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-              <span>{recipes.length} recette{recipes.length !== 1 ? 's' : ''}</span>
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                list.is_public 
-                  ? 'bg-green-100 text-green-600' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}>
-                {list.is_public ? 'Publique' : 'Privée'}
-              </span>
-            </div>
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">{list.name}</DialogTitle>
+          {list.description && (
+            <DialogDescription>{list.description}</DialogDescription>
+          )}
+          <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
+            <span>{recipes.length} recette{recipes.length !== 1 ? 's' : ''}</span>
+            <span className={`px-2 py-1 rounded-full text-xs ${
+              list.is_public
+                ? 'bg-herb-100 text-herb-700'
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              {list.is_public ? 'Publique' : 'Privée'}
+            </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="flex-shrink-0"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+        </DialogHeader>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div>
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">Chargement des recettes...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Chargement des recettes...</p>
             </div>
           ) : error ? (
             <div className="text-center py-8">
-              <p className="text-red-600">{error}</p>
+              <p className="text-destructive">{error}</p>
               <Button
                 variant="ghost"
                 onClick={fetchListRecipes}
@@ -160,13 +158,13 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
             </div>
           ) : recipes.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="h-8 w-8 text-gray-400" />
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Aucune recette dans cette liste
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Commencez à ajouter des recettes à votre liste en naviguant sur le site et en utilisant le bouton "Ajouter à une liste".
               </p>
             </div>
@@ -196,11 +194,11 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
                           }}
                         />
                       ) : null}
-                      <div 
-                        className="w-full h-32 bg-gray-200 rounded-md flex items-center justify-center"
+                      <div
+                        className="w-full h-32 bg-muted rounded-md flex items-center justify-center"
                         style={{ display: recipe.image_url ? 'none' : 'flex' }}
                       >
-                        <ChefHat className="h-8 w-8 text-gray-400" />
+                        <ChefHat className="h-8 w-8 text-muted-foreground" />
                       </div>
                     </div>
 
@@ -208,16 +206,16 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                       {recipe.title}
                     </h3>
-                    
+
                     {recipe.description && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                         {recipe.description}
                       </p>
                     )}
 
                     {/* Recipe Meta */}
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Clock className="h-4 w-4" />
                           <span>{recipe.prep_time + recipe.cook_time} min</span>
@@ -229,19 +227,19 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">
+                        <span className="text-muted-foreground">
                           Par {recipe.author?.username || 'Anonyme'}
                         </span>
-                        <span className="text-gray-400">
+                        <span className="text-muted-foreground">
                           {formatDate(recipe.created_at)}
                         </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="mt-4 pt-3 border-t border-gray-100">
+                    <div className="mt-4 pt-3 border-t border-border">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
@@ -255,12 +253,12 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
                           <Eye className="h-4 w-4 mr-2" />
                           Voir la recette
                         </Button>
-                        
+
                         {canEdit && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveRecipe(recipe.id, recipe.title);
@@ -269,7 +267,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
                             title="Retirer de la liste"
                           >
                             {removingRecipeId === recipe.id ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-destructive"></div>
                             ) : (
                               <Trash2 className="h-4 w-4" />
                             )}
@@ -283,7 +281,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

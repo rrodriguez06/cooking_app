@@ -5,5 +5,3 @@ export * from './Loading';
 export * from './Modal';
 export * from './Badge';
 export * from './Select';
-export * from './Badge';
-export * from './Select';

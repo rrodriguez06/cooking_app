@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Plus } from 'lucide-react';
-import { Button, Input, Card, CardContent, CardHeader } from './ui';
+import { Plus } from 'lucide-react';
+import { Button, Input } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { api } from '../services';
 import type { Equipment } from '../types';
 
@@ -37,7 +38,7 @@ export const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       setError('Le nom de l\'équipement est requis');
       return;
@@ -89,109 +90,94 @@ export const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Plus className="h-5 w-5 text-primary-600" />
-              <h2 className="text-lg font-semibold">
-                Nouvel équipement
-              </h2>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5 text-primary" />
+            Nouvel équipement
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+              {error}
             </div>
-            <button
+          )}
+
+          <Input
+            label="Nom de l'équipement"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Ex: Mandoline"
+            required
+            disabled={isLoading}
+          />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Catégorie
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+              disabled={isLoading}
+              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            >
+              <option value="">Sélectionnez une catégorie</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Input
+            label="Icône (optionnel)"
+            value={formData.icon}
+            onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+            placeholder="Ex: 🔪"
+            disabled={isLoading}
+            maxLength={2}
+          />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Description (optionnel)
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Description de l'équipement"
+              disabled={isLoading}
+              rows={3}
+              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <Button
+              type="button"
+              variant="secondary"
               onClick={handleClose}
               disabled={isLoading}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="flex-1"
             >
-              <X className="h-5 w-5" />
-            </button>
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {isLoading ? 'Création...' : 'Créer l\'équipement'}
+            </Button>
           </div>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-
-            <Input
-              label="Nom de l'équipement"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ex: Mandoline"
-              required
-              disabled={isLoading}
-            />
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Catégorie
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">Sélectionnez une catégorie</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <Input
-              label="Icône (optionnel)"
-              value={formData.icon}
-              onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-              placeholder="Ex: 🔪"
-              disabled={isLoading}
-              maxLength={2}
-            />
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Description (optionnel)
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description de l'équipement"
-                disabled={isLoading}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="flex space-x-3 pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleClose}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                Annuler
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1"
-              >
-                {isLoading ? 'Création...' : 'Créer l\'équipement'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };

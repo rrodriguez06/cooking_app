@@ -18,6 +18,8 @@ export interface RecipeIngredient {
   quantity: number;
   unit: string;
   notes?: string;
+  group?: string;
+  position?: number;
   ingredient: Ingredient;
 }
 
@@ -25,7 +27,7 @@ export interface RecipeEquipment {
   id: number;
   recipe_id: number;
   equipment_id: number;
-  is_required: boolean;
+  is_optional: boolean;
   notes?: string;
   equipment: Equipment;
 }
@@ -120,11 +122,12 @@ export interface RecipeIngredientRequest {
   quantity: number;
   unit?: string;
   notes?: string;
+  group?: string;
 }
 
 export interface RecipeEquipmentRequest {
   equipment_id: number;
-  is_required: boolean;
+  is_optional: boolean;
   notes?: string;
 }
 

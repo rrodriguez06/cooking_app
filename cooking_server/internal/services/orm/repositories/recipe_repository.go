@@ -40,6 +40,10 @@ func (r *recipeRepository) GetByID(ctx context.Context, id uint) (*dto.Recipe, e
 		Preload("Author").
 		Preload("OriginalRecipe").
 		Preload("OriginalRecipe.Author").
+		Preload("Ingredients", func(db *gorm.DB) *gorm.DB {
+			// Ordre stable : position puis id (rétrocompatible, position=0 sur l'existant)
+			return db.Order("recipe_ingredients.position ASC").Order("recipe_ingredients.id ASC")
+		}).
 		Preload("Ingredients.Ingredient").
 		Preload("Equipments.Equipment").
 		Preload("Tags").
@@ -602,6 +606,8 @@ func (r *recipeRepository) Copy(ctx context.Context, originalRecipeID, newAuthor
 			Unit:         ingredient.Unit,
 			Notes:        ingredient.Notes,
 			IsOptional:   ingredient.IsOptional,
+			Group:        ingredient.Group,
+			Position:     ingredient.Position,
 		}
 		if err := r.db.WithContext(ctx).Create(newIngredient).Error; err != nil {
 			return nil, ormerrors.NewDatabaseError("copy recipe ingredients", err)

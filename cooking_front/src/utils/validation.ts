@@ -57,7 +57,7 @@ export const recipeIngredientSchema = z.object({
 
 export const recipeEquipmentSchema = z.object({
   equipment_id: z.number().min(1),
-  is_required: z.boolean(),
+  is_optional: z.boolean(),
   notes: z.string().optional(),
 });
 

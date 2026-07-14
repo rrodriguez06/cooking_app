@@ -65,9 +65,9 @@ export const SelectTrigger: React.FC<SelectTriggerProps> = ({
       type="button"
       className={cn(
         'flex items-center justify-between w-full px-3 py-2 text-left',
-        'border border-gray-300 rounded-md shadow-sm bg-white',
-        'hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-        'disabled:bg-gray-50 disabled:text-gray-500',
+        'border border-border rounded-md shadow-sm bg-card',
+        'hover:border-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring',
+        'disabled:bg-muted/50 disabled:text-muted-foreground',
         className
       )}
       onClick={() => setIsOpen(!isOpen)}
@@ -108,7 +108,7 @@ export const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
     <div
       ref={contentRef}
       className={cn(
-        'absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg',
+        'absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg',
         'max-h-60 overflow-auto'
       )}
     >
@@ -134,9 +134,9 @@ export const SelectItem: React.FC<SelectItemProps> = ({
     <button
       type="button"
       className={cn(
-        'w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100',
+        'w-full px-3 py-2 text-left hover:bg-muted focus:bg-muted',
         'focus:outline-none transition-colors duration-150',
-        selectedValue === value && 'bg-primary-50 text-primary-600'
+        selectedValue === value && 'bg-primary/10 text-primary'
       )}
       onClick={handleSelect}
     >
@@ -149,7 +149,7 @@ export const SelectValue: React.FC<SelectValueProps> = ({ placeholder }) => {
   const { value } = React.useContext(SelectContext);
 
   if (!value && placeholder) {
-    return <span className="text-gray-500">{placeholder}</span>;
+    return <span className="text-muted-foreground">{placeholder}</span>;
   }
 
   return <span>{value}</span>;

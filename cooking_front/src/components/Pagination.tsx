@@ -67,7 +67,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className={`flex flex-col items-center space-y-4 ${className}`}>
       {showInfo && (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           {totalCount > 0 ? (
             <>
               Affichage de {Math.max(1, (currentPage - 1) * itemsPerPage + 1)} à{' '}
@@ -97,16 +97,16 @@ export const Pagination: React.FC<PaginationProps> = ({
           {visiblePages.map((page, index) => (
             <React.Fragment key={index}>
               {page === '...' ? (
-                <span className="px-3 py-2 text-gray-500">...</span>
+                <span className="px-3 py-2 text-muted-foreground">...</span>
               ) : (
                 <Button
                   variant={currentPage === page ? "primary" : "ghost"}
                   size="sm"
                   onClick={() => onPageChange(page as number)}
                   className={`w-10 h-10 ${
-                    currentPage === page 
-                      ? 'bg-primary-600 text-white' 
-                      : 'hover:bg-gray-100'
+                    currentPage === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   }`}
                 >
                   {page}

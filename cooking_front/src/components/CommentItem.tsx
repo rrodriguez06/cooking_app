@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Comment } from '../services/commentService';
 import { useAuth } from '../context/AuthContext';
+import { useConfirm } from './ConfirmDialog';
 import StarRating from './StarRating';
 
 interface CommentItemProps {
@@ -19,6 +20,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   level = 0
 }) => {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -46,8 +48,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
-  const handleDeleteClick = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) {
+  const handleDeleteClick = async () => {
+    const ok = await confirm({
+      title: 'Supprimer le commentaire',
+      description: 'Êtes-vous sûr de vouloir supprimer ce commentaire ?',
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (ok) {
       onDelete?.(comment.id);
     }
   };
@@ -63,15 +71,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 mb-4`} style={{ marginLeft: `${marginLeft}rem` }}>
+    <div className={`bg-card rounded-lg border border-border p-4 mb-4`} style={{ marginLeft: `${marginLeft}rem` }}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-semibold">
+          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-semibold">
             {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
-            <h4 className="font-medium text-gray-900">{comment.user?.username || 'Utilisateur'}</h4>
-            <p className="text-sm text-gray-500">{formatDate(comment.created_at)}</p>
+            <h4 className="font-medium text-foreground">{comment.user?.username || 'Utilisateur'}</h4>
+            <p className="text-sm text-muted-foreground">{formatDate(comment.created_at)}</p>
           </div>
           <StarRating rating={comment.rating} readonly size="sm" />
         </div>
@@ -80,13 +88,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <div className="flex space-x-2">
             <button
               onClick={() => setIsEditing(true)}
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-primary hover:text-primary/80 text-sm"
             >
               Modifier
             </button>
             <button
               onClick={handleDeleteClick}
-              className="text-red-600 hover:text-red-800 text-sm"
+              className="text-destructive hover:text-destructive/80 text-sm"
             >
               Supprimer
             </button>
@@ -99,24 +107,24 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <textarea
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+            className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-ring resize-none"
             rows={3}
             placeholder="Votre commentaire..."
           />
           <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-700">Note :</span>
+            <span className="text-sm text-foreground">Note :</span>
             <StarRating rating={editRating} onRatingChange={setEditRating} />
           </div>
           <div className="flex space-x-2">
             <button
               onClick={handleEditSubmit}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               Enregistrer
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
             >
               Annuler
             </button>
@@ -124,13 +132,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
         </div>
       ) : (
         <>
-          <p className="text-gray-700 mb-3">{comment.content}</p>
+          <p className="text-foreground mb-3">{comment.content}</p>
           
           <div className="flex items-center space-x-4">
             {user && level < 2 && (
               <button
                 onClick={() => setIsReplying(true)}
-                className="text-orange-600 hover:text-orange-800 text-sm font-medium"
+                className="text-primary hover:text-primary/80 text-sm font-medium"
               >
                 Répondre
               </button>
@@ -139,7 +147,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             {comment.replies && comment.replies.length > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
-                className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                className="text-muted-foreground hover:text-foreground text-sm font-medium"
               >
                 {showReplies ? 'Masquer' : 'Afficher'} les réponses ({comment.replies.length})
               </button>
@@ -151,24 +159,24 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-ring resize-none"
                 rows={3}
                 placeholder="Votre réponse..."
               />
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-700">Note :</span>
+                <span className="text-sm text-foreground">Note :</span>
                 <StarRating rating={replyRating} onRatingChange={setReplyRating} />
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={handleReplySubmit}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Répondre
                 </button>
                 <button
                   onClick={() => setIsReplying(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
                 >
                   Annuler
                 </button>

@@ -16,7 +16,7 @@ export const Loading: React.FC<LoadingProps> = ({ size = 'md', className }) => {
   return (
     <div className={cn('flex items-center justify-center', className)}>
       <svg
-        className={cn('animate-spin text-primary-600', sizeClasses[size])}
+        className={cn('animate-spin text-primary', sizeClasses[size])}
         fill="none"
         viewBox="0 0 24 24"
       >
@@ -53,7 +53,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
         <div
           key={index}
           className={cn(
-            'bg-gray-300 rounded h-4',
+            'bg-muted rounded h-4',
             index > 0 && 'mt-2',
             index === lines - 1 && lines > 1 && 'w-3/4'
           )}

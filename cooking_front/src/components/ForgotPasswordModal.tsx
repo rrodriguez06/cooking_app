@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Input, Card, CardContent, CardHeader, Modal } from './ui';
+import { Button, Input } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { userPasswordResetSchema } from '../utils/validation';
 import type { UserPasswordResetData } from '../utils/validation';
 import { authService } from '../services';
-import { X, AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -64,42 +65,31 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="md">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Mot de passe oublié</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="p-1 h-auto"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-sm text-gray-600 mt-2">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Mot de passe oublié</DialogTitle>
+          <p className="text-sm text-muted-foreground mt-2">
             Entrez votre email et votre nouveau mot de passe pour réinitialiser votre compte.
           </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </DialogHeader>
+
+        <div className="space-y-4">
           {success ? (
             <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-green-800 mb-2">
+              <CheckCircle className="h-12 w-12 text-herb-700 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-herb-700 mb-2">
                 Mot de passe réinitialisé !
               </h3>
-              <p className="text-green-600">
+              <p className="text-herb-700">
                 Votre mot de passe a été mis à jour avec succès.
               </p>
             </div>
           ) : (
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               {error && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                <div className="flex items-center space-x-2 p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
                   <span className="text-sm">{error}</span>
                 </div>
@@ -150,8 +140,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               </div>
             </form>
           )}
-        </CardContent>
-      </Card>
-    </Modal>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -173,39 +173,39 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           className={`
-            w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-            ${error ? 'border-red-500' : 'border-gray-300'}
-            ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+            w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+            ${error ? 'border-destructive' : 'border-border'}
+            ${disabled ? 'bg-muted cursor-not-allowed' : 'bg-card'}
           `}
         />
         
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
           {searchQuery && !disabled && (
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-1 hover:bg-muted rounded"
             >
-              <X className="h-3 w-3 text-gray-400" />
+              <X className="h-3 w-3 text-muted-foreground" />
             </button>
           )}
           <ChevronDown 
-            className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </div>
 
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-destructive">{error}</p>
       )}
 
       {/* Dropdown */}
       {isOpen && !disabled && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
         >
           {filteredIngredients.length > 0 ? (
             <ul>
@@ -214,9 +214,9 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
                   key={ingredient.id}
                   onClick={() => handleIngredientSelect(ingredient)}
                   className={`
-                    px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center justify-between
-                    ${index === highlightedIndex ? 'bg-blue-100' : ''}
-                    ${selectedIngredient?.id === ingredient.id ? 'bg-blue-50 text-blue-700' : 'text-gray-900'}
+                    px-3 py-2 cursor-pointer hover:bg-muted flex items-center justify-between
+                    ${index === highlightedIndex ? 'bg-primary/15' : ''}
+                    ${selectedIngredient?.id === ingredient.id ? 'bg-primary/10 text-primary' : 'text-foreground'}
                   `}
                 >
                   <div className="flex items-center space-x-2">
@@ -226,18 +226,18 @@ export const IngredientSearch: React.FC<IngredientSearchProps> = ({
                     <div>
                       <div className="font-medium">{ingredient.name}</div>
                       {ingredient.category && (
-                        <div className="text-xs text-gray-500">{ingredient.category}</div>
+                        <div className="text-xs text-muted-foreground">{ingredient.category}</div>
                       )}
                     </div>
                   </div>
                   {selectedIngredient?.id === ingredient.id && (
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
                   )}
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="px-3 py-2 text-gray-500 text-center">
+            <div className="px-3 py-2 text-muted-foreground text-center">
               {searchQuery.trim() ? 'Aucun ingrédient trouvé' : 'Tapez pour rechercher...'}
             </div>
           )}

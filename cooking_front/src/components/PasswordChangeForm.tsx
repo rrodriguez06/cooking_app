@@ -64,23 +64,23 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     <Card>
       <CardHeader>
         <div className="flex items-center space-x-2">
-          <Key className="h-5 w-5 text-gray-600" />
+          <Key className="h-5 w-5 text-muted-foreground" />
           <h3 className="text-lg font-semibold">Changer le mot de passe</h3>
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Mise à jour de votre mot de passe pour sécuriser votre compte.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {success && (
-          <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md">
+          <div className="flex items-center space-x-2 p-3 bg-herb-50 border border-herb-200 text-herb-700 rounded-md">
             <CheckCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">Mot de passe mis à jour avec succès !</span>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+          <div className="flex items-center space-x-2 p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>

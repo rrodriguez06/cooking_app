@@ -1,107 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeActions, UserLink, SmartSearchBar, Pagination } from '../components';
+import { useSearchParams } from 'react-router-dom';
+import { Filter, Star, X, ChefHat, SlidersHorizontal } from 'lucide-react';
+import { Layout, Card, CardContent, Button, Input, SmartSearchBar, Pagination, RecipeCard } from '../components';
 import type { SearchSuggestion } from '../components/SmartSearchBar';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '../components/ui/sheet';
+import { SegmentedControl } from '../components/ui/segmented-control';
+import { MultiSelect } from '../components/ui/combobox';
+import { Skeleton } from '../components/ui/skeleton';
 import { recipeService, categoryService, tagService, ingredientService, equipmentService, userService } from '../services';
 import { useDebounce, usePagination } from '../hooks';
-import { formatTime } from '../utils';
-import { getFullImageUrl } from '../utils/imageUtils';
 import type { Recipe, SearchFilters, Category, Tag, Ingredient, Equipment, User } from '../types';
-import { Filter, Clock, Users, ChefHat, Star, X, ChevronDown, ChevronUp } from 'lucide-react';
 
-const RecipeCard: React.FC<{ recipe: Recipe }> = ({ recipe }) => (
-  <Card className="hover:shadow-lg transition-shadow duration-200 group">
-    <Link to={`/recipe/${recipe.id}`} className="block">
-      <div className="aspect-w-16 aspect-h-9">
-        {recipe.image_url ? (
-          <img
-            src={getFullImageUrl(recipe.image_url)}
-            alt={recipe.title}
-            className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-200"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = `
-                <div class="w-full h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
-                  <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
-                  </svg>
-                </div>
-              `;
-            }}
-          />
-        ) : (
-          <div className="w-full h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
-            <ChefHat className="h-12 w-12 text-gray-400" />
-          </div>
-        )}
-      </div>
-      
-      <CardContent className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
-          {recipe.title}
-        </h3>
-        
-        {recipe.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {recipe.description}
-          </p>
-        )}
-        
-        {/* Rating Display */}
-        <div className="flex items-center mb-3">
-          <div className="flex items-center">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className={`h-4 w-4 ${
-                  recipe.average_rating && star <= recipe.average_rating
-                    ? 'text-yellow-400 fill-current'
-                    : 'text-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-gray-600 ml-2">
-            {recipe.average_rating && recipe.average_rating > 0 
-              ? `${recipe.average_rating.toFixed(1)} (${recipe.rating_count || 0})`
-              : 'Aucune note'
-            }
-          </span>
-        </div>
-        
-        <div className="flex items-center text-sm text-gray-500 space-x-4">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            <span>{formatTime(recipe.total_time)}</span>
-          </div>
-          <div className="flex items-center">
-            <Users className="h-4 w-4 mr-1" />
-            <span>{recipe.servings}</span>
-          </div>
-          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-            recipe.difficulty === 'easy' 
-              ? 'bg-green-100 text-green-800'
-              : recipe.difficulty === 'medium'
-              ? 'bg-yellow-100 text-yellow-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {recipe.difficulty === 'easy' ? 'Facile' : 
-             recipe.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-          </span>
-        </div>
-      </CardContent>
-    </Link>
-    
-    {/* Section auteur en dehors du lien principal */}
-    <CardContent className="px-4 pb-2 pt-0">
-      <span className="text-sm text-gray-500">Par <UserLink user={recipe.author} /></span>
-    </CardContent>
-    
-    {/* Actions en dehors du lien pour éviter les conflits */}
-    <div className="px-4 pb-4 -mt-2">
-      <RecipeActions recipeId={recipe.id} size="sm" showLabels={false} />
-    </div>
-  </Card>
+const difficultyLabels: Record<string, string> = { easy: 'Facile', medium: 'Moyen', hard: 'Difficile' };
+
+interface ActiveChip {
+  key: string;
+  label: string;
+  onRemove: () => void;
+}
+
+/** Puce de filtre actif, uniforme et retirable. */
+const FilterChip: React.FC<{ label: string; onRemove: () => void }> = ({ label, onRemove }) => (
+  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+    {label}
+    <button type="button" onClick={onRemove} className="rounded-full text-primary/70 hover:text-primary" aria-label={`Retirer ${label}`}>
+      <X className="h-3.5 w-3.5" />
+    </button>
+  </span>
+);
+
+/** Grille de squelettes pendant le chargement des résultats. */
+const ResultsSkeleton: React.FC = () => (
+  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {Array.from({ length: 8 }).map((_, index) => (
+      <Card key={index} className="overflow-hidden">
+        <Skeleton className="h-48 w-full rounded-none" />
+        <CardContent className="space-y-3 p-4">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-1/2" />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
 );
 
 export const SearchPage: React.FC = () => {
@@ -111,11 +59,9 @@ export const SearchPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [showFilters, setShowFilters] = useState(false);
   const [smartSearchFilters, setSmartSearchFilters] = useState<SearchSuggestion[]>([]);
-  
-  // Pagination
+
   const pagination = usePagination(1);
-  
-  // Reference data
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -123,7 +69,7 @@ export const SearchPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   const [filters, setFilters] = useState<SearchFilters>({
-    difficulty: searchParams.get('difficulty') as any || undefined,
+    difficulty: (searchParams.get('difficulty') as SearchFilters['difficulty']) || undefined,
     max_prep_time: searchParams.get('max_prep_time') ? parseInt(searchParams.get('max_prep_time')!) : undefined,
     max_cook_time: searchParams.get('max_cook_time') ? parseInt(searchParams.get('max_cook_time')!) : undefined,
     max_total_time: searchParams.get('max_total_time') ? parseInt(searchParams.get('max_total_time')!) : undefined,
@@ -131,14 +77,12 @@ export const SearchPage: React.FC = () => {
     author: searchParams.get('author') || undefined,
     categories: searchParams.get('categories') ? searchParams.get('categories')!.split(',') : [],
     tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') : [],
-
     sort_by: searchParams.get('sort_by') || 'created_at',
-    sort_order: searchParams.get('sort_order') as 'asc' | 'desc' || 'desc',
+    sort_order: (searchParams.get('sort_order') as 'asc' | 'desc') || 'desc',
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Load reference data on component mount
   useEffect(() => {
     const loadReferenceData = async () => {
       try {
@@ -147,25 +91,23 @@ export const SearchPage: React.FC = () => {
           tagService.getTags({ limit: 100 }),
           ingredientService.getIngredients({ limit: 100 }),
           equipmentService.getEquipments({ limit: 100 }),
-          userService.listUsers({ limit: 100 }), // Charger les utilisateurs
+          userService.listUsers({ limit: 100 }),
         ]);
 
         if (categoriesRes.success) setCategories(categoriesRes.data);
         if (tagsRes.success) setTags(tagsRes.data);
         if (ingredientsRes.success) {
-          // Gérer le nouveau format paginé ou l'ancien format tableau
-          const ingredientsArray = Array.isArray(ingredientsRes.data) 
-            ? ingredientsRes.data 
+          const ingredientsArray = Array.isArray(ingredientsRes.data)
+            ? ingredientsRes.data
             : ingredientsRes.data.ingredients || [];
           setIngredients(ingredientsArray);
         }
         if (equipmentsRes.success) setEquipments(equipmentsRes.data);
         if (usersRes.success) setUsers(usersRes.data.users);
-      } catch (error) {
-        console.error('Error loading reference data:', error);
+      } catch {
+        /* données de référence indisponibles : la recherche reste fonctionnelle */
       }
     };
-
     loadReferenceData();
   }, []);
 
@@ -179,7 +121,6 @@ export const SearchPage: React.FC = () => {
           page: pagination.pagination.currentPage,
           limit: 20,
         };
-
         const response = await recipeService.searchRecipes(searchFilters);
         if (response.success) {
           setRecipes(response.data.recipes);
@@ -188,43 +129,32 @@ export const SearchPage: React.FC = () => {
             totalPages: response.data.total_pages,
             totalCount: response.data.total_count,
             hasNext: response.data.has_next,
-            hasPrev: response.data.has_prev
+            hasPrev: response.data.has_prev,
           });
         }
-      } catch (error) {
-        console.error('Error searching recipes:', error);
+      } catch {
+        setRecipes([]);
       } finally {
         setIsLoading(false);
       }
     };
-
     searchRecipes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchQuery, filters, pagination.pagination.currentPage]);
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    pagination.resetPagination(); // Retour à la page 1 lors d'un changement de filtre
+  const handleFilterChange = (key: keyof SearchFilters, value: unknown) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    pagination.resetPagination();
   };
 
-  const handleMultiSelectChange = (key: keyof SearchFilters, value: string, checked: boolean) => {
-    setFilters(prev => {
-      const currentArray = (prev[key] as string[]) || [];
-      if (checked) {
-        return { ...prev, [key]: [...currentArray, value] };
-      } else {
-        return { ...prev, [key]: currentArray.filter(item => item !== value) };
-      }
-    });
-    pagination.resetPagination(); // Retour à la page 1 lors d'un changement de filtre
+  const setArrayFilter = (key: 'categories' | 'tags', values: string[]) => {
+    setFilters((prev) => ({ ...prev, [key]: values }));
+    pagination.resetPagination();
   };
 
   const handleSmartSearch = (suggestion: SearchSuggestion) => {
-    // Ajouter le filtre aux filtres intelligents
-    setSmartSearchFilters(prev => [...prev, suggestion]);
-    
-    // Appliquer le filtre selon le type de suggestion
+    setSmartSearchFilters((prev) => [...prev, suggestion]);
     const newFilters = { ...filters };
-    
     switch (suggestion.type) {
       case 'recipe':
         newFilters.q = suggestion.value;
@@ -232,34 +162,25 @@ export const SearchPage: React.FC = () => {
       case 'author':
         newFilters.author = suggestion.value;
         break;
-      case 'ingredient':
-        // Trouver l'ID de l'ingrédient
-        const ingredient = ingredients.find(ing => ing.name === suggestion.value);
-        if (ingredient) {
-          newFilters.ingredients = [...(newFilters.ingredients || []), ingredient.id.toString()];
-        }
+      case 'ingredient': {
+        const ingredient = ingredients.find((ing) => ing.name === suggestion.value);
+        if (ingredient) newFilters.ingredients = [...(newFilters.ingredients || []), ingredient.id.toString()];
         break;
-      case 'equipment':
-        // Trouver l'ID de l'équipement
-        const equipment = equipments.find(eq => eq.name === suggestion.value);
-        if (equipment) {
-          newFilters.equipments = [...(newFilters.equipments || []), equipment.id.toString()];
-        }
+      }
+      case 'equipment': {
+        const equipment = equipments.find((eq) => eq.name === suggestion.value);
+        if (equipment) newFilters.equipments = [...(newFilters.equipments || []), equipment.id.toString()];
         break;
+      }
     }
-
     setFilters(newFilters);
-    pagination.resetPagination(); // Retour à la page 1 lors d'une nouvelle recherche
+    pagination.resetPagination();
   };
 
   const removeSmartSearchFilter = (index: number) => {
     const filterToRemove = smartSearchFilters[index];
-    const newSmartFilters = smartSearchFilters.filter((_, i) => i !== index);
-    setSmartSearchFilters(newSmartFilters);
-
-    // Retirer le filtre correspondant
+    setSmartSearchFilters((prev) => prev.filter((_, i) => i !== index));
     const newFilters = { ...filters };
-    
     switch (filterToRemove.type) {
       case 'recipe':
         delete newFilters.q;
@@ -267,28 +188,25 @@ export const SearchPage: React.FC = () => {
       case 'author':
         delete newFilters.author;
         break;
-      case 'ingredient':
-        const ingredient = ingredients.find(ing => ing.name === filterToRemove.value);
-        if (ingredient && newFilters.ingredients) {
-          newFilters.ingredients = newFilters.ingredients.filter(id => id !== ingredient.id.toString());
-        }
+      case 'ingredient': {
+        const ingredient = ingredients.find((ing) => ing.name === filterToRemove.value);
+        if (ingredient && newFilters.ingredients)
+          newFilters.ingredients = newFilters.ingredients.filter((id) => id !== ingredient.id.toString());
         break;
-      case 'equipment':
-        const equipment = equipments.find(eq => eq.name === filterToRemove.value);
-        if (equipment && newFilters.equipments) {
-          newFilters.equipments = newFilters.equipments.filter(id => id !== equipment.id.toString());
-        }
+      }
+      case 'equipment': {
+        const equipment = equipments.find((eq) => eq.name === filterToRemove.value);
+        if (equipment && newFilters.equipments)
+          newFilters.equipments = newFilters.equipments.filter((id) => id !== equipment.id.toString());
         break;
+      }
     }
-
+    if (filterToRemove.type === 'recipe') setSearchQuery('');
     setFilters(newFilters);
   };
 
   const clearFilters = () => {
-    setFilters({
-      sort_by: 'created_at',
-      sort_order: 'desc'
-    });
+    setFilters({ sort_by: 'created_at', sort_order: 'desc' });
     setSearchQuery('');
     setSmartSearchFilters([]);
     setSearchParams({});
@@ -298,14 +216,6 @@ export const SearchPage: React.FC = () => {
   const handlePageChange = (page: number) => {
     pagination.goToPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const removeFilter = (key: keyof SearchFilters, value?: string) => {
-    if (value && Array.isArray(filters[key])) {
-      handleMultiSelectChange(key, value, false);
-    } else {
-      handleFilterChange(key, undefined);
-    }
   };
 
   const getActiveFiltersCount = () => {
@@ -322,446 +232,142 @@ export const SearchPage: React.FC = () => {
     return count;
   };
 
-  // Fonction pour vérifier si un filtre traditionnel est déjà présent dans les filtres intelligents
-  const isAlreadyInSmartFilters = (type: 'author' | 'ingredient', value: string) => {
-    return smartSearchFilters.some(filter => filter.type === type && filter.value === value);
-  };
+  const isAlreadyInSmartFilters = (type: 'author', value: string) =>
+    smartSearchFilters.some((filter) => filter.type === type && filter.value === value);
 
-  // Fonction pour créer tous les tags unifiés (smart + traditional sans doublons)
-  const getAllActiveTags = () => {
-    const activeTags: Array<{type: string, smartIndex?: number, element: React.ReactElement}> = [];
-    
-    // Ajouter tous les smartSearchFilters en premier
+  // Toutes les puces actives (intelligentes + classiques), toutes retirables (SRCH-2).
+  const buildActiveChips = (): ActiveChip[] => {
+    const chips: ActiveChip[] = [];
+
     smartSearchFilters.forEach((filter, index) => {
-      activeTags.push({
-        type: 'smart',
-        smartIndex: index,
-        element: (
-          <span key={`smart-${index}`} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-            filter.type === 'recipe' ? 'bg-blue-100 text-blue-800' :
-            filter.type === 'author' ? 'bg-purple-100 text-purple-800' :
-            filter.type === 'equipment' ? 'bg-orange-100 text-orange-800' :
-            'bg-green-100 text-green-800'
-          }`}>
-            {filter.type === 'recipe' && '📋 '}
-            {filter.type === 'author' && '👤 '}
-            {filter.type === 'ingredient' && '🥕 '}
-            {filter.type === 'equipment' && '🔧 '}
-            {filter.label}
-            <button
-              onClick={() => removeSmartSearchFilter(index)}
-              className={`ml-2 ${
-                filter.type === 'recipe' ? 'hover:text-blue-600' :
-                filter.type === 'author' ? 'hover:text-purple-600' :
-                filter.type === 'equipment' ? 'hover:text-orange-600' :
-                'hover:text-green-600'
-              }`}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )
-      });
+      const prefix =
+        filter.type === 'recipe' ? '📋 ' : filter.type === 'author' ? '👤 ' : filter.type === 'ingredient' ? '🥕 ' : '🔧 ';
+      chips.push({ key: `smart-${index}`, label: `${prefix}${filter.label}`, onRemove: () => removeSmartSearchFilter(index) });
     });
 
-    // Ajouter les filtres traditionnels seulement s'ils ne sont pas déjà dans les smart filters
-    if (filters.difficulty) {
-      activeTags.push({
-        type: 'traditional',
-        element: (
-          <span key="difficulty" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-            Difficulté: {filters.difficulty === 'easy' ? 'Facile' : filters.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
-            <button
-              onClick={() => removeFilter('difficulty')}
-              className="ml-2 hover:text-blue-600"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )
+    if (filters.difficulty)
+      chips.push({
+        key: 'difficulty',
+        label: `Difficulté : ${difficultyLabels[filters.difficulty]}`,
+        onRemove: () => handleFilterChange('difficulty', undefined),
       });
-    }
+    if (filters.author && !isAlreadyInSmartFilters('author', filters.author))
+      chips.push({ key: 'author', label: `Auteur : ${filters.author}`, onRemove: () => handleFilterChange('author', undefined) });
+    if (filters.min_rating)
+      chips.push({ key: 'min_rating', label: `Note ≥ ${filters.min_rating} ★`, onRemove: () => handleFilterChange('min_rating', undefined) });
+    if (filters.max_prep_time)
+      chips.push({ key: 'max_prep_time', label: `Prépa ≤ ${filters.max_prep_time} min`, onRemove: () => handleFilterChange('max_prep_time', undefined) });
+    if (filters.max_cook_time)
+      chips.push({ key: 'max_cook_time', label: `Cuisson ≤ ${filters.max_cook_time} min`, onRemove: () => handleFilterChange('max_cook_time', undefined) });
+    if (filters.max_total_time)
+      chips.push({ key: 'max_total_time', label: `Total ≤ ${filters.max_total_time} min`, onRemove: () => handleFilterChange('max_total_time', undefined) });
 
-    if (filters.author && !isAlreadyInSmartFilters('author', filters.author)) {
-      activeTags.push({
-        type: 'traditional',
-        element: (
-          <span key="author" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-            Auteur: {filters.author}
-            <button
-              onClick={() => removeFilter('author')}
-              className="ml-2 hover:text-purple-600"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )
-      });
-    }
-
-    if (filters.min_rating) {
-      activeTags.push({
-        type: 'traditional',
-        element: (
-          <span key="min_rating" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-            Note min: {filters.min_rating} ⭐
-            <button
-              onClick={() => removeFilter('min_rating')}
-              className="ml-2 hover:text-yellow-600"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )
-      });
-    }
-
-    if (filters.max_total_time) {
-      activeTags.push({
-        type: 'traditional',
-        element: (
-          <span key="max_total_time" className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-            Max {filters.max_total_time}min
-            <button
-              onClick={() => removeFilter('max_total_time')}
-              className="ml-2 hover:text-green-600"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )
-      });
-    }
-
-    // Ajouter les catégories
-    filters.categories?.forEach(catId => {
-      const category = categories.find(c => c.id.toString() === catId);
-      if (category) {
-        activeTags.push({
-          type: 'traditional',
-          element: (
-            <span key={`category-${catId}`} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-              {category.name}
-              <button
-                onClick={() => removeFilter('categories', catId)}
-                className="ml-2 hover:text-purple-600"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )
+    filters.categories?.forEach((catId) => {
+      const category = categories.find((c) => c.id.toString() === catId);
+      if (category)
+        chips.push({
+          key: `category-${catId}`,
+          label: category.name,
+          onRemove: () => setArrayFilter('categories', (filters.categories || []).filter((id) => id !== catId)),
         });
-      }
     });
-
-    // Ajouter les tags
-    filters.tags?.forEach(tagId => {
-      const tag = tags.find(t => t.id.toString() === tagId);
-      if (tag) {
-        activeTags.push({
-          type: 'traditional',
-          element: (
-            <span key={`tag-${tagId}`} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
-              {tag.name}
-              <button
-                onClick={() => removeFilter('tags', tagId)}
-                className="ml-2 hover:text-indigo-600"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )
+    filters.tags?.forEach((tagId) => {
+      const tag = tags.find((t) => t.id.toString() === tagId);
+      if (tag)
+        chips.push({
+          key: `tag-${tagId}`,
+          label: tag.name,
+          onRemove: () => setArrayFilter('tags', (filters.tags || []).filter((id) => id !== tagId)),
         });
-      }
     });
 
-    return activeTags;
+    return chips;
   };
+
+  const activeChips = buildActiveChips();
+  const activeCount = getActiveFiltersCount();
+  const totalCount = pagination.pagination.totalCount || recipes.length;
 
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Search Header */}
+        {/* En-tête */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Rechercher des recettes</h1>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Trouvez la recette parfaite selon vos goûts et contraintes
+          <h1 className="mb-2 font-display text-3xl font-bold">Rechercher des recettes</h1>
+          <p className="mx-auto max-w-2xl text-muted-foreground">
+            Trouvez la recette parfaite selon vos goûts et vos contraintes.
           </p>
         </div>
 
-        {/* Smart Search Bar */}
+        {/* Barre de recherche + bouton filtres */}
         <Card>
-          <CardContent className="p-6">
-            {/* Active Filters Tags */}
-            {(getActiveFiltersCount() > 0 || smartSearchFilters.length > 0) && (
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  {getAllActiveTags().map(tag => tag.element)}
-                </div>
-              </div>
-            )}
-            
-            <div className="flex space-x-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <SmartSearchBar
                   onSearch={handleSmartSearch}
                   ingredients={ingredients}
                   equipments={equipments}
                   users={users}
-                  placeholder="Rechercher une recette, un auteur, un ingrédient, un équipement..."
+                  placeholder="Rechercher une recette, un auteur, un ingrédient…"
                 />
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => setShowFilters(!showFilters)}
-                className="relative"
-              >
-                <Filter className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={() => setShowFilters(true)} className="relative gap-2 sm:w-auto">
+                <Filter className="h-4 w-4" />
                 Filtres
-                {getActiveFiltersCount() > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {getActiveFiltersCount()}
+                {activeCount > 0 && (
+                  <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-foreground">
+                    {activeCount}
                   </span>
                 )}
               </Button>
             </div>
 
-            {/* Advanced Filters */}
-            {showFilters && (
-              <div className="mt-6 p-6 bg-gray-50 rounded-lg">
-                {/* Filter Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column - Basic Filters */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Critères de base</h3>
-                    
-                    {/* Difficulty */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Difficulté
-                      </label>
-                      <select
-                        value={filters.difficulty || ''}
-                        onChange={(e) => handleFilterChange('difficulty', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
-                        <option value="">Toutes</option>
-                        <option value="easy">Facile</option>
-                        <option value="medium">Moyen</option>
-                        <option value="hard">Difficile</option>
-                      </select>
-                    </div>
-
-                    {/* Rating */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Note minimale
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <button
-                            key={rating}
-                            onClick={() => handleFilterChange('min_rating', rating === filters.min_rating ? undefined : rating)}
-                            className={`p-1 rounded ${
-                              filters.min_rating && rating <= filters.min_rating
-                                ? 'text-yellow-400'
-                                : 'text-gray-300 hover:text-yellow-400'
-                            }`}
-                          >
-                            <Star className="h-6 w-6 fill-current" />
-                          </button>
-                        ))}
-                        {filters.min_rating && (
-                          <span className="text-sm text-gray-600 ml-2">
-                            {filters.min_rating}+ étoiles
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Sort */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Trier par
-                      </label>
-                      <div className="flex space-x-2">
-                        <select
-                          value={filters.sort_by || 'created_at'}
-                          onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                          <option value="created_at">Date de création</option>
-                          <option value="title">Nom</option>
-                          <option value="total_time">Temps total</option>
-                          <option value="average_rating">Note</option>
-                          <option value="difficulty">Difficulté</option>
-                          <option value="popularity">Popularité</option>
-                        </select>
-                        <select
-                          value={filters.sort_order || 'desc'}
-                          onChange={(e) => handleFilterChange('sort_order', e.target.value as 'asc' | 'desc')}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                          <option value="desc">Décroissant</option>
-                          <option value="asc">Croissant</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Middle Column - Time Filters */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Temps (minutes)</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Temps de préparation max
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="30"
-                        value={filters.max_prep_time || ''}
-                        onChange={(e) => handleFilterChange('max_prep_time', e.target.value ? parseInt(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Temps de cuisson max
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="60"
-                        value={filters.max_cook_time || ''}
-                        onChange={(e) => handleFilterChange('max_cook_time', e.target.value ? parseInt(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Temps total max
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="90"
-                        value={filters.max_total_time || ''}
-                        onChange={(e) => handleFilterChange('max_total_time', e.target.value ? parseInt(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Column - Advanced Filters */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Filtres avancés</h3>
-                    
-                    {/* Categories */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Catégories
-                        <button
-                          type="button"
-                          className="ml-2 text-xs text-primary-600 hover:text-primary-700"
-                          onClick={() => setShowFilters(!showFilters)}
-                        >
-                          {showFilters ? <ChevronUp className="h-3 w-3 inline" /> : <ChevronDown className="h-3 w-3 inline" />}
-                        </button>
-                      </label>
-                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2">
-                        {categories.map((category) => (
-                          <label key={category.id} className="flex items-center space-x-2 py-1">
-                            <input
-                              type="checkbox"
-                              checked={filters.categories?.includes(category.id.toString()) || false}
-                              onChange={(e) => handleMultiSelectChange('categories', category.id.toString(), e.target.checked)}
-                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <span className="text-sm text-gray-700">{category.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tags
-                      </label>
-                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2">
-                        {tags.map((tag) => (
-                          <label key={tag.id} className="flex items-center space-x-2 py-1">
-                            <input
-                              type="checkbox"
-                              checked={filters.tags?.includes(tag.id.toString()) || false}
-                              onChange={(e) => handleMultiSelectChange('tags', tag.id.toString(), e.target.checked)}
-                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <span className="text-sm text-gray-700">{tag.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-                  <Button variant="ghost" onClick={clearFilters}>
-                    <X className="h-4 w-4 mr-2" />
-                    Effacer tous les filtres
-                  </Button>
-                  <Button onClick={() => setShowFilters(false)}>
-                    Appliquer les filtres
-                  </Button>
-                </div>
+            {/* Puces actives */}
+            {activeChips.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {activeChips.map((chip) => (
+                  <FilterChip key={chip.key} label={chip.label} onRemove={chip.onRemove} />
+                ))}
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="ml-1 text-sm font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  Tout effacer
+                </button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Results */}
+        {/* Résultats */}
         <div>
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  <div className="h-48 bg-gray-300 rounded-t-lg" />
-                  <CardContent className="p-4">
-                    <div className="h-4 bg-gray-300 rounded mb-2" />
-                    <div className="h-3 bg-gray-300 rounded mb-3 w-3/4" />
-                    <div className="h-3 bg-gray-300 rounded w-1/2" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <ResultsSkeleton />
           ) : recipes.length === 0 ? (
-            <div className="text-center py-12">
-              <ChefHat className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Aucune recette trouvée</h3>
-              <p className="text-gray-600 mb-6">
-                Essayez de modifier vos critères de recherche
-              </p>
-              <Button onClick={clearFilters}>
-                Voir toutes les recettes
-              </Button>
+            <div className="flex flex-col items-center py-16 text-center">
+              <div className="mb-4 grid h-20 w-20 place-items-center rounded-full bg-muted">
+                <ChefHat className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <h3 className="mb-1 text-xl font-semibold">Aucune recette trouvée</h3>
+              <p className="mb-6 text-muted-foreground">Essayez d'élargir ou de modifier vos critères.</p>
+              <Button onClick={clearFilters}>Voir toutes les recettes</Button>
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {pagination.pagination.totalCount || recipes.length} recette{(pagination.pagination.totalCount || recipes.length) > 1 ? 's' : ''} trouvée{(pagination.pagination.totalCount || recipes.length) > 1 ? 's' : ''}
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">
+                  {totalCount} recette{totalCount > 1 ? 's' : ''} trouvée{totalCount > 1 ? 's' : ''}
                 </h2>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {recipes.map((recipe) => (
                   <RecipeCard key={recipe.id} recipe={recipe} />
                 ))}
               </div>
-              
-              {/* Pagination */}
+
               <Pagination
                 currentPage={pagination.pagination.currentPage}
                 totalPages={pagination.pagination.totalPages}
@@ -774,6 +380,153 @@ export const SearchPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Tiroir latéral de filtres */}
+      <Sheet open={showFilters} onOpenChange={setShowFilters}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+              Filtres
+            </SheetTitle>
+            <SheetDescription>Affinez les résultats sans quitter la page.</SheetDescription>
+          </SheetHeader>
+
+          <div className="-mx-1 flex-1 space-y-6 overflow-y-auto px-1 py-2">
+            {/* Difficulté */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Difficulté</span>
+              <SegmentedControl
+                aria-label="Difficulté"
+                value={filters.difficulty ?? 'all'}
+                onValueChange={(v) => handleFilterChange('difficulty', v === 'all' ? undefined : v)}
+                className="w-full"
+                options={[
+                  { value: 'all', label: 'Toutes' },
+                  { value: 'easy', label: 'Facile' },
+                  { value: 'medium', label: 'Moyen' },
+                  { value: 'hard', label: 'Difficile' },
+                ]}
+              />
+            </div>
+
+            {/* Note minimale */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Note minimale</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => handleFilterChange('min_rating', rating === filters.min_rating ? undefined : rating)}
+                    className={`rounded p-1 transition-colors ${
+                      filters.min_rating && rating <= filters.min_rating ? 'text-amber-400' : 'text-muted-foreground/40 hover:text-amber-400'
+                    }`}
+                    aria-label={`${rating} étoile${rating > 1 ? 's' : ''} minimum`}
+                  >
+                    <Star className="h-6 w-6 fill-current" />
+                  </button>
+                ))}
+                {filters.min_rating ? (
+                  <span className="ml-2 text-sm text-muted-foreground">{filters.min_rating}+ étoiles</span>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Temps */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Temps maximum (minutes)</span>
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Prépa"
+                  aria-label="Préparation max"
+                  value={filters.max_prep_time ?? ''}
+                  onChange={(e) => handleFilterChange('max_prep_time', e.target.value ? parseInt(e.target.value) : undefined)}
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Cuisson"
+                  aria-label="Cuisson max"
+                  value={filters.max_cook_time ?? ''}
+                  onChange={(e) => handleFilterChange('max_cook_time', e.target.value ? parseInt(e.target.value) : undefined)}
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Total"
+                  aria-label="Temps total max"
+                  value={filters.max_total_time ?? ''}
+                  onChange={(e) => handleFilterChange('max_total_time', e.target.value ? parseInt(e.target.value) : undefined)}
+                />
+              </div>
+            </div>
+
+            {/* Catégories */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Catégories</span>
+              <MultiSelect
+                options={categories.map((c) => ({ value: c.id.toString(), label: c.name }))}
+                values={filters.categories || []}
+                onChange={(vals) => setArrayFilter('categories', vals)}
+                placeholder="Toutes les catégories"
+                addLabel="Ajouter une catégorie"
+                searchPlaceholder="Rechercher une catégorie…"
+              />
+            </div>
+
+            {/* Tags */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Tags</span>
+              <MultiSelect
+                options={tags.map((t) => ({ value: t.id.toString(), label: t.name }))}
+                values={filters.tags || []}
+                onChange={(vals) => setArrayFilter('tags', vals)}
+                placeholder="Tous les tags"
+                addLabel="Ajouter un tag"
+                searchPlaceholder="Rechercher un tag…"
+              />
+            </div>
+
+            {/* Tri */}
+            <div>
+              <span className="mb-2 block text-sm font-medium text-foreground">Trier par</span>
+              <div className="flex gap-2">
+                <select
+                  value={filters.sort_by || 'created_at'}
+                  onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+                  className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="created_at">Date de création</option>
+                  <option value="title">Nom</option>
+                  <option value="total_time">Temps total</option>
+                  <option value="average_rating">Note</option>
+                  <option value="difficulty">Difficulté</option>
+                  <option value="popularity">Popularité</option>
+                </select>
+                <select
+                  value={filters.sort_order || 'desc'}
+                  onChange={(e) => handleFilterChange('sort_order', e.target.value as 'asc' | 'desc')}
+                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="desc">Décroissant</option>
+                  <option value="asc">Croissant</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <SheetFooter className="border-t border-border pt-4">
+            <Button variant="ghost" onClick={clearFilters} className="gap-2">
+              <X className="h-4 w-4" />
+              Tout effacer
+            </Button>
+            <Button onClick={() => setShowFilters(false)}>Voir les {totalCount} résultats</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </Layout>
   );
 };

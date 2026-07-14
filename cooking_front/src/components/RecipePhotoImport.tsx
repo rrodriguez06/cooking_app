@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Camera, AlertCircle, CheckCircle, Loader2, X } from 'lucide-react';
+import { Upload, Camera, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { recipeExtractionService } from '../services/recipeExtractionService';
 import type { ExtractedRecipeData, ExtractRecipeResponse } from '../services/recipeExtractionService';
 
@@ -34,7 +35,7 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
 
     setSelectedFile(file);
     setErrorMessage('');
-    
+
     // Créer une preview
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -72,7 +73,7 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
       // Vérifier l'état des services avant de commencer
       setStep('ocr');
       const health = await recipeExtractionService.checkHealth();
-      
+
       if (health.status === 'error') {
         throw new Error('Services d\'extraction temporairement indisponibles');
       }
@@ -127,38 +128,32 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${className}`}>
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className={`max-w-2xl max-h-[90vh] overflow-y-auto ${className}`}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
             Importer une recette depuis une photo
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X size={24} />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Étape 1: Sélection du fichier */}
         {step === 'idle' && (
           <div className="space-y-4">
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-muted-foreground transition-colors cursor-pointer"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium text-gray-900 mb-2">
+              <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-foreground mb-2">
                 Glissez votre photo de recette ici
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 ou cliquez pour sélectionner un fichier
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 JPG, PNG, BMP ou TIFF - Maximum 10MB
               </p>
             </div>
@@ -172,9 +167,9 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
             />
 
             {errorMessage && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <span className="text-sm text-red-600">{errorMessage}</span>
+              <div className="bg-destructive/10 border border-destructive/30 rounded-md p-3 flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <span className="text-sm text-destructive">{errorMessage}</span>
               </div>
             )}
           </div>
@@ -184,13 +179,13 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
         {step === 'idle' && selectedFile && previewUrl && (
           <div className="space-y-4 mt-6">
             <div className="border rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-2">Image sélectionnée:</h3>
+              <h3 className="font-medium text-foreground mb-2">Image sélectionnée:</h3>
               <img
                 src={previewUrl}
                 alt="Preview"
                 className="max-h-64 mx-auto rounded-lg shadow-sm"
               />
-              <p className="text-sm text-gray-500 mt-2 text-center">
+              <p className="text-sm text-muted-foreground mt-2 text-center">
                 {selectedFile.name} ({Math.round(selectedFile.size / 1024)}KB)
               </p>
             </div>
@@ -216,11 +211,11 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
         {/* Étape 3: Extraction en cours */}
         {['uploading', 'ocr', 'llm'].includes(step) && (
           <div className="text-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-900 mb-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-lg font-medium text-foreground mb-2">
               {getStepMessage()}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Cela peut prendre quelques instants...
             </p>
           </div>
@@ -229,13 +224,13 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
         {/* Étape 4: Succès */}
         {step === 'success' && extractionResult?.data && (
           <div className="space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-md p-3 flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-sm text-green-600">{getStepMessage()}</span>
+            <div className="bg-herb-50 border border-herb-200 rounded-md p-3 flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-herb-600" />
+              <span className="text-sm text-herb-700">{getStepMessage()}</span>
             </div>
 
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">
-              <h3 className="font-medium text-gray-900 mb-2">Recette extraite:</h3>
+              <h3 className="font-medium text-foreground mb-2">Recette extraite:</h3>
               <div className="space-y-2 text-sm">
                 <p><strong>Titre:</strong> {extractionResult.data.title}</p>
                 <p><strong>Temps de préparation:</strong> {extractionResult.data.prep_time} min</p>
@@ -267,15 +262,15 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
         {/* Étape 5: Erreur */}
         {step === 'error' && (
           <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <span className="text-sm text-red-600">{errorMessage}</span>
+            <div className="bg-destructive/10 border border-destructive/30 rounded-md p-3 flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <span className="text-sm text-destructive">{errorMessage}</span>
             </div>
 
             {extractionResult?.extracted_text && (
               <div className="border rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">Texte extrait (pour diagnostic):</h3>
-                <pre className="text-sm text-gray-600 whitespace-pre-wrap max-h-32 overflow-y-auto bg-gray-50 p-2 rounded">
+                <h3 className="font-medium text-foreground mb-2">Texte extrait (pour diagnostic):</h3>
+                <pre className="text-sm text-muted-foreground whitespace-pre-wrap max-h-32 overflow-y-auto bg-muted/50 p-2 rounded">
                   {extractionResult.extracted_text}
                 </pre>
               </div>
@@ -294,9 +289,9 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
 
         {/* Footer avec conseils */}
         {step === 'idle' && !selectedFile && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-medium text-blue-900 mb-2">💡 Conseils pour de meilleurs résultats:</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
+          <div className="mt-6 p-4 bg-primary/10 rounded-lg">
+            <h3 className="font-medium text-primary mb-2">💡 Conseils pour de meilleurs résultats:</h3>
+            <ul className="text-sm text-primary space-y-1">
               <li>• Utilisez une photo claire et bien éclairée</li>
               <li>• Assurez-vous que le texte est lisible</li>
               <li>• Évitez les photos avec beaucoup d'ombres</li>
@@ -304,7 +299,7 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
             </ul>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -3,14 +3,17 @@ import { cn } from '../../utils';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  /** Ajoute un effet d'élévation au survol (pour les cartes cliquables). */
+  interactive?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({ children, className, ...props }) => {
+export const Card: React.FC<CardProps> = ({ children, className, interactive, ...props }) => {
   return (
     <div
       className={cn(
-        'bg-white rounded-lg shadow-md border border-gray-200',
-        className
+        'bg-card text-card-foreground rounded-2xl shadow-soft border border-border',
+        interactive && 'transition-shadow duration-200 hover:shadow-soft-lg',
+        className,
       )}
       {...props}
     >
@@ -25,10 +28,7 @@ interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardHeader: React.FC<CardHeaderProps> = ({ children, className, ...props }) => {
   return (
-    <div
-      className={cn('px-6 py-4 border-b border-gray-200', className)}
-      {...props}
-    >
+    <div className={cn('px-6 py-4 border-b border-border', className)} {...props}>
       {children}
     </div>
   );
@@ -40,32 +40,25 @@ interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardContent: React.FC<CardContentProps> = ({ children, className, ...props }) => {
   return (
-    <div
-      className={cn('px-6 py-4', className)}
-      {...props}
-    >
+    <div className={cn('px-6 py-4', className)} {...props}>
       {children}
     </div>
   );
 };
 
-// Ajout du composant CardTitle manquant
 interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   children: React.ReactNode;
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 }
 
-export const CardTitle: React.FC<CardTitleProps> = ({ 
-  children, 
-  className, 
+export const CardTitle: React.FC<CardTitleProps> = ({
+  children,
+  className,
   as: Component = 'h3',
-  ...props 
+  ...props
 }) => {
   return (
-    <Component
-      className={cn('text-lg font-semibold text-gray-900', className)}
-      {...props}
-    >
+    <Component className={cn('text-lg font-semibold text-foreground', className)} {...props}>
       {children}
     </Component>
   );
@@ -77,10 +70,7 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardFooter: React.FC<CardFooterProps> = ({ children, className, ...props }) => {
   return (
-    <div
-      className={cn('px-6 py-4 border-t border-gray-200 bg-gray-50', className)}
-      {...props}
-    >
+    <div className={cn('px-6 py-4 border-t border-border bg-muted/40', className)} {...props}>
       {children}
     </div>
   );

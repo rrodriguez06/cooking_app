@@ -119,7 +119,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {preview ? (
         <div className="relative">
-          <div className="relative overflow-hidden rounded-lg border-2 border-gray-200">
+          <div className="relative overflow-hidden rounded-lg border-2 border-border">
             <img
               src={preview}
               alt="Aperçu de l'image"
@@ -134,7 +134,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 size="sm"
                 onClick={openFileDialog}
                 disabled={isUploading}
-                className="text-white bg-blue-600 hover:bg-blue-700"
+                className="text-primary-foreground bg-primary hover:bg-primary/90"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Changer
@@ -146,7 +146,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 size="sm"
                 onClick={handleRemove}
                 disabled={isUploading}
-                className="text-white bg-red-600 hover:bg-red-700"
+                className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
               >
                 <X className="w-4 h-4 mr-2" />
                 Supprimer
@@ -155,34 +155,34 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
 
           {isUploading && (
-            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <div className="absolute inset-0 bg-card bg-opacity-75 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           )}
         </div>
       ) : (
         <div
           onClick={openFileDialog}
-          className={`border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors ${
+          className={`border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-muted-foreground transition-colors ${
             isUploading ? 'pointer-events-none opacity-50' : ''
           }`}
         >
           <div className="flex flex-col items-center space-y-2">
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full">
-              <ImageIcon className="w-6 h-6 text-gray-500" />
+            <div className="flex items-center justify-center w-12 h-12 bg-muted rounded-full">
+              <ImageIcon className="w-6 h-6 text-muted-foreground" />
             </div>
             
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-foreground">
                 {isUploading ? 'Upload en cours...' : 'Ajouter une image'}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 PNG, JPG, WebP jusqu'à {maxSize}MB
               </p>
             </div>
             
             {isUploading && (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             )}
           </div>
         </div>

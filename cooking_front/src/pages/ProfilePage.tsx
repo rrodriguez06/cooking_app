@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination } from '../components';
+import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
+import { toast } from '../components/ui/sonner';
 import { useAuth } from '../context';
 import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
 import { usePagination } from '../hooks';
@@ -12,6 +13,7 @@ import { User, Mail, Calendar, ChefHat, Edit2, Heart, List, Plus, Trash2, Edit, 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
   const [recipeLists, setRecipeLists] = useState<RecipeList[]>([]);
@@ -191,20 +193,22 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleDeleteRecipe = async (recipeId: number, recipeTitle: string) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer la recette "${recipeTitle}" ? Cette action est irréversible.`)) {
-      try {
-        const response = await recipeService.deleteRecipe(recipeId);
-        if (response.success) {
-          // Retirer la recette de la liste locale
-          setUserRecipes(userRecipes.filter(recipe => recipe.id !== recipeId));
-          // Optionnel: Afficher une notification de succès
-          console.log('Recette supprimée avec succès');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la suppression de la recette:', error);
-        // Optionnel: Afficher une notification d'erreur
-        alert('Erreur lors de la suppression de la recette');
+    const ok = await confirm({
+      title: 'Supprimer la recette',
+      description: `Êtes-vous sûr de vouloir supprimer « ${recipeTitle} » ? Cette action est irréversible.`,
+      confirmLabel: 'Supprimer',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      const response = await recipeService.deleteRecipe(recipeId);
+      if (response.success) {
+        setUserRecipes(userRecipes.filter(recipe => recipe.id !== recipeId));
+        toast.success('Recette supprimée.');
       }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la recette:', error);
+      toast.error('Erreur lors de la suppression de la recette.');
     }
   };
 
@@ -232,7 +236,7 @@ export const ProfilePage: React.FC = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">Mon Profil</h1>
+              <h1 className="text-2xl font-bold font-display">Mon Profil</h1>
               <Button
                 variant="ghost"
                 size="sm"
@@ -254,8 +258,8 @@ export const ProfilePage: React.FC = () => {
                     className="w-20 h-20 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="h-10 w-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center">
+                    <User className="h-10 w-10 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -276,7 +280,7 @@ export const ProfilePage: React.FC = () => {
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     />
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-foreground mb-2">
                         Photo de profil
                       </label>
                       <ProfileImageUpload
@@ -300,16 +304,16 @@ export const ProfilePage: React.FC = () => {
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      <User className="h-5 w-5 text-gray-500" />
+                      <User className="h-5 w-5 text-muted-foreground" />
                       <span className="text-lg font-semibold">{user.username}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Mail className="h-5 w-5 text-gray-500" />
-                      <span className="text-gray-700">{user.email}</span>
+                      <Mail className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-foreground">{user.email}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Calendar className="h-5 w-5 text-gray-500" />
-                      <span className="text-gray-700">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-foreground">
                         Membre depuis {user.created_at ? formatDate(user.created_at, 'MMMM yyyy') : 'Date inconnue'}
                       </span>
                     </div>
@@ -324,54 +328,54 @@ export const ProfilePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <CardContent className="p-6 text-center">
-              <ChefHat className="h-8 w-8 text-primary-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{recipesPagination.pagination.totalCount || 0}</div>
-              <div className="text-sm text-gray-500">Recettes créées</div>
+              <ChefHat className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{recipesPagination.pagination.totalCount || 0}</div>
+              <div className="text-sm text-muted-foreground">Recettes créées</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="p-6 text-center">
-              <Heart className="h-8 w-8 text-red-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{favoritesPagination.pagination.totalCount || 0}</div>
-              <div className="text-sm text-gray-500">Recettes favorites</div>
+              <Heart className="h-8 w-8 text-destructive mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{favoritesPagination.pagination.totalCount || 0}</div>
+              <div className="text-sm text-muted-foreground">Recettes favorites</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="p-6 text-center">
-              <List className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{recipeLists.length}</div>
-              <div className="text-sm text-gray-500">Listes créées</div>
+              <List className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{recipeLists.length}</div>
+              <div className="text-sm text-muted-foreground">Listes créées</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{followersCount || 0}</div>
-              <div className="text-sm text-gray-500">Abonnés</div>
+              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{followersCount || 0}</div>
+              <div className="text-sm text-muted-foreground">Abonnés</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="p-6 text-center">
-              <UserCheck className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{followingCount || 0}</div>
-              <div className="text-sm text-gray-500">Abonnements</div>
+              <UserCheck className="h-8 w-8 text-herb-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{followingCount || 0}</div>
+              <div className="text-sm text-muted-foreground">Abonnements</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs Navigation */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('recipes')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'recipes'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               <ChefHat className="h-4 w-4 inline mr-2" />
@@ -382,8 +386,8 @@ export const ProfilePage: React.FC = () => {
               onClick={() => setActiveTab('favorites')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'favorites'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               <Heart className="h-4 w-4 inline mr-2" />
@@ -394,8 +398,8 @@ export const ProfilePage: React.FC = () => {
               onClick={() => setActiveTab('lists')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'lists'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               <List className="h-4 w-4 inline mr-2" />
@@ -406,8 +410,8 @@ export const ProfilePage: React.FC = () => {
               onClick={() => setActiveTab('follows')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'follows'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               <Users className="h-4 w-4 inline mr-2" />
@@ -418,8 +422,8 @@ export const ProfilePage: React.FC = () => {
               onClick={() => setActiveTab('security')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'security'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
               <Shield className="h-4 w-4 inline mr-2" />
@@ -437,13 +441,13 @@ export const ProfilePage: React.FC = () => {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Chargement des recettes...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Chargement des recettes...</p>
                 </div>
               ) : userRecipes.length === 0 ? (
                 <div className="text-center py-8">
-                  <ChefHat className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Vous n'avez pas encore créé de recettes</p>
+                  <ChefHat className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">Vous n'avez pas encore créé de recettes</p>
                   <Button onClick={() => navigate('/recipe/new')}>
                     Créer ma première recette
                   </Button>
@@ -457,7 +461,7 @@ export const ProfilePage: React.FC = () => {
                     >
                       {/* Image de la recette */}
                       <div 
-                        className="w-full h-48 bg-gray-200 cursor-pointer"
+                        className="w-full h-48 bg-muted cursor-pointer"
                         onClick={() => navigate(`/recipe/${recipe.id}`)}
                       >
                         {recipe.image_url ? (
@@ -468,7 +472,7 @@ export const ProfilePage: React.FC = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <ChefHat className="h-16 w-16 text-gray-400" />
+                            <ChefHat className="h-16 w-16 text-muted-foreground" />
                           </div>
                         )}
                       </div>
@@ -476,10 +480,10 @@ export const ProfilePage: React.FC = () => {
                       {/* Contenu de la carte */}
                       <div className="p-4">
                         <h3 className="font-semibold mb-2 line-clamp-1">{recipe.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                           {recipe.description}
                         </p>
-                        <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+                        <div className="flex justify-between items-center text-sm text-muted-foreground mb-3">
                           <span>{formatDate(recipe.created_at)}</span>
                         </div>
                         <div className="flex justify-between items-center space-x-2">
@@ -505,7 +509,7 @@ export const ProfilePage: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteRecipe(recipe.id, recipe.title)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -537,13 +541,13 @@ export const ProfilePage: React.FC = () => {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Chargement des favoris...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Chargement des favoris...</p>
                 </div>
               ) : favoriteRecipes.length === 0 ? (
                 <div className="text-center py-8">
-                  <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Vous n'avez pas encore de recettes favorites</p>
+                  <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">Vous n'avez pas encore de recettes favorites</p>
                   <Button onClick={() => window.location.href = '/search'}>
                     Découvrir des recettes
                   </Button>
@@ -557,7 +561,7 @@ export const ProfilePage: React.FC = () => {
                     >
                       {/* Image de la recette */}
                       <div 
-                        className="w-full h-48 bg-gray-200 cursor-pointer"
+                        className="w-full h-48 bg-muted cursor-pointer"
                         onClick={() => navigate(`/recipe/${recipe.id}`)}
                       >
                         {recipe.image_url ? (
@@ -568,7 +572,7 @@ export const ProfilePage: React.FC = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <ChefHat className="h-16 w-16 text-gray-400" />
+                            <ChefHat className="h-16 w-16 text-muted-foreground" />
                           </div>
                         )}
                       </div>
@@ -576,10 +580,10 @@ export const ProfilePage: React.FC = () => {
                       {/* Contenu de la carte */}
                       <div className="p-4">
                         <h3 className="font-semibold mb-2 line-clamp-1">{recipe.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                           {recipe.description}
                         </p>
-                        <div className="flex justify-between items-center text-sm text-gray-500">
+                        <div className="flex justify-between items-center text-sm text-muted-foreground">
                           <span>Par {recipe.author?.username}</span>
                           <Button
                             variant="ghost"
@@ -625,14 +629,14 @@ export const ProfilePage: React.FC = () => {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Chargement des listes...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Chargement des listes...</p>
                 </div>
               ) : recipeLists.length === 0 ? (
                 <div className="text-center py-8">
-                  <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Vous n'avez pas encore créé de listes</p>
-                  <p className="text-sm text-gray-400 mb-4">
+                  <List className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">Vous n'avez pas encore créé de listes</p>
+                  <p className="text-sm text-muted-foreground mb-4">
                     Créez des listes pour organiser vos recettes par thème, occasion ou préférence
                   </p>
                   <Button onClick={() => setIsListModalOpen(true)}>
@@ -655,7 +659,7 @@ export const ProfilePage: React.FC = () => {
                               e.stopPropagation();
                               handleViewList(list);
                             }}
-                            className="p-1 text-gray-400 hover:text-blue-600"
+                            className="p-1 text-muted-foreground hover:text-primary"
                             title="Voir les recettes"
                           >
                             <Eye className="h-4 w-4" />
@@ -666,7 +670,7 @@ export const ProfilePage: React.FC = () => {
                               setEditingList(list);
                               setIsListModalOpen(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-gray-600"
+                            className="p-1 text-muted-foreground hover:text-muted-foreground"
                             title="Modifier"
                           >
                             <Edit className="h-4 w-4" />
@@ -674,16 +678,23 @@ export const ProfilePage: React.FC = () => {
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();
-                              if (window.confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
-                                try {
-                                  await recipeListService.deleteRecipeList(list.id);
-                                  setRecipeLists(prev => prev.filter(l => l.id !== list.id));
-                                } catch (error) {
-                                  console.error('Error deleting list:', error);
-                                }
+                              const ok = await confirm({
+                                title: 'Supprimer la liste',
+                                description: `Êtes-vous sûr de vouloir supprimer la liste « ${list.name} » ?`,
+                                confirmLabel: 'Supprimer',
+                                destructive: true,
+                              });
+                              if (!ok) return;
+                              try {
+                                await recipeListService.deleteRecipeList(list.id);
+                                setRecipeLists(prev => prev.filter(l => l.id !== list.id));
+                                toast.success('Liste supprimée.');
+                              } catch (error) {
+                                console.error('Error deleting list:', error);
+                                toast.error('Erreur lors de la suppression de la liste.');
                               }
                             }}
-                            className="p-1 text-gray-400 hover:text-red-600"
+                            className="p-1 text-muted-foreground hover:text-destructive"
                             title="Supprimer"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -692,25 +703,25 @@ export const ProfilePage: React.FC = () => {
                       </div>
                       
                       {list.description && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                           {list.description}
                         </p>
                       )}
                       
-                      <div className="flex justify-between items-center text-sm text-gray-500">
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
                         <span>{list.items?.length || 0} recettes</span>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           list.is_public 
-                            ? 'bg-green-100 text-green-600' 
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-herb-100 text-herb-700'
+                            : 'bg-muted text-muted-foreground'
                         }`}>
                           {list.is_public ? 'Publique' : 'Privée'}
                         </span>
                       </div>
 
                       {/* Click indicator */}
-                      <div className="mt-3 pt-2 border-t border-gray-100">
-                        <p className="text-xs text-gray-400 text-center">
+                      <div className="mt-3 pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground text-center">
                           Cliquer pour voir les recettes
                         </p>
                       </div>
@@ -727,14 +738,14 @@ export const ProfilePage: React.FC = () => {
             <CardHeader>
               <h2 className="text-xl font-bold">Abonnements</h2>
               {/* Sub-navigation pour Abonnés / Abonnements */}
-              <div className="border-b border-gray-200 mt-4">
+              <div className="border-b border-border mt-4">
                 <nav className="-mb-px flex space-x-8">
                   <button
                     onClick={() => setFollowTab('followers')}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
                       followTab === 'followers'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                     }`}
                   >
                     Abonnés ({followersCount || 0})
@@ -744,8 +755,8 @@ export const ProfilePage: React.FC = () => {
                     onClick={() => setFollowTab('following')}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
                       followTab === 'following'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                     }`}
                   >
                     Abonnements ({followingCount || 0})
@@ -756,8 +767,8 @@ export const ProfilePage: React.FC = () => {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Chargement...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">Chargement...</p>
                 </div>
               ) : (
                 <>
@@ -766,9 +777,9 @@ export const ProfilePage: React.FC = () => {
                     <>
                       {(followers?.length || 0) === 0 ? (
                         <div className="text-center py-8">
-                          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">Aucun abonné pour le moment</p>
-                          <p className="text-sm text-gray-400 mt-2">
+                          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-muted-foreground">Aucun abonné pour le moment</p>
+                          <p className="text-sm text-muted-foreground mt-2">
                             Partagez vos recettes pour attirer des abonnés !
                           </p>
                         </div>
@@ -777,7 +788,7 @@ export const ProfilePage: React.FC = () => {
                           {(followers || []).map((follower) => (
                             <div
                               key={follower.id}
-                              className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
+                              className="bg-card border rounded-lg p-4 hover:shadow-md transition-shadow"
                             >
                               <div className="flex flex-col items-center text-center">
                                 {/* Avatar */}
@@ -788,8 +799,8 @@ export const ProfilePage: React.FC = () => {
                                     className="w-16 h-16 rounded-full object-cover mb-3"
                                   />
                                 ) : (
-                                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-3">
-                                    <User className="h-8 w-8 text-gray-400" />
+                                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-3">
+                                    <User className="h-8 w-8 text-muted-foreground" />
                                   </div>
                                 )}
                                 
@@ -808,9 +819,9 @@ export const ProfilePage: React.FC = () => {
                     <>
                       {(following?.length || 0) === 0 ? (
                         <div className="text-center py-8">
-                          <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">Vous ne suivez personne pour le moment</p>
-                          <p className="text-sm text-gray-400 mt-2">
+                          <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-muted-foreground">Vous ne suivez personne pour le moment</p>
+                          <p className="text-sm text-muted-foreground mt-2">
                             Découvrez des cuisiniers talentueux à suivre !
                           </p>
                           <Button 
@@ -825,7 +836,7 @@ export const ProfilePage: React.FC = () => {
                           {(following || []).map((followedUser) => (
                             <div
                               key={followedUser.id}
-                              className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
+                              className="bg-card border rounded-lg p-4 hover:shadow-md transition-shadow"
                             >
                               <div className="flex flex-col items-center text-center">
                                 {/* Avatar */}
@@ -836,8 +847,8 @@ export const ProfilePage: React.FC = () => {
                                     className="w-16 h-16 rounded-full object-cover mb-3"
                                   />
                                 ) : (
-                                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-3">
-                                    <User className="h-8 w-8 text-gray-400" />
+                                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-3">
+                                    <User className="h-8 w-8 text-muted-foreground" />
                                   </div>
                                 )}
                                 
@@ -873,20 +884,20 @@ export const ProfilePage: React.FC = () => {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Dernière connexion</span>
+                    <span className="text-sm text-muted-foreground">Dernière connexion</span>
                     <span className="text-sm font-medium">
                       {user?.updated_at ? formatDate(user.updated_at) : 'Non disponible'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Compte créé</span>
+                    <span className="text-sm text-muted-foreground">Compte créé</span>
                     <span className="text-sm font-medium">
                       {user?.created_at ? formatDate(user.created_at) : 'Non disponible'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Status du compte</span>
-                    <span className={`text-sm font-medium ${user?.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="text-sm text-muted-foreground">Status du compte</span>
+                    <span className={`text-sm font-medium ${user?.is_active ? 'text-herb-700' : 'text-destructive'}`}>
                       {user?.is_active ? 'Actif' : 'Inactif'}
                     </span>
                   </div>

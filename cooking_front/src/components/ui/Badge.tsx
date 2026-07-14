@@ -13,11 +13,11 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props 
 }) => {
   const variantClasses = {
-    default: 'bg-gray-100 text-gray-800',
-    secondary: 'bg-blue-100 text-blue-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-orange-100 text-orange-800',
-    danger: 'bg-red-100 text-red-800',
+    default: 'bg-muted text-muted-foreground',
+    secondary: 'bg-primary/10 text-primary',
+    success: 'bg-herb-100 text-herb-700',
+    warning: 'bg-amber-100 text-amber-700',
+    danger: 'bg-destructive/10 text-destructive',
   };
 
   return (

@@ -87,23 +87,23 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted/50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center">
-            <ChefHat className="h-12 w-12 text-primary-600" />
+            <ChefHat className="h-12 w-12 text-primary" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-foreground">
             {isLogin ? 'Connectez-vous' : 'Créez votre compte'}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {isLogin ? (
               <>
                 Pas encore de compte ?{' '}
                 <button
                   onClick={toggleMode}
-                  className="font-medium text-primary-600 hover:text-primary-500"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   Inscrivez-vous
                 </button>
@@ -113,7 +113,7 @@ export const LoginPage: React.FC = () => {
                 Déjà un compte ?{' '}
                 <button
                   onClick={toggleMode}
-                  className="font-medium text-primary-600 hover:text-primary-500"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   Connectez-vous
                 </button>
@@ -126,7 +126,7 @@ export const LoginPage: React.FC = () => {
         <Card>
           <CardContent className="pt-6">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
                 {error}
               </div>
             )}
@@ -150,7 +150,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsForgotPasswordOpen(true)}
-                    className="text-sm text-primary-600 hover:text-primary-500"
+                    className="text-sm text-primary hover:text-primary/80"
                   >
                     Mot de passe oublié ?
                   </button>
@@ -187,7 +187,7 @@ export const LoginPage: React.FC = () => {
                 
                 {/* Upload de photo de profil */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-foreground">
                     Photo de profil (optionnel)
                   </label>
                   <ProfileImageUpload
@@ -213,7 +213,7 @@ export const LoginPage: React.FC = () => {
         <div className="text-center">
           <Link
             to="/"
-            className="text-sm text-gray-600 hover:text-primary-600"
+            className="text-sm text-muted-foreground hover:text-primary"
           >
             Retour à l'accueil
           </Link>

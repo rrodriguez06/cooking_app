@@ -1,66 +1,69 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context';
+import { useTheme } from '../../hooks';
 import { Button } from '../ui';
-import { 
-  Home, 
-  Search, 
-  Calendar, 
-  User, 
-  PlusCircle, 
-  Menu, 
-  X,
-  LogOut,
-  ChefHat,
-  Refrigerator
-} from 'lucide-react';
+import { cn } from '../../utils';
+import { Home, Search, Calendar, User, PlusCircle, Menu, X, LogOut, ChefHat, Refrigerator, Sun, Moon } from 'lucide-react';
+
+const navigation = [
+  { name: 'Accueil', href: '/', icon: Home },
+  { name: 'Recherche', href: '/search', icon: Search },
+  { name: 'Planning', href: '/planning', icon: Calendar },
+  { name: 'Mon Frigo', href: '/fridge', icon: Refrigerator },
+  { name: 'Nouvelle recette', href: '/recipe/new', icon: PlusCircle },
+];
 
 export const Header: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggle } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
-    { name: 'Accueil', href: '/', icon: Home },
-    { name: 'Recherche', href: '/search', icon: Search },
-    { name: 'Planning', href: '/planning', icon: Calendar },
-    { name: 'Mon Frigo', href: '/fridge', icon: Refrigerator },
-    { name: 'Nouvelle recette', href: '/recipe/new', icon: PlusCircle },
-  ];
-
-  const isCurrentPath = (path: string) => {
-    return location.pathname === path;
-  };
+  const isCurrentPath = (path: string) => location.pathname === path;
 
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
   };
 
+  const ThemeToggle = () => (
+    <button
+      type="button"
+      onClick={toggle}
+      className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      aria-label={theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
+      title={theme === 'dark' ? 'Thème clair' : 'Thème sombre'}
+    >
+      {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+    </button>
+  );
+
   return (
-    <header className="bg-white shadow-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="border-b border-border bg-card shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <ChefHat className="h-8 w-8 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900">CookingApp</span>
+          <Link to="/" className="flex items-center gap-2">
+            <ChefHat className="h-8 w-8 text-primary" />
+            <span className="font-display text-xl font-bold text-foreground">CookingApp</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Navigation desktop */}
           {isAuthenticated && (
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden gap-1 md:flex">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                       isCurrentPath(item.href)
-                        ? 'text-primary-600 bg-primary-50'
-                        : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                    }`}
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
@@ -70,58 +73,52 @@ export const Header: React.FC = () => {
             </nav>
           )}
 
-          {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Menu utilisateur desktop */}
+          <div className="hidden items-center gap-2 md:flex">
+            <ThemeToggle />
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/profile"
-                  className="flex items-center space-x-2 text-gray-700 hover:text-primary-600"
-                >
+                <Link to="/profile" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                   <User className="h-5 w-5" />
                   <span>{user?.username}</span>
                 </Link>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-1" />
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1">
+                  <LogOut className="h-4 w-4" />
                   Déconnexion
                 </Button>
               </>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Link to="/login">
                   <Button variant="ghost" size="sm">
                     Connexion
                   </Button>
                 </Link>
                 <Link to="/login?mode=register">
-                  <Button size="sm">
-                    Inscription
-                  </Button>
+                  <Button size="sm">Inscription</Button>
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Bouton menu mobile */}
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-700 hover:text-primary-600 p-2"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Menu"
             >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Navigation mobile */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="border-t border-border py-4 md:hidden">
             {isAuthenticated && (
-              <nav className="space-y-2 mb-4">
+              <nav className="mb-4 space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -129,11 +126,12 @@ export const Header: React.FC = () => {
                       key={item.name}
                       to={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
+                      className={cn(
+                        'flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium transition-colors',
                         isCurrentPath(item.href)
-                          ? 'text-primary-600 bg-primary-50'
-                          : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                      }`}
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )}
                     >
                       <Icon className="h-5 w-5" />
                       <span>{item.name}</span>
@@ -143,38 +141,38 @@ export const Header: React.FC = () => {
               </nav>
             )}
 
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-border pt-4">
               {isAuthenticated ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Link
                     to="/profile"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600"
+                    className="flex items-center gap-2 px-3 py-2 text-base font-medium text-muted-foreground hover:text-primary"
                   >
                     <User className="h-5 w-5" />
                     <span>{user?.username}</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 w-full text-left"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-base font-medium text-muted-foreground hover:text-primary"
                   >
                     <LogOut className="h-5 w-5" />
                     <span>Déconnexion</span>
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Link
                     to="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600"
+                    className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-primary"
                   >
                     Connexion
                   </Link>
                   <Link
                     to="/login?mode=register"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 text-base font-medium text-primary-600"
+                    className="block px-3 py-2 text-base font-medium text-primary"
                   >
                     Inscription
                   </Link>
