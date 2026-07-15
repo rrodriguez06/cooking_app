@@ -312,10 +312,20 @@ export const RecipeEditPage: React.FC = () => {
         />
 
         <div className="mx-auto max-w-7xl space-y-6 px-4">
-          {/* Mise en place : l'essentiel & les détails côte à côte, pleine largeur */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          {/* Mise en place : l'essentiel (photo + titre) à gauche ; détails &
+              classement empilés à droite pour combler la hauteur et équilibrer
+              les deux colonnes. items-start évite d'étirer une carte plus courte. */}
+          <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
             <EssentialsSection isCreating={isCreatingNew} onImportPhoto={() => setShowPhotoImportModal(true)} />
-            <DetailsSection />
+            <div className="space-y-6">
+              <DetailsSection />
+              <ClassificationSection
+                categories={categories}
+                tags={tags}
+                equipments={equipments}
+                onCreateEquipment={() => setShowAddEquipmentModal(true)}
+              />
+            </div>
           </div>
 
           {/* Espace de travail : ingrédients (collants, visibles pendant l'écriture
@@ -328,13 +338,6 @@ export const RecipeEditPage: React.FC = () => {
             </div>
             <StepsEditor recipes={recipes} currentRecipeId={id ? parseInt(id) : undefined} />
           </div>
-
-          <ClassificationSection
-            categories={categories}
-            tags={tags}
-            equipments={equipments}
-            onCreateEquipment={() => setShowAddEquipmentModal(true)}
-          />
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
