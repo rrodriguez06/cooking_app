@@ -26,8 +26,6 @@ import {
   clearRecipeDraft,
   useAutosave,
   ActionBar,
-  FormTOC,
-  type TocSection,
   EssentialsSection,
   DetailsSection,
   IngredientsEditor,
@@ -298,19 +296,6 @@ export const RecipeEditPage: React.FC = () => {
 
   if (initialLoading) return <Loading />;
 
-  const w = watch();
-  const sections: TocSection[] = [
-    { id: 'essentiel', label: "L'essentiel", complete: !!w.title?.trim() },
-    { id: 'details', label: 'Détails', complete: (w.servings ?? 0) > 0 },
-    { id: 'ingredients', label: 'Ingrédients', complete: (w.ingredients ?? []).some((i) => i.ingredient_id > 0) },
-    { id: 'etapes', label: 'Étapes', complete: (w.instructions ?? []).some((s) => (s.description ?? '').trim().length > 0) },
-    {
-      id: 'classement',
-      label: 'Classement',
-      complete: (w.category_ids?.length || 0) + (w.tag_ids?.length || 0) + (w.equipment_ids?.length || 0) > 0,
-    },
-  ];
-
   const submitLabel = isCreatingNew ? 'Créer la recette' : 'Enregistrer';
 
   return (
@@ -326,41 +311,40 @@ export const RecipeEditPage: React.FC = () => {
           onTogglePreview={() => setShowPreview(true)}
         />
 
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 xl:grid-cols-[190px_minmax(0,1fr)_340px]">
-          <aside className="hidden xl:block">
-            <div className="sticky top-24">
-              <FormTOC sections={sections} />
-            </div>
-          </aside>
-
-          <div className="min-w-0 space-y-6">
+        <div className="mx-auto max-w-7xl space-y-6 px-4">
+          {/* Mise en place : l'essentiel & les détails côte à côte, pleine largeur */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <EssentialsSection isCreating={isCreatingNew} onImportPhoto={() => setShowPhotoImportModal(true)} />
             <DetailsSection />
-            <IngredientsEditor ingredients={ingredients} onCreateIngredient={() => setShowAddIngredientModal(true)} />
-            <StepsEditor recipes={recipes} currentRecipeId={id ? parseInt(id) : undefined} />
-            <ClassificationSection
-              categories={categories}
-              tags={tags}
-              equipments={equipments}
-              onCreateEquipment={() => setShowAddEquipmentModal(true)}
-            />
-
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
-                Annuler
-              </Button>
-              <Button type="submit" isLoading={formState.isSubmitting} className="gap-1.5">
-                <Check className="h-4 w-4" />
-                {submitLabel}
-              </Button>
-            </div>
           </div>
 
-          <aside className="hidden xl:block">
-            <div className="sticky top-24">
-              <RecipePreview />
+          {/* Espace de travail : ingrédients (collants, visibles pendant l'écriture
+              des étapes) ⇆ étapes. Chaque colonne défile indépendamment. */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.25fr)]">
+            <div>
+              <div className="xl:sticky xl:top-24">
+                <IngredientsEditor ingredients={ingredients} onCreateIngredient={() => setShowAddIngredientModal(true)} />
+              </div>
             </div>
-          </aside>
+            <StepsEditor recipes={recipes} currentRecipeId={id ? parseInt(id) : undefined} />
+          </div>
+
+          <ClassificationSection
+            categories={categories}
+            tags={tags}
+            equipments={equipments}
+            onCreateEquipment={() => setShowAddEquipmentModal(true)}
+          />
+
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
+              Annuler
+            </Button>
+            <Button type="submit" isLoading={formState.isSubmitting} className="gap-1.5">
+              <Check className="h-4 w-4" />
+              {submitLabel}
+            </Button>
+          </div>
         </div>
       </form>
 

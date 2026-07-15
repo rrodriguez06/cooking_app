@@ -36,12 +36,13 @@ export function ActionBar({
           <Button
             type="button"
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onTogglePreview}
             aria-label="Aperçu"
-            className="xl:hidden"
+            className="gap-1.5"
           >
             <Eye className="h-5 w-5" />
+            <span className="hidden sm:inline">Aperçu</span>
           </Button>
           <Button type="submit" isLoading={isSubmitting} className="gap-1.5">
             {!isSubmitting && <Check className="h-4 w-4" />}
