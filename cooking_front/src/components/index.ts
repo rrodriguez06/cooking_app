@@ -6,7 +6,6 @@ export * from './ErrorState';
 export * from './RecipeCard';
 export * from './PlanRecipeModal';
 export * from './AddMealModal';
-export * from './FavoriteButton';
 export * from './RecipeListModal';
 export * from './RecipeListDetailModal';
 export * from './RecipeActions';

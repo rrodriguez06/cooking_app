@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -20,30 +20,28 @@ export const useDebouncedCallback = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T => {
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  // Timer et callback en refs (PERF-4) : la callback débouncée reste stable et ne
+  // capture pas de closure périmée, contrairement à un timer stocké en useState.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
 
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-
-      const newTimer = setTimeout(() => {
-        callback(...args);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        callbackRef.current(...args);
       }, delay);
-
-      setDebounceTimer(newTimer);
     },
-    [callback, delay, debounceTimer]
+    [delay]
   ) as T;
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-    };
-  }, [debounceTimer]);
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    []
+  );
 
   return debouncedCallback;
 };

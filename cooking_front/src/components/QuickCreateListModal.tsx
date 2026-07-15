@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Input } from './ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { recipeListService } from '../services';
+import { toast } from './ui/sonner';
 import type { RecipeListCreateRequest } from '../types';
 
 interface QuickCreateListModalProps {
@@ -34,30 +35,30 @@ export const QuickCreateListModal: React.FC<QuickCreateListModalProps> = ({
 
     try {
       const response = await recipeListService.createRecipeList(formData);
-      if (response.success) {
-        const listId = response.data.id;
+      if (!response.success) {
+        setError('Erreur lors de la création de la liste');
+        return;
+      }
+      const listId = response.data.id;
 
-        // Si un recipeId est fourni, ajouter automatiquement la recette à la liste
-        if (recipeId) {
+      // Si un recipeId est fourni, ajouter automatiquement la recette à la liste.
+      // Un échec ici n'annule PAS la création de la liste (message correct — UI-2).
+      if (recipeId) {
+        try {
           await recipeListService.addRecipeToList(listId, {
             recipe_id: recipeId,
             notes: '',
-            position: 0
+            position: 0,
           });
+        } catch {
+          toast.error("Liste créée, mais la recette n'a pas pu y être ajoutée.");
         }
-
-        onListCreated(listId);
-        onClose();
-
-        // Reset form
-        setFormData({
-          name: '',
-          description: '',
-          is_public: false
-        });
       }
-    } catch (error) {
-      console.error('Erreur lors de la création de la liste:', error);
+
+      onListCreated(listId);
+      onClose();
+      setFormData({ name: '', description: '', is_public: false });
+    } catch {
       setError('Erreur lors de la création de la liste');
     } finally {
       setIsLoading(false);
