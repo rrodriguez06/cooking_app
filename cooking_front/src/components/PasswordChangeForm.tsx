@@ -23,6 +23,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   const form = useForm<UserPasswordChangeData>({
     resolver: zodResolver(userPasswordChangeSchema),
     defaultValues: {
+      current_password: '',
       new_password: '',
       confirm_password: '',
     },
@@ -36,10 +37,12 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     setSuccess(false);
 
     try {
-      const response = await userService.updateUser(parseInt(user.id), {
-        password: data.new_password,
+      const response = await userService.changePassword(parseInt(user.id), {
+        current_password: data.current_password,
+        new_password: data.new_password,
+        confirm_password: data.confirm_password,
       });
-      
+
       if (response.success) {
         setSuccess(true);
         form.reset();
@@ -88,11 +91,21 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <Input
+            label="Mot de passe actuel"
+            type="password"
+            autoComplete="current-password"
+            {...form.register('current_password')}
+            error={form.formState.errors.current_password?.message}
+            placeholder="Entrez votre mot de passe actuel"
+          />
+
+          <Input
             label="Nouveau mot de passe"
             type="password"
+            autoComplete="new-password"
             {...form.register('new_password')}
             error={form.formState.errors.new_password?.message}
-            placeholder="Entrez votre nouveau mot de passe"
+            placeholder="Au moins 8 caractères"
           />
 
           <Input

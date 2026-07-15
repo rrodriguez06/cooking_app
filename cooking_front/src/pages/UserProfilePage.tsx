@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeListDetailModal } from '../components';
+import { Card, CardContent, Button, RecipeListDetailModal } from '../components';
 import { userFollowService } from '../services/userFollowService';
-import { formatRelativeTime, formatTime } from '../utils';
+import { getApiErrorMessage } from '../services';
+import { toast } from '../components/ui/sonner';
+import { formatRelativeTime, formatTime, formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { UserProfileResponse } from '../types/user';
 import type { Recipe, RecipeList } from '../types';
@@ -57,13 +59,14 @@ export const UserProfilePage: React.FC = () => {
         setProfile(prev => prev ? {
           ...prev,
           is_following: response.is_following,
-          followers_count: response.is_following 
-            ? prev.followers_count + 1 
+          followers_count: response.is_following
+            ? prev.followers_count + 1
             : prev.followers_count - 1
         } : null);
+        toast.success(response.is_following ? 'Abonnement ajouté.' : 'Abonnement retiré.');
       }
     } catch (error) {
-      console.error('Error toggling follow:', error);
+      toast.error(getApiErrorMessage(error, "Impossible de mettre à jour l'abonnement."));
     } finally {
       setFollowLoading(false);
     }
@@ -76,7 +79,7 @@ export const UserProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <div className="animate-pulse space-y-8">
           <div className="bg-card rounded-lg p-6">
             <div className="flex items-center space-x-4">
@@ -93,13 +96,13 @@ export const UserProfilePage: React.FC = () => {
             ))}
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (error || !profile) {
     return (
-      <Layout>
+      <>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-foreground mb-4">
             {error || 'Utilisateur non trouvé'}
@@ -108,14 +111,14 @@ export const UserProfilePage: React.FC = () => {
             <Button>Retour à la recherche</Button>
           </Link>
         </div>
-      </Layout>
+      </>
     );
   }
 
   const isOwnProfile = currentUser?.id === userId;
 
   return (
-    <Layout>
+    <>
       <div className="space-y-8">
         {/* Header du profil */}
         <Card>
@@ -138,7 +141,7 @@ export const UserProfilePage: React.FC = () => {
                     {profile.user.username}
                   </h1>
                   <p className="text-muted-foreground">
-                    Membre depuis {formatRelativeTime(profile.user.created_at || '')}
+                    Membre depuis {profile.user.created_at ? formatDate(profile.user.created_at, 'MMMM yyyy') : 'Date inconnue'}
                   </p>
                 </div>
               </div>
@@ -275,7 +278,7 @@ export const UserProfilePage: React.FC = () => {
         list={selectedList}
         canEdit={false} // Les utilisateurs ne peuvent pas modifier les listes des autres
       />
-    </Layout>
+    </>
   );
 };
 
@@ -295,14 +298,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
               alt={recipe.title}
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = `
-                  <div class="w-full h-48 bg-muted flex items-center justify-center">
-                    <svg class="h-12 w-12 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
-                    </svg>
-                  </div>
-                `;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/chef-hat.svg';
               }}
             />
           ) : (

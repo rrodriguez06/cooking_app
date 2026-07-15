@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeCard, UserLink } from '../components';
+import { Card, CardContent, Button, RecipeCard, UserLink, ErrorState } from '../components';
 import { Skeleton } from '../components/ui/skeleton';
 import { loadRecipeDraft, draftKey } from '../components/recipe-form/autosave';
 import { recipeService } from '../services';
@@ -59,6 +59,8 @@ export const HomePage: React.FC = () => {
   const [followingFeed, setFollowingFeed] = useState<UserFeed[]>([]);
   const [isLoadingLatest, setIsLoadingLatest] = useState(true);
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
+  const [errorLatest, setErrorLatest] = useState(false);
+  const [errorPopular, setErrorPopular] = useState(false);
   const [draft, setDraft] = useState<{ title: string; savedAt: number } | null>(null);
 
   useEffect(() => {
@@ -68,31 +70,40 @@ export const HomePage: React.FC = () => {
     }
   }, []);
 
+  const loadLatest = useCallback(async () => {
+    setIsLoadingLatest(true);
+    setErrorLatest(false);
+    try {
+      const response = await recipeService.getLatestRecipes(8);
+      if (response.success) setLatestRecipes(response.data.recipes);
+    } catch {
+      setErrorLatest(true);
+    } finally {
+      setIsLoadingLatest(false);
+    }
+  }, []);
+
+  const loadPopular = useCallback(async () => {
+    setIsLoadingPopular(true);
+    setErrorPopular(false);
+    try {
+      const response = await recipeService.getPopularRecipes(8);
+      if (response.success) setPopularRecipes(response.data.recipes);
+    } catch {
+      setErrorPopular(true);
+    } finally {
+      setIsLoadingPopular(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchLatestRecipes = async () => {
-      try {
-        const response = await recipeService.getLatestRecipes(8);
-        if (response.success) setLatestRecipes(response.data.recipes);
-      } catch {
-        /* silencieux : la section reste vide */
-      } finally {
-        setIsLoadingLatest(false);
-      }
-    };
+    loadLatest();
+    loadPopular();
+  }, [loadLatest, loadPopular]);
 
-    const fetchPopularRecipes = async () => {
-      try {
-        const response = await recipeService.getPopularRecipes(8);
-        if (response.success) setPopularRecipes(response.data.recipes);
-      } catch {
-        /* silencieux */
-      } finally {
-        setIsLoadingPopular(false);
-      }
-    };
-
+  useEffect(() => {
+    if (!user) return;
     const fetchFollowingFeed = async () => {
-      if (!user) return;
       try {
         const response = await feedService.getFollowingFeedGrouped();
         if (response.success && response.data) setFollowingFeed(response.data);
@@ -100,14 +111,11 @@ export const HomePage: React.FC = () => {
         setFollowingFeed([]);
       }
     };
-
-    fetchLatestRecipes();
-    fetchPopularRecipes();
     fetchFollowingFeed();
   }, [user]);
 
   return (
-    <Layout>
+    <>
       <div className="space-y-10">
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-50 via-background to-herb-50 px-6 py-14 text-center sm:py-20">
@@ -157,13 +165,29 @@ export const HomePage: React.FC = () => {
         {/* Populaires */}
         <section>
           <SectionHeader title="Recettes populaires" to="/search?sort_by=popularity&sort_order=desc" />
-          {isLoadingPopular ? <RailSkeleton /> : <RecipeRail recipes={popularRecipes} />}
+          {isLoadingPopular ? (
+            <RailSkeleton />
+          ) : errorPopular ? (
+            <ErrorState message="Impossible de charger les recettes populaires." onRetry={loadPopular} />
+          ) : popularRecipes.length > 0 ? (
+            <RecipeRail recipes={popularRecipes} />
+          ) : (
+            <p className="text-muted-foreground">Aucune recette populaire pour le moment.</p>
+          )}
         </section>
 
         {/* Dernières */}
         <section>
           <SectionHeader title="Dernières recettes" to="/search?sort_by=created_at&sort_order=desc" />
-          {isLoadingLatest ? <RailSkeleton count={8} /> : <RecipeRail recipes={latestRecipes} />}
+          {isLoadingLatest ? (
+            <RailSkeleton count={8} />
+          ) : errorLatest ? (
+            <ErrorState message="Impossible de charger les dernières recettes." onRetry={loadLatest} />
+          ) : latestRecipes.length > 0 ? (
+            <RecipeRail recipes={latestRecipes} />
+          ) : (
+            <p className="text-muted-foreground">Aucune recette pour le moment.</p>
+          )}
         </section>
 
         {/* Abonnements */}
@@ -204,7 +228,7 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

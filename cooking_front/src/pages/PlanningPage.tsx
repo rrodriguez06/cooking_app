@@ -11,24 +11,17 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Calendar, Plus, ChefHat, ShoppingCart, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
-import { Layout, Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal, GeneratePlanModal, useConfirm } from '../components';
+import { Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal, GeneratePlanModal, useConfirm } from '../components';
 import { MealCard, GenerationRecapDialog, type GenerationRecap } from '../components/planning';
 import { Skeleton } from '../components/ui/skeleton';
 import { toast } from '../components/ui/sonner';
 import { mealPlanService, mealPlanGenerator } from '../services';
-import { formatDate, getCurrentDate, addDays, getStartOfWeek } from '../utils';
+import { formatDate, getCurrentDate, addDays, getStartOfWeek, buildPlannedDate } from '../utils';
 import { cn } from '../utils';
 import type { MealPlan } from '../types';
 import type { GenerationOptions } from '../components/GeneratePlanModal';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-
-const MEAL_TIMES: Record<MealType, string> = {
-  breakfast: '08:00:00.000Z',
-  lunch: '12:30:00.000Z',
-  dinner: '19:00:00.000Z',
-  snack: '15:30:00.000Z',
-};
 
 const MEAL_TYPES: { key: MealType; label: string; accent: string }[] = [
   { key: 'breakfast', label: 'Petit-déjeuner', accent: 'border-amber-200 bg-amber-50 text-amber-900' },
@@ -40,7 +33,6 @@ const MEAL_TYPES: { key: MealType; label: string; accent: string }[] = [
 const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
 const dateOf = (meal: MealPlan) => meal.planned_date.split('T')[0];
-const buildPlannedDate = (date: string, mealType: MealType) => new Date(`${date}T${MEAL_TIMES[mealType]}`).toISOString();
 
 export const PlanningPage: React.FC = () => {
   const navigate = useNavigate();
@@ -150,6 +142,7 @@ export const PlanningPage: React.FC = () => {
         recipesUsed: result.stats.recipesUsed,
         diversityScore: result.stats.diversityScore,
         skipped: result.stats.skippedSlots.length,
+        repeated: result.stats.repeated,
         failed: result.mealPlans.length - successCount,
         sourceType: result.stats.sourceType,
       });
@@ -211,7 +204,7 @@ export const PlanningPage: React.FC = () => {
   });
 
   return (
-    <Layout>
+    <>
       <div className="space-y-6">
         {/* En-tête */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -396,7 +389,7 @@ export const PlanningPage: React.FC = () => {
       />
 
       <GenerationRecapDialog recap={recap} open={showRecap} onOpenChange={setShowRecap} />
-    </Layout>
+    </>
   );
 };
 

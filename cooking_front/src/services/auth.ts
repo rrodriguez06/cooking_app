@@ -4,8 +4,11 @@ import type {
   UserCreateRequest,
   UserUpdateRequest,
   UserLoginRequest,
-  UserPasswordResetRequest,
+  UserPasswordResetRequestPayload,
+  UserPasswordResetRequestResponse,
+  UserPasswordResetConfirmPayload,
   UserPasswordResetResponse,
+  UserPasswordChangePayload,
   AuthSuccessResponse,
   UserDetailsResponse,
   UserListResponse,
@@ -19,12 +22,10 @@ export const authService = {
     
     // Store token and user info
     if (response.data.success && response.data.token) {
-      console.log('authService: Storing token:', response.data.token);
       localStorage.setItem('auth_token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data));
-      console.log('authService: Token stored, isAuthenticated():', !!localStorage.getItem('auth_token'));
     }
-    
+
     return response.data;
   },
 
@@ -58,10 +59,16 @@ export const authService = {
     return !!localStorage.getItem('auth_token');
   },
 
-  // Get stored user
+  // Get stored user (tolère un localStorage corrompu sans casser le démarrage de l'app)
   getStoredUser(): User | null {
     const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr) as User;
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
   },
 
   // Get stored token
@@ -69,9 +76,25 @@ export const authService = {
     return localStorage.getItem('auth_token');
   },
 
-  // Reset password
-  async resetPassword(resetData: UserPasswordResetRequest): Promise<UserPasswordResetResponse> {
-    const response = await api.post<UserPasswordResetResponse>('/users/reset-password', resetData);
+  // Mot de passe oublié — étape 1 : demander un jeton de réinitialisation à expiration
+  async requestPasswordReset(
+    payload: UserPasswordResetRequestPayload,
+  ): Promise<UserPasswordResetRequestResponse> {
+    const response = await api.post<UserPasswordResetRequestResponse>(
+      '/users/reset-password/request',
+      payload,
+    );
+    return response.data;
+  },
+
+  // Mot de passe oublié — étape 2 : confirmer avec le jeton + nouveau mot de passe
+  async confirmPasswordReset(
+    payload: UserPasswordResetConfirmPayload,
+  ): Promise<UserPasswordResetResponse> {
+    const response = await api.post<UserPasswordResetResponse>(
+      '/users/reset-password/confirm',
+      payload,
+    );
     return response.data;
   },
 };
@@ -86,6 +109,15 @@ export const userService = {
   // Update user
   async updateUser(id: number, userData: UserUpdateRequest): Promise<UserDetailsResponse> {
     const response = await api.put<UserDetailsResponse>(`/users/${id}`, userData);
+    return response.data;
+  },
+
+  // Changer le mot de passe (exige le mot de passe actuel)
+  async changePassword(
+    id: number,
+    payload: UserPasswordChangePayload,
+  ): Promise<UserPasswordResetResponse> {
+    const response = await api.put<UserPasswordResetResponse>(`/users/${id}/password`, payload);
     return response.data;
   },
 

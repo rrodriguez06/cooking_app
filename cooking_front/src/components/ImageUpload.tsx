@@ -163,7 +163,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       ) : (
         <div
           onClick={openFileDialog}
-          className={`border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-muted-foreground transition-colors ${
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openFileDialog();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Ajouter une image"
+          className={`border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${
             isUploading ? 'pointer-events-none opacity-50' : ''
           }`}
         >

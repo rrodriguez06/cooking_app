@@ -6,6 +6,7 @@ import { Input } from './ui/Input';
 import { toast } from './ui/sonner';
 import type { FridgeItemCreateRequest, Ingredient } from '../types';
 import { ingredientService } from '../services';
+import { UNIT_OPTIONS } from './recipe-form/units';
 
 interface AddFridgeItemModalProps {
   isOpen: boolean;
@@ -194,10 +195,16 @@ const AddFridgeItemModal: React.FC<AddFridgeItemModalProps> = ({
               </label>
               <Input
                 type="text"
-                placeholder="kg, pièces, L..."
+                list="fridge-unit-options"
+                placeholder="g, ml, pièce…"
                 value={unit}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUnit(e.target.value)}
               />
+              <datalist id="fridge-unit-options">
+                {UNIT_OPTIONS.map((u) => (
+                  <option key={u.value} value={u.value} />
+                ))}
+              </datalist>
             </div>
           </div>
 

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
+import { Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
 import { toast } from '../components/ui/sonner';
 import { useAuth } from '../context';
-import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
+import { userService, recipeService, favoriteService, recipeListService, userFollowService, getApiErrorMessage } from '../services';
 import { usePagination } from '../hooks';
 import { formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
@@ -167,14 +167,25 @@ export const ProfilePage: React.FC = () => {
   const handleSaveProfile = async () => {
     if (!user) return;
 
+    // Validation minimale (PROF-3)
+    if (!editForm.username.trim() || editForm.username.trim().length < 3) {
+      toast.error("Le nom d'utilisateur doit contenir au moins 3 caractères.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+      toast.error('Adresse e-mail invalide.');
+      return;
+    }
+
     try {
       const response = await userService.updateUser(parseInt(user.id), editForm);
       if (response.success) {
         updateUser(response.data);
         setIsEditing(false);
+        toast.success('Profil mis à jour.');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la mise à jour du profil.'));
     }
   };
 
@@ -226,11 +237,11 @@ export const ProfilePage: React.FC = () => {
   };
 
   if (!user) {
-    return <Layout><div>Chargement...</div></Layout>;
+    return <div>Chargement...</div>;
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Profile Header */}
         <Card>
@@ -548,7 +559,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="text-center py-8">
                   <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4">Vous n'avez pas encore de recettes favorites</p>
-                  <Button onClick={() => window.location.href = '/search'}>
+                  <Button onClick={() => navigate('/search')}>
                     Découvrir des recettes
                   </Button>
                 </div>
@@ -824,8 +835,8 @@ export const ProfilePage: React.FC = () => {
                           <p className="text-sm text-muted-foreground mt-2">
                             Découvrez des cuisiniers talentueux à suivre !
                           </p>
-                          <Button 
-                            onClick={() => window.location.href = '/search'} 
+                          <Button
+                            onClick={() => navigate('/search')}
                             className="mt-4"
                           >
                             Découvrir des utilisateurs
@@ -938,6 +949,6 @@ export const ProfilePage: React.FC = () => {
           onRecipeRemoved={handleRecipeRemovedFromList}
         />
       </div>
-    </Layout>
+    </>
   );
 };

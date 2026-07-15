@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/romainrodriguez/cooking_server/internal/api/middleware"
@@ -85,10 +88,11 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	// Convertir en réponse publique (sans mot de passe)
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	// Générer un token JWT pour l'utilisateur créé
@@ -151,10 +155,11 @@ func (h *UserHandler) GetCurrentUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -207,10 +212,11 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -246,6 +252,15 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Vérifier l'ownership : on ne peut modifier que son propre compte
+	if currentUserID, ok := middleware.GetCurrentUserID(c); !ok || currentUserID != uint(id) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "Forbidden",
+			"message": "Vous ne pouvez modifier que votre propre compte",
+		})
+		return
+	}
+
 	var req dto.UserUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -273,31 +288,16 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// TODO: Vérifier que l'utilisateur peut modifier ce profil (authentification)
-
-	// Mettre à jour les champs
+	// Mettre à jour les champs (le mot de passe passe par l'endpoint dédié ChangePassword)
 	if req.Username != "" {
 		user.Username = req.Username
 	}
 	if req.Email != "" {
 		user.Email = req.Email
 	}
-	if req.Password != "" {
-		// Hasher le nouveau mot de passe
-		hashedPassword, err := auth.HashPassword(req.Password)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "Internal server error",
-				"message": "Failed to hash password",
-			})
-			return
-		}
-		user.Password = hashedPassword
-	}
 	if req.Avatar != "" {
 		user.Avatar = req.Avatar
 	}
-	user.IsActive = req.IsActive
 
 	if err := h.ormService.UserRepository.Update(c.Request.Context(), user); err != nil {
 		switch {
@@ -317,10 +317,11 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -354,7 +355,14 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// TODO: Vérifier que l'utilisateur peut supprimer ce profil (authentification)
+	// Vérifier l'ownership : on ne peut supprimer que son propre compte
+	if currentUserID, ok := middleware.GetCurrentUserID(c); !ok || currentUserID != uint(id) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "Forbidden",
+			"message": "Vous ne pouvez supprimer que votre propre compte",
+		})
+		return
+	}
 
 	if err := h.ormService.UserRepository.Delete(c.Request.Context(), uint(id)); err != nil {
 		switch {
@@ -423,10 +431,11 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	var responses []dto.UserResponse
 	for _, user := range users {
 		responses = append(responses, dto.UserResponse{
-			ID:       strconv.Itoa(int(user.ID)),
-			Username: user.Username,
-			Email:    user.Email,
-			Avatar:   user.Avatar,
+			ID:        strconv.Itoa(int(user.ID)),
+			Username:  user.Username,
+			Email:     user.Email,
+			Avatar:    user.Avatar,
+			CreatedAt: user.CreatedAt,
 		})
 	}
 
@@ -497,10 +506,11 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 	}
 
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -947,20 +957,43 @@ func (h *UserHandler) GetFollowing(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// ResetPassword permet de réinitialiser le mot de passe d'un utilisateur via son email
-// @Summary Réinitialisation du mot de passe
-// @Description Permet de réinitialiser le mot de passe d'un utilisateur en utilisant son email
+// ChangePassword permet à un utilisateur authentifié de changer son propre mot de passe.
+// Exige le mot de passe actuel (re-authentification) — contrairement à l'ancien flux via UpdateUser.
+// @Summary Changer le mot de passe
+// @Description Change le mot de passe de l'utilisateur authentifié après vérification du mot de passe actuel
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param resetData body dto.UserPasswordResetRequest true "Données de réinitialisation"
-// @Success 200 {object} map[string]interface{} "Mot de passe réinitialisé avec succès"
+// @Param id path int true "ID de l'utilisateur"
+// @Param passwordData body dto.UserPasswordChangeRequest true "Mot de passe actuel et nouveau"
+// @Success 200 {object} map[string]interface{} "Mot de passe mis à jour"
 // @Failure 400 {object} map[string]interface{} "Requête invalide"
-// @Failure 404 {object} map[string]interface{} "Utilisateur non trouvé"
+// @Failure 401 {object} map[string]interface{} "Mot de passe actuel incorrect"
+// @Failure 403 {object} map[string]interface{} "Interdit"
 // @Failure 500 {object} map[string]interface{} "Erreur serveur"
-// @Router /users/reset-password [post]
-func (h *UserHandler) ResetPassword(c *gin.Context) {
-	var req dto.UserPasswordResetRequest
+// @Security ApiKeyAuth
+// @Router /users/{id}/password [put]
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid user ID",
+			"message": "User ID must be a number",
+		})
+		return
+	}
+
+	// Ownership : on ne peut changer que son propre mot de passe
+	if currentUserID, ok := middleware.GetCurrentUserID(c); !ok || currentUserID != uint(id) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "Forbidden",
+			"message": "Vous ne pouvez modifier que votre propre mot de passe",
+		})
+		return
+	}
+
+	var req dto.UserPasswordChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid request",
@@ -969,34 +1002,32 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// Vérifier que les mots de passe correspondent
 	if req.NewPassword != req.ConfirmPassword {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Password mismatch",
-			"message": "New password and confirmation password do not match",
+			"message": "Les mots de passe ne correspondent pas",
 		})
 		return
 	}
 
-	// Récupérer l'utilisateur par email
-	user, err := h.ormService.UserRepository.GetByEmail(c.Request.Context(), req.Email)
+	user, err := h.ormService.UserRepository.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
-		switch {
-		case errors.Is(err, ormerrors.ErrRecordNotFound):
-			c.JSON(http.StatusNotFound, gin.H{
-				"error":   "User not found",
-				"message": "No user found with this email address",
-			})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "Internal server error",
-				"message": "Failed to retrieve user",
-			})
-		}
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "User not found",
+			"message": "No user found with this ID",
+		})
 		return
 	}
 
-	// Hasher le nouveau mot de passe
+	// Re-authentification : vérifier le mot de passe actuel
+	if !auth.CheckPassword(req.CurrentPassword, user.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Invalid credentials",
+			"message": "Le mot de passe actuel est incorrect",
+		})
+		return
+	}
+
 	hashedPassword, err := auth.HashPassword(req.NewPassword)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -1006,7 +1037,6 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// Mettre à jour le mot de passe
 	user.Password = hashedPassword
 	if err := h.ormService.UserRepository.Update(c.Request.Context(), user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -1018,6 +1048,138 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Password reset successfully",
+		"message": "Mot de passe mis à jour",
+	})
+}
+
+// RequestPasswordReset (étape 1 « mot de passe oublié ») génère un token à usage unique et à expiration.
+// App familiale, sans envoi d'email : le token est renvoyé dans la réponse pour être utilisé
+// immédiatement à l'étape de confirmation. La réponse est générique si l'email est inconnu.
+// @Summary Demander une réinitialisation de mot de passe
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param data body dto.UserPasswordResetRequestRequest true "Email du compte"
+// @Success 200 {object} map[string]interface{} "Jeton généré (ou réponse générique)"
+// @Router /users/reset-password/request [post]
+func (h *UserHandler) RequestPasswordReset(c *gin.Context) {
+	var req dto.UserPasswordResetRequestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	user, err := h.ormService.UserRepository.GetByEmail(c.Request.Context(), req.Email)
+	if err != nil {
+		// Réponse générique : ne pas révéler si l'email existe.
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Si un compte existe pour cet email, un jeton de réinitialisation a été généré.",
+		})
+		return
+	}
+
+	// Générer un token aléatoire (32 octets → 64 hexa)
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal server error",
+			"message": "Failed to generate token",
+		})
+		return
+	}
+	token := hex.EncodeToString(tokenBytes)
+	expiresAt := time.Now().Add(15 * time.Minute)
+
+	user.ResetToken = token
+	user.ResetTokenExpiresAt = &expiresAt
+	if err := h.ormService.UserRepository.Update(c.Request.Context(), user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal server error",
+			"message": "Failed to store reset token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Jeton de réinitialisation généré (valable 15 minutes).",
+		"token":   token,
+	})
+}
+
+// ConfirmPasswordReset (étape 2) réinitialise le mot de passe si le token est valide et non expiré,
+// puis invalide le token (usage unique).
+// @Summary Confirmer la réinitialisation du mot de passe
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param data body dto.UserPasswordResetConfirmRequest true "Email, token et nouveau mot de passe"
+// @Success 200 {object} map[string]interface{} "Mot de passe réinitialisé"
+// @Failure 400 {object} map[string]interface{} "Jeton invalide ou expiré"
+// @Router /users/reset-password/confirm [post]
+func (h *UserHandler) ConfirmPasswordReset(c *gin.Context) {
+	var req dto.UserPasswordResetConfirmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Password mismatch",
+			"message": "Les mots de passe ne correspondent pas",
+		})
+		return
+	}
+
+	user, err := h.ormService.UserRepository.GetByEmail(c.Request.Context(), req.Email)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid token",
+			"message": "Jeton invalide ou expiré",
+		})
+		return
+	}
+
+	// Token présent, correspondant et non expiré
+	if user.ResetToken == "" || user.ResetToken != req.Token ||
+		user.ResetTokenExpiresAt == nil || user.ResetTokenExpiresAt.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid token",
+			"message": "Jeton invalide ou expiré",
+		})
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal server error",
+			"message": "Failed to hash password",
+		})
+		return
+	}
+
+	user.Password = hashedPassword
+	user.ResetToken = ""       // usage unique
+	user.ResetTokenExpiresAt = nil
+	if err := h.ormService.UserRepository.Update(c.Request.Context(), user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal server error",
+			"message": "Failed to update password",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Mot de passe réinitialisé avec succès",
 	})
 }

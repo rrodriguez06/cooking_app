@@ -64,21 +64,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      console.log('AuthContext: Starting login...');
-      const response = await authService.login({ email, password });
-      console.log('AuthContext: Login response:', response);
-      console.log('AuthContext: response.data:', response.data);
-      if (response.success) {
-        console.log('AuthContext: Setting user:', response.data);
-        setUser(response.data);
-        console.log('AuthContext: User set, isAuthenticated should be:', !!response.data && authService.isAuthenticated());
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
-    } catch (error) {
-      console.error('AuthContext: Login error:', error);
-      throw error;
+    const response = await authService.login({ email, password });
+    if (response.success) {
+      setUser(response.data);
+    } else {
+      throw new Error(response.message || 'Login failed');
     }
   };
 

@@ -10,6 +10,10 @@ type User struct {
 	Avatar   string `json:"avatar"`
 	IsActive bool   `json:"is_active" gorm:"default:true"`
 
+	// Réinitialisation du mot de passe : token à usage unique + expiration (jamais exposés en JSON)
+	ResetToken          string     `json:"-" gorm:"index"`
+	ResetTokenExpiresAt *time.Time `json:"-"`
+
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
@@ -28,27 +32,43 @@ type User struct {
 type UserCreateRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=50"`
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Password string `json:"password" binding:"required,min=8"`
 	Avatar   string `json:"avatar,omitempty"`
 }
 
+// UserUpdateRequest ne gère plus le mot de passe : celui-ci passe par l'endpoint
+// dédié ChangePassword (qui exige le mot de passe actuel).
 type UserUpdateRequest struct {
 	Username string `json:"username,omitempty" binding:"omitempty,min=3,max=50"`
 	Email    string `json:"email,omitempty" binding:"omitempty,email"`
-	Password string `json:"password,omitempty" binding:"omitempty,min=6"`
 	Avatar   string `json:"avatar,omitempty"`
-	IsActive bool   `json:"is_active,omitempty"`
 }
 
 type UserLoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Email string `json:"email" binding:"required,email"`
+	// Pas de contrainte min : la politique de mot de passe s'applique à la création,
+	// pas à la connexion (ne pas bloquer les comptes existants plus anciens).
+	Password string `json:"password" binding:"required"`
 }
 
-type UserPasswordResetRequest struct {
+// UserPasswordChangeRequest : changement de mot de passe authentifié, exige le mot de passe actuel.
+type UserPasswordChangeRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=8"`
+}
+
+// UserPasswordResetRequestRequest : étape 1 « mot de passe oublié » (génération d'un token).
+type UserPasswordResetRequestRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// UserPasswordResetConfirmRequest : étape 2, réinitialisation via le token à expiration.
+type UserPasswordResetConfirmRequest struct {
 	Email           string `json:"email" binding:"required,email"`
-	NewPassword     string `json:"new_password" binding:"required,min=6"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,min=6"`
+	Token           string `json:"token" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=8"`
 }
 
 type UserLoginResponse struct {
@@ -57,10 +77,11 @@ type UserLoginResponse struct {
 }
 
 type UserResponse struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar,omitempty"`
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 // UserDetailsResponse représente la réponse pour un utilisateur avec détails

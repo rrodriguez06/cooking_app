@@ -3,6 +3,7 @@ import { Button } from './index';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { mealPlanService } from '../services';
 import { getFullImageUrl } from '../utils/imageUtils';
+import { buildPlannedDate, type MealTimeType } from '../utils';
 import { Calendar, Clock, Users } from 'lucide-react';
 import type { Recipe, MealPlanCreateRequest } from '../types';
 
@@ -31,9 +32,14 @@ export const PlanRecipeModal: React.FC<PlanRecipeModalProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!formData.planned_date) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // Convert date to ISO string format expected by Go backend
-      const plannedDate = new Date(formData.planned_date + 'T12:00:00.000Z').toISOString();
+      // planned_date construit en heure locale (cohérent avec le générateur — GEN-1)
+      const plannedDate = buildPlannedDate(formData.planned_date, formData.meal_type as MealTimeType);
 
       const requestData: MealPlanCreateRequest = {
         recipe_id: recipe.id,
@@ -43,7 +49,6 @@ export const PlanRecipeModal: React.FC<PlanRecipeModalProps> = ({
         notes: formData.notes || ''
       };
 
-      console.log('PlanRecipeModal: Sending request data:', requestData);
       const response = await mealPlanService.createMealPlan(requestData);
 
       if (response.success) {
@@ -91,14 +96,9 @@ export const PlanRecipeModal: React.FC<PlanRecipeModalProps> = ({
                   alt={recipe.title}
                   className="h-12 w-12 rounded-lg object-cover"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = `
-                      <div class="h-12 w-12 bg-muted rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z" />
-                        </svg>
-                      </div>
-                    `;
+                    // Fallback propre (pas d'innerHTML hors cycle React) : image placeholder
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/chef-hat.svg';
                   }}
                 />
               ) : (

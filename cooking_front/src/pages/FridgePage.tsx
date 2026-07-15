@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Refrigerator, Search, Calendar, Trash2, Clock, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select';
 import { Badge } from '../components/ui/Badge';
-import { Layout } from '../components';
-import { fridgeService } from '../services';
+import { PlanRecipeModal } from '../components';
+import { toast } from '../components/ui/sonner';
+import { fridgeService, recipeService } from '../services';
 import AddFridgeItemModal from '../components/AddFridgeItemModal';
+import type { Recipe } from '../types';
 import type { 
   FridgeItem, 
   RecipeSuggestion, 
@@ -26,6 +29,20 @@ const FridgePage: React.FC = () => {
 
   // États pour la modal d'ajout
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Navigation + planification depuis une suggestion (NAV-3)
+  const navigate = useNavigate();
+  const [plannedRecipe, setPlannedRecipe] = useState<Recipe | null>(null);
+
+  const handlePlanSuggestion = async (recipeId: number) => {
+    try {
+      const res = await recipeService.getRecipe(recipeId);
+      if (res.success && res.data) setPlannedRecipe(res.data);
+      else toast.error('Impossible de charger la recette.');
+    } catch {
+      toast.error('Impossible de charger la recette.');
+    }
+  };
 
   // États pour les filtres et recherche
   const [searchTerm, setSearchTerm] = useState('');
@@ -141,16 +158,16 @@ const FridgePage: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <div className="flex h-64 items-center justify-center">
           <div className="text-lg text-muted-foreground">Chargement de votre frigo...</div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
     <div className="space-y-6">
       {/* En-tête avec statistiques */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -384,10 +401,18 @@ const FridgePage: React.FC = () => {
                       </div>
                       
                       <div className="flex gap-1 ml-3">
-                        <Button variant="secondary" size="sm">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/recipe/${suggestion.recipe.id}`)}
+                        >
                           Voir
                         </Button>
-                        <Button size="sm" className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          className="flex items-center gap-1"
+                          onClick={() => handlePlanSuggestion(suggestion.recipe.id)}
+                        >
                           <Calendar className="h-3 w-3" />
                           Planifier
                         </Button>
@@ -407,8 +432,21 @@ const FridgePage: React.FC = () => {
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddFridgeItem}
       />
+
+      {/* Planifier une recette suggérée */}
+      {plannedRecipe && (
+        <PlanRecipeModal
+          isOpen={!!plannedRecipe}
+          recipe={plannedRecipe}
+          onClose={() => setPlannedRecipe(null)}
+          onSuccess={() => {
+            toast.success('Recette ajoutée au planning.');
+            setPlannedRecipe(null);
+          }}
+        />
+      )}
     </div>
-    </Layout>
+    </>
   );
 };
 

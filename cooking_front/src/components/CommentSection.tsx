@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import type { Comment, CreateCommentRequest } from '../services/commentService';
 import { commentService } from '../services/commentService';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +16,7 @@ const CommentSection: React.FC<CommentsectionProps> = ({ recipeId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState(5);
+  const [newRating, setNewRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const CommentSection: React.FC<CommentsectionProps> = ({ recipeId }) => {
 
       await commentService.createComment(commentRequest);
       setNewComment('');
-      setNewRating(5);
+      setNewRating(0);
       await loadComments(); // Recharger les commentaires
     } catch (err) {
       console.error('Error creating comment:', err);
@@ -157,7 +158,8 @@ const CommentSection: React.FC<CommentsectionProps> = ({ recipeId }) => {
               </div>
               <button
                 onClick={handleCreateComment}
-                disabled={!newComment.trim() || submitting}
+                disabled={!newComment.trim() || newRating < 1 || submitting}
+                title={newRating < 1 ? 'Sélectionnez une note' : undefined}
                 className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? 'Publication...' : 'Publier'}
@@ -167,9 +169,9 @@ const CommentSection: React.FC<CommentsectionProps> = ({ recipeId }) => {
         ) : (
           <div className="mb-6 p-4 bg-muted/50 rounded-lg text-center">
             <p className="text-muted-foreground">
-              <a href="/login" className="text-primary hover:text-primary/80">
+              <Link to="/login" className="text-primary hover:text-primary/80">
                 Connectez-vous
-              </a>{' '}
+              </Link>{' '}
               pour laisser un commentaire
             </p>
           </div>

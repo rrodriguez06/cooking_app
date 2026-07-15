@@ -3,66 +3,89 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input } from './ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { userPasswordResetSchema } from '../utils/validation';
-import type { UserPasswordResetData } from '../utils/validation';
+import { passwordResetRequestSchema, passwordResetConfirmSchema } from '../utils/validation';
+import type { PasswordResetRequestData, PasswordResetConfirmData } from '../utils/validation';
 import { authService } from '../services';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { toast } from './ui/sonner';
+import { AlertCircle } from 'lucide-react';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen, onClose }) => {
+  const [step, setStep] = useState<'request' | 'confirm'>('request');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const form = useForm<UserPasswordResetData>({
-    resolver: zodResolver(userPasswordResetSchema),
-    defaultValues: {
-      email: '',
-      new_password: '',
-      confirm_password: '',
-    },
+  const requestForm = useForm<PasswordResetRequestData>({
+    resolver: zodResolver(passwordResetRequestSchema),
+    defaultValues: { email: '' },
   });
 
-  const handleSubmit = async (data: UserPasswordResetData) => {
+  const confirmForm = useForm<PasswordResetConfirmData>({
+    resolver: zodResolver(passwordResetConfirmSchema),
+    defaultValues: { token: '', new_password: '', confirm_password: '' },
+  });
+
+  const resetAll = () => {
+    setStep('request');
+    setEmail('');
+    setError(null);
+    requestForm.reset();
+    confirmForm.reset();
+  };
+
+  const handleClose = () => {
+    resetAll();
+    onClose();
+  };
+
+  const handleRequest = async (data: PasswordResetRequestData) => {
     setIsLoading(true);
     setError(null);
-
     try {
-      const response = await authService.resetPassword(data);
-      if (response.success) {
-        setSuccess(true);
-        form.reset();
-        // Fermer automatiquement après 2 secondes
-        setTimeout(() => {
-          setSuccess(false);
-          onClose();
-        }, 2000);
+      const response = await authService.requestPasswordReset({ email: data.email });
+      setEmail(data.email);
+      if (response.token) {
+        // App familiale sans envoi d'email : le jeton est fourni directement pour l'étape 2.
+        confirmForm.setValue('token', response.token);
+        toast.success('Jeton généré. Choisissez un nouveau mot de passe.');
       } else {
-        setError(response.message || 'Une erreur est survenue');
+        // Réponse générique (email inconnu) : on n'indique pas si le compte existe.
+        toast(response.message || 'Si un compte existe pour cet email, un jeton a été généré.');
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Une erreur est survenue lors de la réinitialisation du mot de passe');
-      }
+      setStep('confirm');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleClose = () => {
-    form.reset();
+  const handleConfirm = async (data: PasswordResetConfirmData) => {
+    setIsLoading(true);
     setError(null);
-    setSuccess(false);
-    onClose();
+    try {
+      const response = await authService.confirmPasswordReset({
+        email,
+        token: data.token,
+        new_password: data.new_password,
+        confirm_password: data.confirm_password,
+      });
+      if (response.success) {
+        toast.success('Mot de passe réinitialisé. Vous pouvez vous connecter.');
+        handleClose();
+      } else {
+        setError(response.message || 'Une erreur est survenue.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Jeton invalide ou expiré.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,70 +94,66 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Mot de passe oublié</DialogTitle>
           <p className="text-sm text-muted-foreground mt-2">
-            Entrez votre email et votre nouveau mot de passe pour réinitialiser votre compte.
+            {step === 'request'
+              ? 'Entrez votre email pour générer un jeton de réinitialisation à expiration.'
+              : 'Saisissez le jeton et votre nouveau mot de passe.'}
           </p>
         </DialogHeader>
 
         <div className="space-y-4">
-          {success ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-herb-700 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-herb-700 mb-2">
-                Mot de passe réinitialisé !
-              </h3>
-              <p className="text-herb-700">
-                Votre mot de passe a été mis à jour avec succès.
-              </p>
+          {error && (
+            <div className="flex items-center space-x-2 p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
             </div>
-          ) : (
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              {error && (
-                <div className="flex items-center space-x-2 p-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-sm">{error}</span>
-                </div>
-              )}
+          )}
 
+          {step === 'request' ? (
+            <form onSubmit={requestForm.handleSubmit(handleRequest)} className="space-y-4">
               <Input
                 label="Email"
                 type="email"
-                {...form.register('email')}
-                error={form.formState.errors.email?.message}
+                {...requestForm.register('email')}
+                error={requestForm.formState.errors.email?.message}
                 placeholder="votre@email.com"
               />
-
+              <div className="flex space-x-3 pt-4">
+                <Button type="button" variant="secondary" onClick={handleClose} className="flex-1" disabled={isLoading}>
+                  Annuler
+                </Button>
+                <Button type="submit" className="flex-1" isLoading={isLoading} disabled={isLoading}>
+                  Continuer
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={confirmForm.handleSubmit(handleConfirm)} className="space-y-4">
+              <Input
+                label="Jeton de réinitialisation"
+                type="text"
+                {...confirmForm.register('token')}
+                error={confirmForm.formState.errors.token?.message}
+                placeholder="Collez le jeton"
+              />
               <Input
                 label="Nouveau mot de passe"
                 type="password"
-                {...form.register('new_password')}
-                error={form.formState.errors.new_password?.message}
-                placeholder="Entrez votre nouveau mot de passe"
+                {...confirmForm.register('new_password')}
+                error={confirmForm.formState.errors.new_password?.message}
+                placeholder="Au moins 8 caractères"
               />
-
               <Input
                 label="Confirmer le mot de passe"
                 type="password"
-                {...form.register('confirm_password')}
-                error={form.formState.errors.confirm_password?.message}
+                {...confirmForm.register('confirm_password')}
+                error={confirmForm.formState.errors.confirm_password?.message}
                 placeholder="Confirmez votre nouveau mot de passe"
               />
-
               <div className="flex space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleClose}
-                  className="flex-1"
-                  disabled={isLoading}
-                >
-                  Annuler
+                <Button type="button" variant="secondary" onClick={() => setStep('request')} className="flex-1" disabled={isLoading}>
+                  Retour
                 </Button>
-                <Button
-                  type="submit"
-                  className="flex-1"
-                  isLoading={isLoading}
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="flex-1" isLoading={isLoading} disabled={isLoading}>
                   Réinitialiser
                 </Button>
               </div>

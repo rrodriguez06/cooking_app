@@ -1,9 +1,21 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context';
-import { ProtectedRoute } from './components';
+import { ProtectedLayout } from './components';
+import { AuthSessionHandler } from './components/AuthSessionHandler';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { Toaster } from './components/ui/sonner';
-import { HomePage, LoginPage, ProfilePage, UserProfilePage, RecipeDetailPage, SearchPage, PlanningPage, RecipeEditPage, FridgePage } from './pages';
+import {
+  HomePage,
+  LoginPage,
+  ProfilePage,
+  UserProfilePage,
+  RecipeDetailPage,
+  SearchPage,
+  PlanningPage,
+  RecipeEditPage,
+  FridgePage,
+  NotFoundPage,
+} from './pages';
 
 function App() {
   return (
@@ -11,68 +23,26 @@ function App() {
       <ConfirmProvider>
         <Toaster />
         <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Protected routes */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/search" element={
-            <ProtectedRoute>
-              <SearchPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/planning" element={
-            <ProtectedRoute>
-              <PlanningPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/fridge" element={
-            <ProtectedRoute>
-              <FridgePage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/user/:userId" element={
-            <ProtectedRoute>
-              <UserProfilePage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/recipe/:id" element={
-            <ProtectedRoute>
-              <RecipeDetailPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/recipe/:id/edit" element={
-            <ProtectedRoute>
-              <RecipeEditPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/recipe/new" element={
-            <ProtectedRoute>
-              <RecipeEditPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Redirect unknown routes to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          <AuthSessionHandler />
+          <Routes>
+            {/* Route publique (sans header/nav) */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Routes protégées : header/nav appliqués une seule fois via le layout de route */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/planning" element={<PlanningPage />} />
+              <Route path="/fridge" element={<FridgePage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/user/:userId" element={<UserProfilePage />} />
+              <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+              <Route path="/recipe/:id/edit" element={<RecipeEditPage />} />
+              <Route path="/recipe/new" element={<RecipeEditPage />} />
+              {/* Vraie page 404 (au lieu d'une redirection silencieuse vers l'accueil) */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
         </Router>
       </ConfirmProvider>
     </AuthProvider>

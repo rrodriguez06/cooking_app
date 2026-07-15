@@ -57,14 +57,30 @@ func main() {
 	}
 
 	// Initialisation du service JWT
-	jwtSecret := getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production")
+	env := getEnv("ENV", "development")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	// Valeurs vides ou par défaut connues = non sécurisées (secret prévisible → forge de token).
+	insecureSecrets := map[string]bool{
+		"": true,
+		"your-super-secret-jwt-key-change-in-production":                            true,
+		"your_super_secret_jwt_key_change_in_production_with_at_least_32_characters": true,
+		"dev-only-insecure-secret":                                                  true,
+	}
+	if insecureSecrets[jwtSecret] {
+		if env == "production" {
+			// Ne jamais démarrer en production avec une clé absente ou par défaut.
+			log.Fatal("JWT_SECRET doit être défini avec une valeur sûre en production (clé absente ou par défaut détectée)")
+		}
+		log.Println("[AVERTISSEMENT] JWT_SECRET absent ou non sécurisé : utilisation d'une clé de développement NON sécurisée")
+		jwtSecret = "dev-only-insecure-secret"
+	}
 	jwtIssuer := getEnv("JWT_ISSUER", "cooking-server")
 	jwtService := auth.NewJWTService(jwtSecret, jwtIssuer)
 
 	// Configuration du serveur API
 	serverConfig := &api.ServerConfig{
 		Port:        getEnv("SERVER_PORT", "8080"),
-		Environment: getEnv("ENV", "development"),
+		Environment: env,
 		ORMService:  ormService,
 		JWTService:  jwtService,
 	}

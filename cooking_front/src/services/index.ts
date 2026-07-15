@@ -11,4 +11,4 @@ export * from './fridgeService';
 export * from './data';
 export * from './mealPlanGenerator';
 export * from './recipeExtractionService';
-export { default as api } from './api';
+export { default as api, getApiErrorMessage, setUnauthorizedHandler, API_BASE_URL } from './api';

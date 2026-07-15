@@ -14,8 +14,9 @@ export const useApi = <T>() => {
   });
 
   const execute = useCallback(async (apiCall: () => Promise<T>) => {
-    setState({ data: null, loading: true, error: null });
-    
+    // Conserver les données précédentes pendant le chargement (évite le flash vide — PERF-2)
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
     try {
       const result = await apiCall();
       setState({ data: result, loading: false, error: null });
