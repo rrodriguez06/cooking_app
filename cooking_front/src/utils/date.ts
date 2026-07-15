@@ -1,6 +1,26 @@
 import { format, parseISO, isValid, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Heures (locales) par défaut de chaque type de repas — utilisées par le planning et le générateur.
+export const MEAL_TIMES = {
+  breakfast: '08:00:00',
+  lunch: '12:30:00',
+  dinner: '19:00:00',
+  snack: '15:30:00',
+} as const;
+
+export type MealTimeType = keyof typeof MEAL_TIMES;
+
+// Date locale au format YYYY-MM-DD (évite le décalage de fuseau de toISOString).
+export const toLocalDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
+
+// Construit un planned_date en heure LOCALE (avec offset local, sans conversion UTC) : la date
+// et l'heure du repas restent celles voulues quel que soit le fuseau (corrige GEN-1).
+export const buildPlannedDate = (date: string, mealType: MealTimeType): string => {
+  const local = new Date(`${date}T${MEAL_TIMES[mealType]}`);
+  return format(local, "yyyy-MM-dd'T'HH:mm:ssXXX");
+};
+
 export const formatDate = (date: string | Date, formatStr: string = 'PPP'): string => {
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date;

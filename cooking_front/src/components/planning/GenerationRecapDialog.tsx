@@ -7,6 +7,7 @@ export interface GenerationRecap {
   recipesUsed: number;
   diversityScore: number; // 0..1
   skipped: number;
+  repeated: number;
   failed: number;
   sourceType: string;
 }
@@ -66,6 +67,15 @@ export function GenerationRecapDialog({
               <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
                 {recap.skipped} créneau{recap.skipped > 1 ? 'x' : ''} déjà occupé{recap.skipped > 1 ? 's' : ''} — vos repas existants ont été conservés.
+              </span>
+            </div>
+          )}
+
+          {recap.repeated > 0 && (
+            <div className="flex items-start gap-2 rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">
+              <Shuffle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                {recap.repeated} repas réutilise{recap.repeated > 1 ? 'nt' : ''} une recette déjà planifiée — pas assez de recettes uniques dans la source.
               </span>
             </div>
           )}

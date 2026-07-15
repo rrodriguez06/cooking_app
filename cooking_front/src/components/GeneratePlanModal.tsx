@@ -108,6 +108,12 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
       return;
     }
 
+    // Génération depuis une liste : exiger une liste valide (corrige GEN-7)
+    if (source.type === 'list' && !source.listId) {
+      toast.error('Veuillez sélectionner une liste de recettes.');
+      return;
+    }
+
     const options: GenerationOptions = {
       mealTypes,
       source,
@@ -212,17 +218,20 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                       value={source.listId || ''}
                       onChange={(e) => handleSourceChange({
                         type: 'list',
-                        listId: parseInt(e.target.value)
+                        listId: e.target.value ? parseInt(e.target.value) : undefined,
                       })}
                       className="mt-2 block w-full px-3 py-1 border border-border rounded-md text-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <option value="">Sélectionner une liste</option>
-                      {userLists.map(list => (
-                        <option key={list.id} value={list.id}>
-                          {list.name} ({list.recipes?.length || 0} recettes)
-                        </option>
-                      ))}
+                      {userLists.map(list => {
+                        const count = list.items?.length ?? list.recipes?.length ?? 0;
+                        return (
+                          <option key={list.id} value={list.id}>
+                            {list.name} ({count} recette{count > 1 ? 's' : ''})
+                          </option>
+                        );
+                      })}
                     </select>
                   )}
                 </div>
