@@ -23,11 +23,14 @@ import type { GenerationOptions } from '../components/GeneratePlanModal';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
+// Accents par type de repas, déclinés light + dark. En dark : surface teintée
+// translucide sur fond sombre + texte teinté clair (au lieu des surfaces claires
+// bg-*-50/text-*-900 qui apparaissaient comme des "stickers" blancs).
 const MEAL_TYPES: { key: MealType; label: string; accent: string }[] = [
-  { key: 'breakfast', label: 'Petit-déjeuner', accent: 'border-amber-200 bg-amber-50 text-amber-900' },
-  { key: 'lunch', label: 'Déjeuner', accent: 'border-sky-200 bg-sky-50 text-sky-900' },
-  { key: 'dinner', label: 'Dîner', accent: 'border-primary-200 bg-primary-50 text-primary-900' },
-  { key: 'snack', label: 'Collation', accent: 'border-herb-200 bg-herb-50 text-herb-700' },
+  { key: 'breakfast', label: 'Petit-déjeuner', accent: 'border-amber-300/60 bg-amber-50 text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200' },
+  { key: 'lunch', label: 'Déjeuner', accent: 'border-sky-300/60 bg-sky-50 text-sky-900 dark:border-sky-400/25 dark:bg-sky-400/10 dark:text-sky-200' },
+  { key: 'dinner', label: 'Dîner', accent: 'border-primary-300/60 bg-primary-50 text-primary-900 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-200' },
+  { key: 'snack', label: 'Collation', accent: 'border-herb-500/40 bg-herb-50 text-herb-700 dark:border-herb-500/30 dark:bg-herb-500/10 dark:text-herb-300' },
 ];
 
 const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];

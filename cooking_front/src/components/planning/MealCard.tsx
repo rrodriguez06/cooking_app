@@ -48,7 +48,7 @@ export function MealCard({ meal, accent, onView, onEdit, onDelete, onComplete, d
         <Button
           size="icon"
           variant="ghost"
-          className={cn('h-6 w-6', meal.is_completed ? 'text-herb-600' : 'text-muted-foreground hover:text-herb-600')}
+          className={cn('h-6 w-6', meal.is_completed ? 'text-herb-600 dark:text-herb-500' : 'text-muted-foreground hover:text-herb-600 dark:hover:text-herb-500')}
           onClick={onComplete}
           disabled={meal.is_completed}
           title={meal.is_completed ? 'Repas terminé' : 'Marquer comme terminé'}
