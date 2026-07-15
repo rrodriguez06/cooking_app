@@ -24,41 +24,40 @@ export function DetailsSection() {
       icon={<SlidersHorizontal className="h-5 w-5 text-primary" />}
       description="Temps, portions et niveau de difficulté."
     >
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <Field label="Préparation" icon={<Clock className="h-4 w-4" />}>
-            <Controller
-              control={control}
-              name="prep_time"
-              render={({ field }) => (
-                <Stepper value={field.value} onChange={field.onChange} min={0} step={5} suffix="min" ariaLabel="Temps de préparation" />
-              )}
-            />
-          </Field>
+      {/* Bande horizontale : temps, portions, difficulté et visibilité sur une
+          seule ligne (pleine largeur) -> pas de colonne courte, pas d'espace mort. */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:flex-wrap lg:items-end lg:gap-x-8 lg:gap-y-5">
+        <Field label="Préparation" icon={<Clock className="h-4 w-4" />}>
+          <Controller
+            control={control}
+            name="prep_time"
+            render={({ field }) => (
+              <Stepper value={field.value} onChange={field.onChange} min={0} step={5} suffix="min" ariaLabel="Temps de préparation" />
+            )}
+          />
+        </Field>
 
-          <Field label="Cuisson" icon={<Flame className="h-4 w-4" />}>
-            <Controller
-              control={control}
-              name="cook_time"
-              render={({ field }) => (
-                <Stepper value={field.value} onChange={field.onChange} min={0} step={5} suffix="min" ariaLabel="Temps de cuisson" />
-              )}
-            />
-          </Field>
+        <Field label="Cuisson" icon={<Flame className="h-4 w-4" />}>
+          <Controller
+            control={control}
+            name="cook_time"
+            render={({ field }) => (
+              <Stepper value={field.value} onChange={field.onChange} min={0} step={5} suffix="min" ariaLabel="Temps de cuisson" />
+            )}
+          />
+        </Field>
 
-          <Field label="Portions" icon={<Users className="h-4 w-4" />}>
-            <Controller
-              control={control}
-              name="servings"
-              render={({ field }) => (
-                <Stepper value={field.value} onChange={field.onChange} min={1} step={1} suffix="pers." ariaLabel="Nombre de portions" />
-              )}
-            />
-          </Field>
-        </div>
+        <Field label="Portions" icon={<Users className="h-4 w-4" />}>
+          <Controller
+            control={control}
+            name="servings"
+            render={({ field }) => (
+              <Stepper value={field.value} onChange={field.onChange} min={1} step={1} suffix="pers." ariaLabel="Nombre de portions" />
+            )}
+          />
+        </Field>
 
-        <div>
-          <span className="mb-1.5 block text-sm font-medium text-foreground">Difficulté</span>
+        <Field label="Difficulté" icon={<SlidersHorizontal className="h-4 w-4" />}>
           <Controller
             control={control}
             name="difficulty"
@@ -71,38 +70,35 @@ export function DetailsSection() {
               />
             )}
           />
-        </div>
+        </Field>
 
-        <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/40 px-4 py-3">
-          <span className="flex items-center gap-3">
-            {isPublic ? (
-              <Eye className="h-5 w-5 text-herb-600 dark:text-herb-400" />
-            ) : (
-              <EyeOff className="h-5 w-5 text-muted-foreground" />
-            )}
-            <span>
-              <span className="block text-sm font-medium text-foreground">
-                {isPublic ? 'Recette publique' : 'Recette privée'}
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                {isPublic ? 'Visible par tous les utilisateurs.' : 'Visible par vous seul.'}
-              </span>
+        <Field
+          label="Visibilité"
+          icon={isPublic ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          className="lg:ml-auto"
+        >
+          <label
+            className="flex h-10 cursor-pointer items-center gap-3 rounded-lg border border-border bg-muted/40 px-4"
+            title={isPublic ? 'Visible par tous les utilisateurs.' : 'Visible par vous seul.'}
+          >
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(v) => setValue('is_public', v, { shouldDirty: true })}
+              aria-label="Recette publique"
+            />
+            <span className="whitespace-nowrap text-sm font-medium text-foreground">
+              {isPublic ? 'Publique' : 'Privée'}
             </span>
-          </span>
-          <Switch
-            checked={isPublic}
-            onCheckedChange={(v) => setValue('is_public', v, { shouldDirty: true })}
-            aria-label="Recette publique"
-          />
-        </label>
+          </label>
+        </Field>
       </div>
     </FormSection>
   );
 }
 
-function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Field({ label, icon, children, className }: { label: string; icon: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={className}>
       <span className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
         <span className="text-muted-foreground">{icon}</span>
         {label}
