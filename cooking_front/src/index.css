@@ -4,6 +4,10 @@
 
 @layer base {
   :root {
+    /* Indique aux contrôles natifs (scrollbars, pickers date/time, flèches
+       number/select, autofill) le schéma courant -> ils suivent le thème.
+       Sans ça, tout le natif reste en clair même en .dark. */
+    color-scheme: light;
     /* Neutres chauds (fond / texte / surfaces) */
     --background: 40 30% 98%;
     --foreground: 25 12% 16%;
@@ -32,6 +36,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 25 14% 10%;
     --foreground: 30 16% 92%;
     --card: 25 12% 13%;
