@@ -316,9 +316,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             </h3>
             <span className={`px-2 py-1 text-xs font-medium rounded-full ${
               recipe.difficulty === 'easy'
-                ? 'bg-herb-100 text-herb-700'
+                ? 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300'
                 : recipe.difficulty === 'medium'
-                ? 'bg-amber-100 text-amber-700'
+                ? 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300'
                 : 'bg-destructive/15 text-destructive'
             }`}>
               {recipe.difficulty === 'easy' ? 'Facile' : 

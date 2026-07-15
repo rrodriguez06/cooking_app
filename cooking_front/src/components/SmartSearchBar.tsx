@@ -219,15 +219,15 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
         return suggestion.icon ? (
           <span className="text-sm">{suggestion.icon}</span>
         ) : (
-          <div className="w-4 h-4 bg-herb-100 rounded-full flex items-center justify-center">
-            <span className="text-xs text-herb-600">🥬</span>
+          <div className="w-4 h-4 bg-herb-100 dark:bg-herb-500/20 rounded-full flex items-center justify-center">
+            <span className="text-xs text-herb-600 dark:text-herb-300">🥬</span>
           </div>
         );
       case 'equipment':
         return suggestion.icon ? (
           <span className="text-sm">{suggestion.icon}</span>
         ) : (
-          <Wrench className="h-4 w-4 text-amber-600" />
+          <Wrench className="h-4 w-4 text-amber-600 dark:text-amber-400" />
         );
       default:
         return null;
@@ -241,9 +241,9 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
       case 'author':
         return 'bg-primary/15 text-primary';
       case 'ingredient':
-        return 'bg-herb-100 text-herb-700';
+        return 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300';
       case 'equipment':
-        return 'bg-amber-100 text-amber-700';
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300';
       default:
         return 'bg-muted text-foreground';
     }

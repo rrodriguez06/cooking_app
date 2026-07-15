@@ -371,7 +371,7 @@ export const ProfilePage: React.FC = () => {
           
           <Card>
             <CardContent className="p-6 text-center">
-              <UserCheck className="h-8 w-8 text-herb-600 mx-auto mb-2" />
+              <UserCheck className="h-8 w-8 text-herb-600 dark:text-herb-400 mx-auto mb-2" />
               <div className="text-2xl font-bold text-foreground">{followingCount || 0}</div>
               <div className="text-sm text-muted-foreground">Abonnements</div>
             </CardContent>
@@ -722,8 +722,8 @@ export const ProfilePage: React.FC = () => {
                       <div className="flex justify-between items-center text-sm text-muted-foreground">
                         <span>{list.items?.length || 0} recettes</span>
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          list.is_public 
-                            ? 'bg-herb-100 text-herb-700'
+                          list.is_public
+                            ? 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300'
                             : 'bg-muted text-muted-foreground'
                         }`}>
                           {list.is_public ? 'Publique' : 'Privée'}
@@ -908,7 +908,7 @@ export const ProfilePage: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="text-sm text-muted-foreground">Status du compte</span>
-                    <span className={`text-sm font-medium ${user?.is_active ? 'text-herb-700' : 'text-destructive'}`}>
+                    <span className={`text-sm font-medium ${user?.is_active ? 'text-herb-700 dark:text-herb-400' : 'text-destructive'}`}>
                       {user?.is_active ? 'Actif' : 'Inactif'}
                     </span>
                   </div>

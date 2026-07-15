@@ -110,7 +110,7 @@ export const Timer = forwardRef<TimerRef, TimerProps>(({ className = '' }, ref) 
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-foreground">Timer</h3>
           {timeLeft > 0 && (
-            <div className={`text-lg font-bold ${timerActive ? 'text-primary' : 'text-amber-600'}`}>
+            <div className={`text-lg font-bold ${timerActive ? 'text-primary' : 'text-amber-600 dark:text-amber-400'}`}>
               {formatTime(timeLeft)}
             </div>
           )}
@@ -127,7 +127,7 @@ export const Timer = forwardRef<TimerRef, TimerProps>(({ className = '' }, ref) 
                 max="180"
                 value={customMinutes}
                 onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-16 px-2 py-1 border border-border rounded text-xs focus:ring-ring focus:border-ring"
+                className="w-16 px-2 py-1 border border-input bg-background text-foreground rounded text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 placeholder="min"
               />
               <Button size="sm" onClick={startCustomTimer} className="text-xs px-2 py-1">

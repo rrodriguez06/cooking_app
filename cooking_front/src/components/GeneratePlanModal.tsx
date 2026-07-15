@@ -180,7 +180,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
           {/* Section 2: Source des recettes */}
           <div>
             <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
-              <ChefHat className="h-5 w-5 mr-2 text-herb-600" />
+              <ChefHat className="h-5 w-5 mr-2 text-herb-600 dark:text-herb-400" />
               À partir de quelles recettes ?
             </h3>
             <div className="space-y-3">
@@ -246,7 +246,7 @@ export const GeneratePlanModal: React.FC<GeneratePlanModalProps> = ({
                   onChange={() => handleSourceChange({ type: 'popular' })}
                   className="mr-3"
                 />
-                <TrendingUp className="h-5 w-5 mr-3 text-amber-500" />
+                <TrendingUp className="h-5 w-5 mr-3 text-amber-500 dark:text-amber-400" />
                 <div>
                   <div className="font-medium">Recettes populaires</div>
                   <div className="text-sm text-muted-foreground">Les recettes les plus appréciées du site</div>

@@ -62,12 +62,20 @@ export default {
           DEFAULT: 'hsl(var(--card) / <alpha-value>)',
           foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
         },
-        // Accent de marque (herbes fraîches) pour actions secondaires ponctuelles
+        // Accent de marque (herbes fraîches) pour actions secondaires ponctuelles.
+        // Échelle complète : les shades clairs (100-300) servent aux chips en clair,
+        // et 300/400 comme texte lisible sur surfaces sombres translucides en dark.
         herb: {
           50: '#EFF9F2',
+          100: '#D7F0E0',
+          200: '#B0E1C2',
+          300: '#86CFA1',
+          400: '#5FBB83',
           500: '#3FA66A',
           600: '#2F8A55',
           700: '#256E45',
+          800: '#1E5837',
+          900: '#184529',
         },
         // Couleurs sémantiques (distinctes de la marque)
         success: { DEFAULT: '#16A34A', foreground: '#FFFFFF' },

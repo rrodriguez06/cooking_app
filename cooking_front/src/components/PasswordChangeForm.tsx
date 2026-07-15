@@ -76,7 +76,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {success && (
-          <div className="flex items-center space-x-2 p-3 bg-herb-50 border border-herb-200 text-herb-700 rounded-md">
+          <div className="flex items-center space-x-2 p-3 bg-herb-50 border border-herb-200 text-herb-700 rounded-md dark:bg-herb-500/10 dark:border-herb-500/30 dark:text-herb-300">
             <CheckCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">Mot de passe mis à jour avec succès !</span>
           </div>

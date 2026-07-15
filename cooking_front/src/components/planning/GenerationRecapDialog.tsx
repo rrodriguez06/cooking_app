@@ -44,7 +44,7 @@ export function GenerationRecapDialog({
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Stat icon={<CheckCircle2 className="h-5 w-5 text-herb-600" />} value={recap.added} label={`repas ajouté${recap.added > 1 ? 's' : ''}`} />
+            <Stat icon={<CheckCircle2 className="h-5 w-5 text-herb-600 dark:text-herb-400" />} value={recap.added} label={`repas ajouté${recap.added > 1 ? 's' : ''}`} />
             <Stat icon={<BookOpen className="h-5 w-5 text-primary" />} value={recap.recipesUsed} label={`recette${recap.recipesUsed > 1 ? 's' : ''} utilisée${recap.recipesUsed > 1 ? 's' : ''}`} />
           </div>
 
