@@ -2,6 +2,7 @@ export * from './ui';
 export * from './layout';
 export * from './ProtectedRoute';
 export * from './ConfirmDialog';
+export * from './ErrorState';
 export * from './RecipeCard';
 export * from './PlanRecipeModal';
 export * from './AddMealModal';

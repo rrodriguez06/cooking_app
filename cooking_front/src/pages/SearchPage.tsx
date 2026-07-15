@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Star, X, ChefHat, SlidersHorizontal } from 'lucide-react';
-import { Card, CardContent, Button, Input, SmartSearchBar, Pagination, RecipeCard } from '../components';
+import { Card, CardContent, Button, Input, SmartSearchBar, Pagination, RecipeCard, ErrorState } from '../components';
 import type { SearchSuggestion } from '../components/SmartSearchBar';
 import {
   Sheet,
@@ -56,6 +56,8 @@ export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [showFilters, setShowFilters] = useState(false);
   const [smartSearchFilters, setSmartSearchFilters] = useState<SearchSuggestion[]>([]);
@@ -114,6 +116,7 @@ export const SearchPage: React.FC = () => {
   useEffect(() => {
     const searchRecipes = async () => {
       setIsLoading(true);
+      setSearchError(false);
       try {
         const searchFilters: SearchFilters = {
           q: debouncedSearchQuery || undefined,
@@ -133,6 +136,8 @@ export const SearchPage: React.FC = () => {
           });
         }
       } catch {
+        // Distinguer une panne d'un « 0 résultat » (ERR-3/SRCH-1)
+        setSearchError(true);
         setRecipes([]);
       } finally {
         setIsLoading(false);
@@ -140,7 +145,7 @@ export const SearchPage: React.FC = () => {
     };
     searchRecipes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchQuery, filters, pagination.pagination.currentPage]);
+  }, [debouncedSearchQuery, filters, pagination.pagination.currentPage, retryToken]);
 
   const handleFilterChange = (key: keyof SearchFilters, value: unknown) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -345,6 +350,12 @@ export const SearchPage: React.FC = () => {
         <div>
           {isLoading ? (
             <ResultsSkeleton />
+          ) : searchError ? (
+            <ErrorState
+              message="La recherche a échoué. Vérifiez votre connexion et réessayez."
+              onRetry={() => setRetryToken((t) => t + 1)}
+              className="my-8"
+            />
           ) : recipes.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-center">
               <div className="mb-4 grid h-20 w-20 place-items-center rounded-full bg-muted">

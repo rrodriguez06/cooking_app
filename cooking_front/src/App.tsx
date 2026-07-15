@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { ProtectedLayout } from './components';
+import { AuthSessionHandler } from './components/AuthSessionHandler';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { Toaster } from './components/ui/sonner';
 import {
@@ -22,6 +23,7 @@ function App() {
       <ConfirmProvider>
         <Toaster />
         <Router>
+          <AuthSessionHandler />
           <Routes>
             {/* Route publique (sans header/nav) */}
             <Route path="/login" element={<LoginPage />} />

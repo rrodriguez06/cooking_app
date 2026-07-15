@@ -39,6 +39,7 @@ export function ShoppingListModal({ isOpen, onClose, startDate, endDate }: Shopp
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [retryToken, setRetryToken] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -56,7 +57,7 @@ export function ShoppingListModal({ isOpen, onClose, startDate, endDate }: Shopp
       }
     };
     fetchShoppingList();
-  }, [isOpen, startDate, endDate]);
+  }, [isOpen, startDate, endDate, retryToken]);
 
   const toggleChecked = (ingredientId: number) => {
     setChecked((prev) => {
@@ -98,7 +99,12 @@ export function ShoppingListModal({ isOpen, onClose, startDate, endDate }: Shopp
             )}
 
             {error && (
-              <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">{error}</div>
+              <div className="mb-4 flex flex-col items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                <span>{error}</span>
+                <Button variant="secondary" size="sm" onClick={() => setRetryToken((t) => t + 1)}>
+                  Réessayer
+                </Button>
+              </div>
             )}
 
             {shoppingList && !loading && (

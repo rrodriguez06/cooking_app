@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, Button, RecipeListDetailModal } from '../components';
 import { userFollowService } from '../services/userFollowService';
+import { getApiErrorMessage } from '../services';
+import { toast } from '../components/ui/sonner';
 import { formatRelativeTime, formatTime } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { UserProfileResponse } from '../types/user';
@@ -57,13 +59,14 @@ export const UserProfilePage: React.FC = () => {
         setProfile(prev => prev ? {
           ...prev,
           is_following: response.is_following,
-          followers_count: response.is_following 
-            ? prev.followers_count + 1 
+          followers_count: response.is_following
+            ? prev.followers_count + 1
             : prev.followers_count - 1
         } : null);
+        toast.success(response.is_following ? 'Abonnement ajouté.' : 'Abonnement retiré.');
       }
     } catch (error) {
-      console.error('Error toggling follow:', error);
+      toast.error(getApiErrorMessage(error, "Impossible de mettre à jour l'abonnement."));
     } finally {
       setFollowLoading(false);
     }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
 import { toast } from '../components/ui/sonner';
 import { useAuth } from '../context';
-import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
+import { userService, recipeService, favoriteService, recipeListService, userFollowService, getApiErrorMessage } from '../services';
 import { usePagination } from '../hooks';
 import { formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
@@ -167,14 +167,25 @@ export const ProfilePage: React.FC = () => {
   const handleSaveProfile = async () => {
     if (!user) return;
 
+    // Validation minimale (PROF-3)
+    if (!editForm.username.trim() || editForm.username.trim().length < 3) {
+      toast.error("Le nom d'utilisateur doit contenir au moins 3 caractères.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+      toast.error('Adresse e-mail invalide.');
+      return;
+    }
+
     try {
       const response = await userService.updateUser(parseInt(user.id), editForm);
       if (response.success) {
         updateUser(response.data);
         setIsEditing(false);
+        toast.success('Profil mis à jour.');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la mise à jour du profil.'));
     }
   };
 
