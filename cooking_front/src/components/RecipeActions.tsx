@@ -71,6 +71,8 @@ export const RecipeActions: React.FC<RecipeActionsProps> = ({ recipeId, classNam
         size={buttonSize}
         onClick={() => toggleFavorite.mutate()}
         disabled={busy}
+        aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        aria-pressed={isFavorite}
         className={cn(
           'gap-2',
           isFavorite ? 'border-destructive bg-destructive/10 text-destructive hover:bg-destructive/15' : 'hover:border-destructive hover:text-destructive',
@@ -87,6 +89,9 @@ export const RecipeActions: React.FC<RecipeActionsProps> = ({ recipeId, classNam
           size={buttonSize}
           onClick={() => setShowListMenu((s) => !s)}
           disabled={busy}
+          aria-label="Ajouter à une liste"
+          aria-haspopup="menu"
+          aria-expanded={showListMenu}
           className="gap-2 hover:border-primary hover:text-primary"
         >
           <BookmarkPlus className={iconSize} />

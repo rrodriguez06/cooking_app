@@ -160,7 +160,16 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       ) : (
         <div
           onClick={openFileDialog}
-          className={`border-2 border-dashed border-border rounded-full w-32 h-32 mx-auto cursor-pointer hover:border-muted-foreground transition-colors flex items-center justify-center ${
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openFileDialog();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Ajouter une photo de profil"
+          className={`border-2 border-dashed border-border rounded-full w-32 h-32 mx-auto cursor-pointer hover:border-muted-foreground transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-ring ${
             isUploading ? 'pointer-events-none opacity-50' : ''
           }`}
         >

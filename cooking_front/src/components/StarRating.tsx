@@ -33,11 +33,15 @@ const StarRating: React.FC<StarRatingProps> = ({
           type="button"
           onClick={() => handleStarClick(star)}
           disabled={readonly}
+          aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+          aria-pressed={!readonly ? star <= rating : undefined}
+          title={readonly ? undefined : `Noter ${star} sur 5`}
           className={`${sizeClasses[size]} ${
             readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
           } transition-transform duration-150`}
         >
           <svg
+            aria-hidden="true"
             className={`w-full h-full ${
               star <= rating
                 ? 'text-amber-400 fill-current'
