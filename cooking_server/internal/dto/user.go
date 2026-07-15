@@ -77,10 +77,11 @@ type UserLoginResponse struct {
 }
 
 type UserResponse struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar,omitempty"`
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 }
 
 // UserDetailsResponse représente la réponse pour un utilisateur avec détails

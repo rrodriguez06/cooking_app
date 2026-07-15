@@ -88,10 +88,11 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	// Convertir en réponse publique (sans mot de passe)
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	// Générer un token JWT pour l'utilisateur créé
@@ -154,10 +155,11 @@ func (h *UserHandler) GetCurrentUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -210,10 +212,11 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -314,10 +317,11 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	// Convertir en réponse publique
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -427,10 +431,11 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	var responses []dto.UserResponse
 	for _, user := range users {
 		responses = append(responses, dto.UserResponse{
-			ID:       strconv.Itoa(int(user.ID)),
-			Username: user.Username,
-			Email:    user.Email,
-			Avatar:   user.Avatar,
+			ID:        strconv.Itoa(int(user.ID)),
+			Username:  user.Username,
+			Email:     user.Email,
+			Avatar:    user.Avatar,
+			CreatedAt: user.CreatedAt,
 		})
 	}
 
@@ -501,10 +506,11 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 	}
 
 	response := dto.UserResponse{
-		ID:       strconv.Itoa(int(user.ID)),
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
+		ID:        strconv.Itoa(int(user.ID)),
+		Username:  user.Username,
+		Email:     user.Email,
+		Avatar:    user.Avatar,
+		CreatedAt: user.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, gin.H{

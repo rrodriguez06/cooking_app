@@ -4,7 +4,7 @@ import { Card, CardContent, Button, RecipeListDetailModal } from '../components'
 import { userFollowService } from '../services/userFollowService';
 import { getApiErrorMessage } from '../services';
 import { toast } from '../components/ui/sonner';
-import { formatRelativeTime, formatTime } from '../utils';
+import { formatRelativeTime, formatTime, formatDate } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
 import type { UserProfileResponse } from '../types/user';
 import type { Recipe, RecipeList } from '../types';
@@ -141,7 +141,7 @@ export const UserProfilePage: React.FC = () => {
                     {profile.user.username}
                   </h1>
                   <p className="text-muted-foreground">
-                    Membre depuis {formatRelativeTime(profile.user.created_at || '')}
+                    Membre depuis {profile.user.created_at ? formatDate(profile.user.created_at, 'MMMM yyyy') : 'Date inconnue'}
                   </p>
                 </div>
               </div>

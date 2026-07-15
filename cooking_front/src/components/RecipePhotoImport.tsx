@@ -4,6 +4,7 @@ import { Button } from './ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { recipeExtractionService } from '../services/recipeExtractionService';
 import type { ExtractedRecipeData, ExtractRecipeResponse } from '../services/recipeExtractionService';
+import { difficultyLabel } from '../utils';
 
 interface RecipePhotoImportProps {
   onRecipeExtracted: (data: ExtractedRecipeData) => void;
@@ -236,7 +237,7 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
                 <p><strong>Temps de préparation:</strong> {extractionResult.data.prep_time} min</p>
                 <p><strong>Temps de cuisson:</strong> {extractionResult.data.cook_time} min</p>
                 <p><strong>Portions:</strong> {extractionResult.data.servings}</p>
-                <p><strong>Difficulté:</strong> {extractionResult.data.difficulty}</p>
+                <p><strong>Difficulté:</strong> {difficultyLabel(extractionResult.data.difficulty)}</p>
                 <p><strong>Ingrédients:</strong> {extractionResult.data.ingredients.length} éléments</p>
                 <p><strong>Étapes:</strong> {extractionResult.data.instructions.length} instructions</p>
               </div>

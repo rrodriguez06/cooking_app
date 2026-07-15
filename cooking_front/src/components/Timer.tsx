@@ -6,6 +6,29 @@ interface TimerProps {
   className?: string;
 }
 
+// Bip sonore (WebAudio) à la fin du minuteur — utile en cuisine même sans notifications (TIMER-3).
+const playBeep = () => {
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    // Trois bips courts
+    [0, 0.25, 0.5].forEach((offset) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      osc.connect(gain);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.15);
+    });
+    setTimeout(() => ctx.close(), 1000);
+  } catch {
+    /* audio indisponible */
+  }
+};
+
 export interface TimerRef {
   startTimer: (minutes: number) => void;
 }
@@ -33,9 +56,10 @@ export const Timer = forwardRef<TimerRef, TimerProps>(({ className = '' }, ref) 
       }, 1000);
     } else if (timeLeft === 0 && timerActive) {
       setTimerActive(false);
-      // Notification sonore ou visuelle
+      // Signal sonore systématique + notification/toast
+      playBeep();
       if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Timer terminé !', {
+        new Notification('Minuteur terminé !', {
           body: 'Le temps de cuisson est écoulé.',
           icon: '/chef-hat.svg'
         });
@@ -107,7 +131,7 @@ export const Timer = forwardRef<TimerRef, TimerProps>(({ className = '' }, ref) 
                 placeholder="min"
               />
               <Button size="sm" onClick={startCustomTimer} className="text-xs px-2 py-1">
-                Start
+                Démarrer
               </Button>
             </div>
             <p className="text-xs text-muted-foreground leading-tight">
@@ -128,7 +152,7 @@ export const Timer = forwardRef<TimerRef, TimerProps>(({ className = '' }, ref) 
                 </Button>
               )}
               <Button size="sm" variant="secondary" onClick={stopTimer} className="text-xs px-2 py-1">
-                Stop
+                Arrêter
               </Button>
             </div>
             
