@@ -86,9 +86,16 @@ export function IngredientsEditor({ ingredients, onCreateIngredient }: Ingredien
       icon={<Carrot className="h-5 w-5 text-primary" />}
       description="Glissez pour réordonner. Nommez un groupe (ex. « Pour la pâte ») pour créer des sections."
       action={
-        <Button type="button" variant="outline" size="sm" onClick={onCreateIngredient} className="gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCreateIngredient}
+          className="gap-1.5"
+          title="Créer un ingrédient absent du catalogue (base de données)"
+        >
           <Plus className="h-4 w-4" />
-          Nouvel ingrédient
+          Créer un ingrédient
         </Button>
       }
     >
@@ -128,7 +135,7 @@ export function IngredientsEditor({ ingredients, onCreateIngredient }: Ingredien
           type="button"
           variant="ghost"
           onClick={() =>
-            append({ ingredient_id: 0, quantity: 0, unit: '', notes: '', group: groupOf(fields.length - 1) })
+            append({ ingredient_id: 0, quantity: 1, unit: '', notes: '', group: groupOf(fields.length - 1) })
           }
           className="gap-1.5 text-primary hover:text-primary"
         >
@@ -188,29 +195,28 @@ function SortableIngredientRow({
           <GripVertical className="h-5 w-5" />
         </button>
 
-        <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-12">
-          {/* Ingrédient */}
-          <div className="col-span-2 sm:col-span-5">
-            <Controller
-              control={control}
-              name={`ingredients.${index}.ingredient_id`}
-              render={({ field, fieldState }) => (
-                <Combobox
-                  options={ingredientOptions}
-                  value={field.value ? String(field.value) : ''}
-                  onChange={(v) => field.onChange(Number(v))}
-                  onCreate={onCreateIngredient}
-                  createLabel={(input) => `Créer l'ingrédient « ${input} »`}
-                  placeholder="Ingrédient…"
-                  searchPlaceholder="Rechercher un ingrédient…"
-                  error={!!fieldState.error}
-                />
-              )}
-            />
-          </div>
+        {/* Ingrédient sur sa propre ligne (pleine largeur), puis qté/unité/groupe
+            sur une ligne dédiée : lisible même dans le panneau étroit. */}
+        <div className="min-w-0 flex-1 space-y-2">
+          <Controller
+            control={control}
+            name={`ingredients.${index}.ingredient_id`}
+            render={({ field, fieldState }) => (
+              <Combobox
+                options={ingredientOptions}
+                value={field.value ? String(field.value) : ''}
+                onChange={(v) => field.onChange(Number(v))}
+                onCreate={onCreateIngredient}
+                createLabel={(input) => `Créer l'ingrédient « ${input} »`}
+                placeholder="Ingrédient…"
+                searchPlaceholder="Rechercher un ingrédient…"
+                error={!!fieldState.error}
+              />
+            )}
+          />
 
-          {/* Quantité */}
-          <div className="sm:col-span-2">
+          <div className="grid grid-cols-[minmax(0,4rem)_minmax(0,1fr)_minmax(0,1fr)] gap-2">
+            {/* Quantité */}
             <Input
               type="number"
               step="0.1"
@@ -219,10 +225,8 @@ function SortableIngredientRow({
               placeholder="Qté"
               {...register(`ingredients.${index}.quantity`, { valueAsNumber: true })}
             />
-          </div>
 
-          {/* Unité */}
-          <div className="sm:col-span-3">
+            {/* Unité */}
             <Controller
               control={control}
               name={`ingredients.${index}.unit`}
@@ -238,10 +242,8 @@ function SortableIngredientRow({
                 />
               )}
             />
-          </div>
 
-          {/* Groupe */}
-          <div className="sm:col-span-2">
+            {/* Groupe */}
             <Controller
               control={control}
               name={`ingredients.${index}.group`}

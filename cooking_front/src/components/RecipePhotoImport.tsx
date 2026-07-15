@@ -225,9 +225,9 @@ export const RecipePhotoImport: React.FC<RecipePhotoImportProps> = ({
         {/* Étape 4: Succès */}
         {step === 'success' && extractionResult?.data && (
           <div className="space-y-4">
-            <div className="bg-herb-50 border border-herb-200 rounded-md p-3 flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-herb-600" />
-              <span className="text-sm text-herb-700">{getStepMessage()}</span>
+            <div className="bg-herb-50 border border-herb-200 rounded-md p-3 flex items-center space-x-2 dark:bg-herb-500/10 dark:border-herb-500/30">
+              <CheckCircle className="h-5 w-5 text-herb-600 dark:text-herb-400" />
+              <span className="text-sm text-herb-700 dark:text-herb-300">{getStepMessage()}</span>
             </div>
 
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">

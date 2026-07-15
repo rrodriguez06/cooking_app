@@ -7,8 +7,8 @@ import { FormSection } from './FormSection';
 import type { RecipeFormData } from './schema';
 
 const difficultyOptions = [
-  { value: 'easy', label: 'Facile', activeClassName: '!bg-herb-100 !text-herb-700' },
-  { value: 'medium', label: 'Moyen', activeClassName: '!bg-amber-100 !text-amber-700' },
+  { value: 'easy', label: 'Facile', activeClassName: '!bg-herb-100 !text-herb-700 dark:!bg-herb-500/15 dark:!text-herb-300' },
+  { value: 'medium', label: 'Moyen', activeClassName: '!bg-amber-100 !text-amber-700 dark:!bg-amber-400/15 dark:!text-amber-300' },
   { value: 'hard', label: 'Difficile', activeClassName: '!bg-destructive/10 !text-destructive' },
 ];
 
@@ -76,7 +76,7 @@ export function DetailsSection() {
         <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/40 px-4 py-3">
           <span className="flex items-center gap-3">
             {isPublic ? (
-              <Eye className="h-5 w-5 text-herb-600" />
+              <Eye className="h-5 w-5 text-herb-600 dark:text-herb-400" />
             ) : (
               <EyeOff className="h-5 w-5 text-muted-foreground" />
             )}

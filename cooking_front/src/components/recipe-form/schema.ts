@@ -67,6 +67,6 @@ export const emptyRecipeForm: RecipeFormData = {
   tag_ids: [],
   category_ids: [],
   equipment_ids: [],
-  ingredients: [{ ingredient_id: 0, quantity: 0, unit: '', notes: '', group: '' }],
+  ingredients: [{ ingredient_id: 0, quantity: 1, unit: '', notes: '', group: '' }],
   instructions: [{ step_number: 1, title: '', description: '' }],
 };

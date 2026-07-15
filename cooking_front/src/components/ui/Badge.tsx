@@ -15,8 +15,8 @@ export const Badge: React.FC<BadgeProps> = ({
   const variantClasses = {
     default: 'bg-muted text-muted-foreground',
     secondary: 'bg-primary/10 text-primary',
-    success: 'bg-herb-100 text-herb-700',
-    warning: 'bg-amber-100 text-amber-700',
+    success: 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300',
+    warning: 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300',
     danger: 'bg-destructive/10 text-destructive',
   };
 

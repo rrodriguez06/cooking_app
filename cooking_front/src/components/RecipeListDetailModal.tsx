@@ -130,7 +130,7 @@ export const RecipeListDetailModal: React.FC<RecipeListDetailModalProps> = ({
             <span>{recipes.length} recette{recipes.length !== 1 ? 's' : ''}</span>
             <span className={`px-2 py-1 rounded-full text-xs ${
               list.is_public
-                ? 'bg-herb-100 text-herb-700'
+                ? 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300'
                 : 'bg-muted text-muted-foreground'
             }`}>
               {list.is_public ? 'Publique' : 'Privée'}

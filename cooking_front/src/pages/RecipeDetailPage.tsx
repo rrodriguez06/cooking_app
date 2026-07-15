@@ -39,8 +39,8 @@ import {
 } from 'lucide-react';
 
 const difficultyMeta: Record<Recipe['difficulty'], { label: string; className: string }> = {
-  easy: { label: 'Facile', className: 'text-herb-600' },
-  medium: { label: 'Moyen', className: 'text-amber-600' },
+  easy: { label: 'Facile', className: 'text-herb-600 dark:text-herb-400' },
+  medium: { label: 'Moyen', className: 'text-amber-600 dark:text-amber-400' },
   hard: { label: 'Difficile', className: 'text-destructive' },
 };
 
@@ -366,7 +366,7 @@ export const RecipeDetailPage: React.FC = () => {
                               ) : null}
                             </div>
                             {step.tips && (
-                              <p className="mt-1.5 inline-flex items-start gap-1.5 text-sm italic text-amber-700">
+                              <p className="mt-1.5 inline-flex items-start gap-1.5 text-sm italic text-amber-700 dark:text-amber-300">
                                 <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
                                 {step.tips}
                               </p>
@@ -419,7 +419,7 @@ export const RecipeDetailPage: React.FC = () => {
                         className={`rounded-lg border p-3 ${
                           equipment.is_optional
                             ? 'border-border bg-muted text-muted-foreground'
-                            : 'border-primary-200 bg-primary-50 text-primary-800'
+                            : 'border-primary-200 bg-primary-50 text-primary-800 dark:border-primary-400/30 dark:bg-primary-400/10 dark:text-primary-200'
                         }`}
                       >
                         <div className="flex items-center gap-2">

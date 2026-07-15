@@ -80,7 +80,7 @@ export function CookMode({ steps, title, onClose }: CookModeProps) {
                 </p>
               ) : null}
               {step.tips ? (
-                <p className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-amber-900">
+                <p className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-amber-900 dark:bg-amber-400/10 dark:text-amber-200">
                   <Lightbulb className="mt-0.5 h-5 w-5 shrink-0" />
                   {step.tips}
                 </p>

@@ -150,10 +150,10 @@ const FridgePage: React.FC = () => {
     if (expiry < now) {
       return { status: 'expired', label: 'Expiré', color: 'bg-destructive/15 text-destructive' };
     } else if (expiry <= threeDaysFromNow) {
-      return { status: 'expiring', label: 'Expire bientôt', color: 'bg-amber-100 text-amber-700' };
+      return { status: 'expiring', label: 'Expire bientôt', color: 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300' };
     }
-    
-    return { status: 'fresh', label: 'Frais', color: 'bg-herb-100 text-herb-700' };
+
+    return { status: 'fresh', label: 'Frais', color: 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300' };
   };
 
   if (loading) {
@@ -187,7 +187,7 @@ const FridgePage: React.FC = () => {
             </div>
             {stats.expiring_soon > 0 && (
               <div className="text-center">
-                <div className="text-2xl font-bold text-amber-600">{stats.expiring_soon}</div>
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.expiring_soon}</div>
                 <div className="text-sm text-muted-foreground">À consommer</div>
               </div>
             )}
@@ -244,7 +244,7 @@ const FridgePage: React.FC = () => {
                   variant="secondary"
                   size="sm"
                   onClick={() => setFilterExpiring(!filterExpiring)}
-                  className={filterExpiring ? 'bg-amber-50 border-amber-200' : ''}
+                  className={filterExpiring ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-400/10 dark:border-amber-400/30 dark:text-amber-200' : ''}
                 >
                   <Clock className="h-4 w-4" />
                   {filterExpiring ? 'Tous' : 'Expiration'}
@@ -382,8 +382,8 @@ const FridgePage: React.FC = () => {
                         <div className="flex items-center gap-2 mt-2">
                           <Badge className={`text-xs ${
                             suggestion.canCook
-                              ? 'bg-herb-100 text-herb-700'
-                              : 'bg-amber-100 text-amber-700'
+                              ? 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300'
+                              : 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300'
                           }`}>
                             {suggestion.matchPercentage}% compatible
                           </Badge>
@@ -393,7 +393,7 @@ const FridgePage: React.FC = () => {
                           </span>
                           
                           {suggestion.missingIngredients.length > 0 && (
-                            <span className="text-xs text-amber-600">
+                            <span className="text-xs text-amber-600 dark:text-amber-400">
                               {suggestion.missingIngredients.length} manquant(s)
                             </span>
                           )}

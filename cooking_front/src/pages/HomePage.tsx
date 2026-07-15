@@ -118,7 +118,7 @@ export const HomePage: React.FC = () => {
     <>
       <div className="space-y-10">
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-50 via-background to-herb-50 px-6 py-14 text-center sm:py-20">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-50 via-background to-herb-50 dark:from-primary-500/10 dark:via-background dark:to-herb-500/10 px-6 py-14 text-center sm:py-20">
           <h1 className="mx-auto mb-4 max-w-3xl font-display text-4xl font-bold sm:text-5xl">
             Cuisinez, partagez, régalez-vous.
           </h1>

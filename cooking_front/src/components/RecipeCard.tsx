@@ -17,8 +17,8 @@ interface RecipeCardProps {
 }
 
 const difficultyMeta: Record<Recipe['difficulty'], { label: string; className: string }> = {
-  easy: { label: 'Facile', className: 'bg-herb-50 text-herb-700' },
-  medium: { label: 'Moyen', className: 'bg-amber-100 text-amber-700' },
+  easy: { label: 'Facile', className: 'bg-herb-100 text-herb-700 dark:bg-herb-500/15 dark:text-herb-300' },
+  medium: { label: 'Moyen', className: 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300' },
   hard: { label: 'Difficile', className: 'bg-destructive/10 text-destructive' },
 };
 
