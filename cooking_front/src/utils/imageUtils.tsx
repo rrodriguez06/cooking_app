@@ -44,7 +44,7 @@ interface RecipeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 export const RecipeImage: React.FC<RecipeImageProps> = ({ 
   imageUrl, 
   alt, 
-  fallback = '/placeholder-recipe.jpg',
+  fallback = '/chef-hat.svg',
   ...props 
 }) => {
   const fullImageUrl = getFullImageUrl(imageUrl);

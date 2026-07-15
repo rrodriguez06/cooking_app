@@ -1,0 +1,19 @@
+{
+  "name": "CookingApp",
+  "short_name": "CookingApp",
+  "description": "Partagez et découvrez de délicieuses recettes de cuisine",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF9F5",
+  "theme_color": "#FFF9F5",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/chef-hat.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
