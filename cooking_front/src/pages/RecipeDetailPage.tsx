@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  Layout,
   Card,
   CardContent,
   CardHeader,
@@ -127,17 +126,17 @@ export const RecipeDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
+      <>
         <div className="flex min-h-96 items-center justify-center">
           <Loading size="lg" />
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (error || !recipe) {
     return (
-      <Layout>
+      <>
         <div className="py-12 text-center">
           <ChefHat className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
           <h2 className="mb-2 font-display text-2xl font-bold">Recette non trouvée</h2>
@@ -147,7 +146,7 @@ export const RecipeDetailPage: React.FC = () => {
             Retour à l'accueil
           </Button>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -160,7 +159,7 @@ export const RecipeDetailPage: React.FC = () => {
   const showImage = recipe.image_url && !imgError;
 
   return (
-    <Layout>
+    <>
       <div className="mx-auto max-w-7xl">
         <div className="lg:flex lg:gap-6">
           {/* Contenu principal */}
@@ -500,7 +499,7 @@ export const RecipeDetailPage: React.FC = () => {
       </div>
 
       {cookMode && <CookMode steps={instructions} title={recipe.title} onClose={() => setCookMode(false)} />}
-    </Layout>
+    </>
   );
 };
 

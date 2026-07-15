@@ -11,7 +11,7 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Calendar, Plus, ChefHat, ShoppingCart, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
-import { Layout, Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal, GeneratePlanModal, useConfirm } from '../components';
+import { Card, CardContent, CardHeader, Button, AddMealModal, ShoppingListModal, GeneratePlanModal, useConfirm } from '../components';
 import { MealCard, GenerationRecapDialog, type GenerationRecap } from '../components/planning';
 import { Skeleton } from '../components/ui/skeleton';
 import { toast } from '../components/ui/sonner';
@@ -204,7 +204,7 @@ export const PlanningPage: React.FC = () => {
   });
 
   return (
-    <Layout>
+    <>
       <div className="space-y-6">
         {/* En-tête */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -389,7 +389,7 @@ export const PlanningPage: React.FC = () => {
       />
 
       <GenerationRecapDialog recap={recap} open={showRecap} onOpenChange={setShowRecap} />
-    </Layout>
+    </>
   );
 };
 

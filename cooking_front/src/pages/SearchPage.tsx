@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Star, X, ChefHat, SlidersHorizontal } from 'lucide-react';
-import { Layout, Card, CardContent, Button, Input, SmartSearchBar, Pagination, RecipeCard } from '../components';
+import { Card, CardContent, Button, Input, SmartSearchBar, Pagination, RecipeCard } from '../components';
 import type { SearchSuggestion } from '../components/SmartSearchBar';
 import {
   Sheet,
@@ -289,7 +289,7 @@ export const SearchPage: React.FC = () => {
   const totalCount = pagination.pagination.totalCount || recipes.length;
 
   return (
-    <Layout>
+    <>
       <div className="space-y-6">
         {/* En-tête */}
         <div className="text-center">
@@ -527,6 +527,6 @@ export const SearchPage: React.FC = () => {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </Layout>
+    </>
   );
 };

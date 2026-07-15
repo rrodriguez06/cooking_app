@@ -3,6 +3,7 @@ import { Button } from './index';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { mealPlanService } from '../services';
 import { getFullImageUrl } from '../utils/imageUtils';
+import { buildPlannedDate, type MealTimeType } from '../utils';
 import { Calendar, Clock, Users } from 'lucide-react';
 import type { Recipe, MealPlanCreateRequest } from '../types';
 
@@ -31,9 +32,14 @@ export const PlanRecipeModal: React.FC<PlanRecipeModalProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!formData.planned_date) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // Convert date to ISO string format expected by Go backend
-      const plannedDate = new Date(formData.planned_date + 'T12:00:00.000Z').toISOString();
+      // planned_date construit en heure locale (cohérent avec le générateur — GEN-1)
+      const plannedDate = buildPlannedDate(formData.planned_date, formData.meal_type as MealTimeType);
 
       const requestData: MealPlanCreateRequest = {
         recipe_id: recipe.id,
@@ -43,7 +49,6 @@ export const PlanRecipeModal: React.FC<PlanRecipeModalProps> = ({
         notes: formData.notes || ''
       };
 
-      console.log('PlanRecipeModal: Sending request data:', requestData);
       const response = await mealPlanService.createMealPlan(requestData);
 
       if (response.success) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context';
 import { useTheme } from '../../hooks';
@@ -20,7 +20,15 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isCurrentPath = (path: string) => location.pathname === path;
+  // Surligne l'item courant : égalité stricte pour l'accueil, préfixe pour les sections
+  // (ex. /recipe/123, /user/5) — corrige NAV-5.
+  const isCurrentPath = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  // Fermer le menu mobile à chaque changement de route (A11Y-5).
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -107,7 +115,9 @@ export const Header: React.FC = () => {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Menu"
+              aria-label={isMobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav"
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -116,7 +126,7 @@ export const Header: React.FC = () => {
 
         {/* Navigation mobile */}
         {isMobileMenuOpen && (
-          <div className="border-t border-border py-4 md:hidden">
+          <div id="mobile-nav" className="border-t border-border py-4 md:hidden">
             {isAuthenticated && (
               <nav className="mb-4 space-y-1">
                 {navigation.map((item) => {

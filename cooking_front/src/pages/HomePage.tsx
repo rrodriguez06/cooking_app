@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeCard, UserLink } from '../components';
+import { Card, CardContent, Button, RecipeCard, UserLink } from '../components';
 import { Skeleton } from '../components/ui/skeleton';
 import { loadRecipeDraft, draftKey } from '../components/recipe-form/autosave';
 import { recipeService } from '../services';
@@ -107,7 +107,7 @@ export const HomePage: React.FC = () => {
   }, [user]);
 
   return (
-    <Layout>
+    <>
       <div className="space-y-10">
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-50 via-background to-herb-50 px-6 py-14 text-center sm:py-20">
@@ -204,7 +204,7 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

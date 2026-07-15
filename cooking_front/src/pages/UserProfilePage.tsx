@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Layout, Card, CardContent, Button, RecipeListDetailModal } from '../components';
+import { Card, CardContent, Button, RecipeListDetailModal } from '../components';
 import { userFollowService } from '../services/userFollowService';
 import { formatRelativeTime, formatTime } from '../utils';
 import { getFullImageUrl } from '../utils/imageUtils';
@@ -76,7 +76,7 @@ export const UserProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <div className="animate-pulse space-y-8">
           <div className="bg-card rounded-lg p-6">
             <div className="flex items-center space-x-4">
@@ -93,13 +93,13 @@ export const UserProfilePage: React.FC = () => {
             ))}
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (error || !profile) {
     return (
-      <Layout>
+      <>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-foreground mb-4">
             {error || 'Utilisateur non trouvé'}
@@ -108,14 +108,14 @@ export const UserProfilePage: React.FC = () => {
             <Button>Retour à la recherche</Button>
           </Link>
         </div>
-      </Layout>
+      </>
     );
   }
 
   const isOwnProfile = currentUser?.id === userId;
 
   return (
-    <Layout>
+    <>
       <div className="space-y-8">
         {/* Header du profil */}
         <Card>
@@ -275,7 +275,7 @@ export const UserProfilePage: React.FC = () => {
         list={selectedList}
         canEdit={false} // Les utilisateurs ne peuvent pas modifier les listes des autres
       />
-    </Layout>
+    </>
   );
 };
 

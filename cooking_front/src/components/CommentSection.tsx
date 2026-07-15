@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import type { Comment, CreateCommentRequest } from '../services/commentService';
 import { commentService } from '../services/commentService';
 import { useAuth } from '../context/AuthContext';
@@ -167,9 +168,9 @@ const CommentSection: React.FC<CommentsectionProps> = ({ recipeId }) => {
         ) : (
           <div className="mb-6 p-4 bg-muted/50 rounded-lg text-center">
             <p className="text-muted-foreground">
-              <a href="/login" className="text-primary hover:text-primary/80">
+              <Link to="/login" className="text-primary hover:text-primary/80">
                 Connectez-vous
-              </a>{' '}
+              </Link>{' '}
               pour laisser un commentaire
             </p>
           </div>

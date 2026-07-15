@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
+import { Card, CardContent, CardHeader, Button, Input, RecipeListModal, RecipeListDetailModal, UserLink, PasswordChangeForm, ProfileImageUpload, Pagination, useConfirm } from '../components';
 import { toast } from '../components/ui/sonner';
 import { useAuth } from '../context';
 import { userService, recipeService, favoriteService, recipeListService, userFollowService } from '../services';
@@ -226,11 +226,11 @@ export const ProfilePage: React.FC = () => {
   };
 
   if (!user) {
-    return <Layout><div>Chargement...</div></Layout>;
+    return <div>Chargement...</div>;
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Profile Header */}
         <Card>
@@ -548,7 +548,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="text-center py-8">
                   <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4">Vous n'avez pas encore de recettes favorites</p>
-                  <Button onClick={() => window.location.href = '/search'}>
+                  <Button onClick={() => navigate('/search')}>
                     Découvrir des recettes
                   </Button>
                 </div>
@@ -824,8 +824,8 @@ export const ProfilePage: React.FC = () => {
                           <p className="text-sm text-muted-foreground mt-2">
                             Découvrez des cuisiniers talentueux à suivre !
                           </p>
-                          <Button 
-                            onClick={() => window.location.href = '/search'} 
+                          <Button
+                            onClick={() => navigate('/search')}
                             className="mt-4"
                           >
                             Découvrir des utilisateurs
@@ -938,6 +938,6 @@ export const ProfilePage: React.FC = () => {
           onRecipeRemoved={handleRecipeRemovedFromList}
         />
       </div>
-    </Layout>
+    </>
   );
 };
