@@ -37,7 +37,8 @@ services:
     environment:
       - ENV=production
       - SERVER_PORT=8080
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      # Doit être défini dans .env : échoue explicitement plutôt que d'utiliser un secret par défaut prévisible.
+      - JWT_SECRET=${JWT_SECRET:?Le secret JWT (JWT_SECRET) doit être défini dans .env}
       - JWT_ISSUER=cooking-server
       - DB_HOST=postgres
       - DB_PORT=5432

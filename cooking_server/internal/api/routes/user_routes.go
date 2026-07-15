@@ -12,9 +12,11 @@ func SetupUserRoutes(router *gin.RouterGroup, handler *handlers.UserHandler, jwt
 	users := router.Group("/users")
 	{
 		// Routes publiques (pas d'authentification requise)
-		users.POST("", handler.CreateUser)                   // POST /api/users (inscription)
-		users.POST("/login", handler.LoginUser)              // POST /api/users/login (connexion)
-		users.POST("/reset-password", handler.ResetPassword) // POST /api/users/reset-password (réinitialisation du mot de passe)
+		users.POST("", handler.CreateUser)      // POST /api/users (inscription)
+		users.POST("/login", handler.LoginUser) // POST /api/users/login (connexion)
+		// Réinitialisation du mot de passe en 2 étapes (token à expiration)
+		users.POST("/reset-password/request", handler.RequestPasswordReset) // POST /api/users/reset-password/request
+		users.POST("/reset-password/confirm", handler.ConfirmPasswordReset) // POST /api/users/reset-password/confirm
 
 		// Routes protégées (authentification requise)
 		protected := users.Group("", middleware.AuthMiddleware(jwtService))
@@ -22,8 +24,9 @@ func SetupUserRoutes(router *gin.RouterGroup, handler *handlers.UserHandler, jwt
 			protected.GET("/me", handler.GetCurrentUser)          // GET /api/users/me (utilisateur actuel)
 			protected.GET("/:id", handler.GetUser)                // GET /api/users/1
 			protected.GET("/:id/profile", handler.GetUserProfile) // GET /api/users/1/profile (profil public)
-			protected.PUT("/:id", handler.UpdateUser)             // PUT /api/users/1
-			protected.DELETE("/:id", handler.DeleteUser)          // DELETE /api/users/1
+			protected.PUT("/:id", handler.UpdateUser)                 // PUT /api/users/1
+			protected.PUT("/:id/password", handler.ChangePassword)    // PUT /api/users/1/password
+			protected.DELETE("/:id", handler.DeleteUser)              // DELETE /api/users/1
 			protected.GET("", handler.ListUsers)                  // GET /api/users?page=1&limit=10
 
 			// Routes pour le système de suivi

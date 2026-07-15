@@ -22,9 +22,7 @@ export interface UserCreateRequest {
 export interface UserUpdateRequest {
   username?: string;
   email?: string;
-  password?: string;
   avatar?: string;
-  is_active?: boolean;
 }
 
 export interface UserLoginRequest {
@@ -32,8 +30,20 @@ export interface UserLoginRequest {
   password: string;
 }
 
-export interface UserPasswordResetRequest {
+// Réinitialisation en 2 étapes (token à expiration, sans email)
+export interface UserPasswordResetRequestPayload {
   email: string;
+}
+
+export interface UserPasswordResetRequestResponse {
+  success: boolean;
+  message: string;
+  token?: string; // renvoyé lorsque le compte existe (pas d'envoi d'email)
+}
+
+export interface UserPasswordResetConfirmPayload {
+  email: string;
+  token: string;
   new_password: string;
   confirm_password: string;
 }
@@ -41,6 +51,13 @@ export interface UserPasswordResetRequest {
 export interface UserPasswordResetResponse {
   success: boolean;
   message: string;
+}
+
+// Changement de mot de passe authentifié (exige le mot de passe actuel)
+export interface UserPasswordChangePayload {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 export interface UserLoginResponse {
