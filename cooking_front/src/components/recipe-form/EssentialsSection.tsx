@@ -35,13 +35,16 @@ export function EssentialsSection({ isCreating, onImportPhoto }: EssentialsSecti
         ) : undefined
       }
     >
-      <div className="space-y-5">
+      {/* Photo à gauche, titre + description à droite (pleine largeur) :
+          bloc compact qui exploite la largeur sans espace mort. */}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-6">
         {/* Photo en héro */}
         <ImageUpload
           value={watch('image_url')}
           onChange={(imageUrl) => setValue('image_url', imageUrl, { shouldDirty: true })}
         />
 
+        <div className="space-y-5">
         {/* Titre en typo display */}
         <div>
           <label htmlFor="recipe-title" className="mb-1 block text-sm font-medium text-foreground">
@@ -72,6 +75,7 @@ export function EssentialsSection({ isCreating, onImportPhoto }: EssentialsSecti
           {errors.description && (
             <p className="mt-1 text-sm text-destructive">{errors.description.message}</p>
           )}
+        </div>
         </div>
       </div>
     </FormSection>
