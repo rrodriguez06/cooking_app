@@ -98,10 +98,15 @@ export function IngredientsEditor({ ingredients, onCreateIngredient }: Ingredien
           Créer un ingrédient
         </Button>
       }
+      className="xl:flex xl:max-h-[calc(100vh-7rem)] xl:flex-col xl:overflow-hidden"
     >
+      {/* En-tête & bouton "Ajouter" restent épinglés ; seule la liste défile
+          (le panneau ne dépasse jamais la hauteur de l'écran, même avec beaucoup
+          d'ingrédients). */}
+      <div className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-2 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
             {fields.map((field, index) => {
               const showHeader = groupOf(index) !== '' && groupOf(index) !== groupOf(index - 1);
               return (
@@ -142,6 +147,7 @@ export function IngredientsEditor({ ingredients, onCreateIngredient }: Ingredien
           <Plus className="h-4 w-4" />
           Ajouter un ingrédient
         </Button>
+      </div>
       </div>
     </FormSection>
   );
